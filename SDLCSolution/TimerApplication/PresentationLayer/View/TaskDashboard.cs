@@ -63,39 +63,41 @@ namespace TimerApplication.PresentationLayer.View
 
         private void HandleMenu(int choice)
         {
-            switch (choice)
-            {
-                case 1:
-                    this.AddNewTask();
-                    break;
-                case 2:
-                    this.EditTask();
-                    break;
-                case 3:
-                    this.DeleteTask();
-                    break;
-                case 4:
-                    this.ViewSpecificTaskLog();
-                    break;
-                case 5:
-                    this.StartTimer();
-                    break;
-                case 6:
-                    this.StopTimer();
-                    break;
-                case 7:
-                    this.ImportTimeLog();
-                    break;
-                case 8:
-                    this.ExportTimeLog();
-                    break;
-                case 9:
-                    this.Logout();
-                    break;
-                default:
+                switch (choice)
+                {
+                    case 1:
+                        this.AddNewTask();
+                        break;
+                    case 2:
+                        this.EditTask();
+                        break;
+                    case 3:
+                        this.DeleteTask();
+                        break;
+                    case 4:
+                        this.ViewSpecificTaskLog();
+                        break;
+                    case 5:
+                        this.StartTimer();
+                        break;
+                    case 6:
+                        this.StopTimer();
+                        break;
+                    case 7:
+                        this.ImportTimeLog();
+                        break;
+                    case 8:
+                        this.ExportTimeLog();
+                        break;
+                    case 9:
+                        this.Logout();
+                        break;
+                    default:
                     _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
-                    break;
+                        break;
+                }
             }
+            while (choice != 9);
         }
 
         private void Logout()
