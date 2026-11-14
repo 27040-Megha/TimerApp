@@ -138,8 +138,8 @@ namespace TimerApplication.PresentationLayer.View
                     break;
                 default:
                     _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 or 2", MessageType.Error);
-                    break;
-            }
+                        break;
+                }
         }
 
         private void DeleteTask()
@@ -222,7 +222,7 @@ namespace TimerApplication.PresentationLayer.View
             {
                 _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
-            }
+        }
 
             activityLogToBeEdited.LogName = taskName;
             this._activityLogService.EditTaskLog(activityLogToBeEdited);
@@ -268,7 +268,7 @@ namespace TimerApplication.PresentationLayer.View
             {
                 _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
-            }
+        }
 
             this._activityService.CreateNewTask(new Activity(taskName, TimeSpan.Zero, CurrentSessionManager.CurrentSessionUser.UserId));
             _userIO.DisplayMessage("Task Added Successfully!", MessageType.Success);
