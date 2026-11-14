@@ -96,6 +96,8 @@ namespace TimerApplication.PresentationLayer.View
                     _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
                         break;
                 }
+            }
+            while (choice != 9);
         }
 
         private void Logout()
@@ -123,7 +125,7 @@ namespace TimerApplication.PresentationLayer.View
             if (!InputValidator.ValidateString(result))
             {
                 return false;
-            }
+        }
 
             return true;
         }
@@ -176,7 +178,7 @@ namespace TimerApplication.PresentationLayer.View
                     $"{i + 1}. {log.LogName} {duration}\n" +
                     $"   Start: {log.StartTime},  End: {endText}",
                     messageType);
-            }
+        }
         }
 
 
