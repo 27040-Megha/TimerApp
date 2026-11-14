@@ -11,10 +11,13 @@ public class UserService
 {
     private readonly IUserRepository _userRepository;
 
-    public UserService(IUserRepository userRepository)
-    {
-        this._userRepository = userRepository;
-    }
+        private readonly IActiveUserRepository _activeUserRepository;
+
+        public UserService(IUserRepository userRepository, IActiveUserRepository activeUserRepository)
+        {
+            this._userRepository = userRepository;
+            this._activeUserRepository = activeUserRepository;
+        }
 
     public bool CreateUser(User newUser)
     {
@@ -57,6 +60,16 @@ public class UserService
             {
                 return new Result(false, AuthenticationStatus.InvalidPassword);
             }
+        }
+
+        public void SaveCurrentActiveUser()
+        {
+            this._activeUserRepository.SaveCurrentActiveUser(CurrentSessionManager.CurrentSessionUser);
+        }
+
+        public User FetchActiveUser()
+        {
+            return this._activeUserRepository.FetchActiveUser();
         }
     }
 }

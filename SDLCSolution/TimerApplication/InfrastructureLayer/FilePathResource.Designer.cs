@@ -79,6 +79,15 @@ namespace TimerApplication.InfrastructureLayer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to LastActiveUser.json.
+        /// </summary>
+        internal static string LastActiveUser {
+            get {
+                return ResourceManager.GetString("LastActiveUser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to UsersFile.json.
         /// </summary>
         internal static string UserRepoFilePath {

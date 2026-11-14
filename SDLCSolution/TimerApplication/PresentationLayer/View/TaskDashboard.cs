@@ -6,6 +6,13 @@ namespace TimerApplication.PresentationLayer.View
 {
     public class TaskDashboard
     {
+        private readonly UserService _userService;
+
+        public TaskDashboard(UserService userService)
+        {
+            this._userService = userService;
+        }
+
         public void RunDashboard()
         {
             Console.Clear();
@@ -71,7 +78,9 @@ namespace TimerApplication.PresentationLayer.View
 
         private void Logout()
         {
-            throw new NotImplementedException();
+            CurrentSessionManager.CurrentSessionUser = null;
+            this._userService.SaveCurrentActiveUser();
+            TextColor.WriteColoredLine("Logging out", ConsoleColor.Yellow);
         }
 
         private void AddNewTask()

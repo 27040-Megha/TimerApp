@@ -123,6 +123,9 @@
   <data name="ActivityRepoFilePath" xml:space="preserve">
     <value>ActivityFile.json</value>
   </data>
+  <data name="LastActiveUser" xml:space="preserve">
+    <value>LastActiveUser.json</value>
+  </data>
   <data name="UserRepoFilePath" xml:space="preserve">
     <value>UsersFile.json</value>
   </data>
