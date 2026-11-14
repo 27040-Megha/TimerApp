@@ -79,6 +79,16 @@ public class UserService
                 return new Result(false, AuthenticationStatus.InvalidPassword);
             }
         }
+
+        public void SaveCurrentActiveUser()
+        {
+            this._activeUserRepository.SaveCurrentActiveUser(CurrentSessionManager.CurrentSessionUser);
+        }
+
+        public User FetchActiveUser()
+        {
+            return this._activeUserRepository.FetchActiveUser();
+        }
     }
  
     private bool CheckPassword(string password, string hash)
