@@ -17,7 +17,7 @@ namespace TimerApplication.PresentationLayer.View
 
         public void Run()
         {
-            Console.WriteLine("Welcome to Time Logger");
+            TextColor.WriteColoredLine("Welcome to Time Logger", ConsoleColor.Cyan);
             int choice;
             do
             {
@@ -28,7 +28,7 @@ namespace TimerApplication.PresentationLayer.View
                 bool isValidChoice = InputValidator.ValidateInteger(Console.ReadLine(), out choice);
                 if (!isValidChoice)
                 {
-                    Console.WriteLine($"Invalid Integer format, Enter a valid integer!");
+                    TextColor.WriteColoredLine($"Invalid Integer format, Enter a valid integer!", ConsoleColor.Red);
                     continue;
                 }
 
@@ -41,10 +41,10 @@ namespace TimerApplication.PresentationLayer.View
                         this.LoginUser();
                         break;
                     case 3:
-                        Console.WriteLine("Exiting the App, Bye!");
+                        TextColor.WriteColoredLine("Exiting the App, Bye!", ConsoleColor.Cyan);
                         break;
                     default:
-                        Console.WriteLine("Invalid Choice, Enter a valid choice between 1 to 3");
+                        TextColor.WriteColoredLine("Invalid Choice, Enter a valid choice between 1 to 3", ConsoleColor.Red);
                         break;
                 }
             }
@@ -67,15 +67,18 @@ namespace TimerApplication.PresentationLayer.View
             var isCreated = this._userService.CreateUser(user);
             if (!isCreated)
             {
-                Console.WriteLine($"Signup failed, Account already registered with the given Email ID!");
+                TextColor.WriteColoredLine($"Signup failed, Account already registered with the given Email ID!", ConsoleColor.Red);
                 return;
             }
 
-            Console.WriteLine("$Signup Successfull!");
+            TextColor.WriteColoredLine("Signup Successfull!", ConsoleColor.Green);
         }
 
         private User GetUserDetails()
         {
+            Console.Clear();
+            Console.WriteLine("\x1b[3J"); 
+            Console.Clear();
             var userName = this.GetUserName();
             if (userName == null)
             {
@@ -99,58 +102,87 @@ namespace TimerApplication.PresentationLayer.View
 
         private string GetUserName()
         {
+            int maxAttempts = 3;
             Console.WriteLine("Enter User Name: ");
-            var userName = Console.ReadLine();
-            var isValidName = InputValidator.ValidateString(userName);
-            if (!isValidName)
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                Console.WriteLine($"User Name should be null or empty!");
-                return null;
+                var userName = Console.ReadLine();
+                var isValidName = InputValidator.ValidateString(userName);
+                if (isValidName)
+                {
+                    return userName;
+                }
+
+                TextColor.WriteColoredLine($"User Name should not be null or empty!", ConsoleColor.Red);
+                if (attempt < maxAttempts)
+                {
+                    Console.WriteLine("Re-enter Email: ");
+                }
             }
 
-            return userName;
+            TextColor.WriteColoredLine("Too many failed attempts!", ConsoleColor.Red);
+            return null;
         }
 
         private string GetEmail()
         {
+            int maxAttempts = 3;
             Console.WriteLine("Enter User Email ID: ");
-            var email = Console.ReadLine();
-            var isValidEmail = InputValidator.ValidateEmail(email);
-            if (!isValidEmail)
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                Console.WriteLine($"Invalid Email ID format");
-                return null;
+                var email = Console.ReadLine();
+                var isValidEmail = InputValidator.ValidateEmail(email);
+                if (isValidEmail)
+                {
+                    return email;
+                }
+
+                TextColor.WriteColoredLine("Invalid email format!", ConsoleColor.Red);
+                if (attempt < maxAttempts)
+                {
+                    Console.WriteLine("Re-enter Email: ");
+                }
             }
 
-            return email;
+            TextColor.WriteColoredLine("Too many failed attempts!", ConsoleColor.Red);
+            return null;
         }
 
         private string GetPassword()
         {
+            int maxAttempts = 3;
             Console.WriteLine("Enter Password: ");
-            string password = "";
-            while (true)
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                var key = Console.ReadKey(true);
-                if (key.Key == ConsoleKey.Enter)
+                string password = "";
+                while (true)
                 {
-                    break;
+                    var key = Console.ReadKey(true);
+                    if (key.Key == ConsoleKey.Enter)
+                    {
+                        break;
+                    }
+
+                    password += key.KeyChar;
+                    Console.Write("*");
                 }
 
-                password += key.KeyChar;
-                Console.Write("*");
-            }
+                Console.WriteLine();
+                var passwordValidation = InputValidator.ValidatePassword(password);
+                if (passwordValidation.IsSuccess)
+                {
+                    return PasswordHasher.HashPassword(password);
+                }
 
-            Console.WriteLine();
-            var isValidPassword = InputValidator.ValidatePassword(password);
-            if (!isValidPassword.IsSuccess)
-            {
-                Console.WriteLine(isValidPassword.Message);
-                return null;
-            }
+                TextColor.WriteColoredLine(passwordValidation.Message, ConsoleColor.Red);
 
-            var hashedPassword = PasswordHasher.HashPassword(password);
-            return hashedPassword;
+                if (attempt < maxAttempts)
+                {
+                    Console.WriteLine("Re-enter Password: ");
+                }
+            }
+            TextColor.WriteColoredLine("Too many failed attempts!", ConsoleColor.Red);
+            return null;
         }
     }
 }
