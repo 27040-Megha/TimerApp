@@ -1,14 +1,25 @@
-﻿namespace TimerApplication.Domain.Model;
+﻿using TimerApplication.Domain.Enums;
 
-public class Result
+namespace TimerApplication.Domain.Model
 {
-    public Result(bool isSuccess, string message)
+    public class Result
     {
-        this.IsSuccess = isSuccess;
-        this.Message = message;
+        public Result(bool isSuccess, string message)
+        {
+            this.IsSuccess = isSuccess;
+            this.Message = message;
+        }
+
+        public Result(bool isSuccess, AuthenticationStatus authenticationStatus)
+        {
+            this.IsSuccess = isSuccess;
+            this.LoginStatus = authenticationStatus;
+        }
+
+        public bool IsSuccess { get; set; }
+
+        public string Message { get; set; }
+
+        public AuthenticationStatus LoginStatus { get; set; }
     }
-
-    public bool IsSuccess { get; set; }
-
-    public string Message { get; set; }
 }
