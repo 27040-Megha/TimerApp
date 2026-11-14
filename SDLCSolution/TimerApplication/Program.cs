@@ -37,6 +37,7 @@ public class Program
                 timer.Stop();
                 break;
                 timer.Stop();
+                timer.Stop();
             }
             catch (Exception ex)
             {
