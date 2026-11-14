@@ -21,7 +21,7 @@ namespace TimerApplication.ApplicationLayer.Service
 
         public List<Activity> GetAllActivities()
         {
-            return this._activityRepository.GetAllActivities().ToList();
+            return this._activityRepository.GetAllActivities().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId).ToList();
         }
     }
 }
