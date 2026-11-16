@@ -8,7 +8,7 @@ namespace TimerApplication.ApplicationLayer.Interface
     {
         public void CreateActivity(Activity activity);
 
-        public void EditActivity(Guid activityIdToEdit, string TaskName);
+        public void EditActivity(Guid activityIdToEdit, Activity activity);
 
         public void DeleteActivity(Guid ActivityId);
 

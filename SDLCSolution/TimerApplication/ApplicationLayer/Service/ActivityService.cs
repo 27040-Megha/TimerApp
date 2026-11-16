@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Model;
@@ -19,8 +20,16 @@ public class ActivityService
         this._activityRepository.CreateActivity(activity);
     }
 
-    public List<Activity> GetAllActivities()
-    {
-        return this._activityRepository.GetAllActivities().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId).ToList();
+        public List<Activity> GetAllActivities()
+        {
+            return this._activityRepository.GetAllActivities().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId).ToList();
+        }
+
+        public void EditTaskDuration(ActivityLog activityLog)
+        {
+            var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == activityLog.TaskId);
+            activity.TotalDuration += activityLog.Duration;
+            this._activityRepository.EditActivity(activityLog.ActivityLogId, activity);
+        }
     }
 }

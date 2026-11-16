@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using TimerApplication.ApplicationLayer.Interface;
@@ -12,6 +13,16 @@ namespace TimerApplication.InfrastructureLayer
         {
             var activityLogs = FileHandlingService.ReadFile<ActivityLog>(FilePathResource.ActivityLogFilePath);
             activityLogs.Add(activityLog);
+            FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
+        }
+
+        public void EditActivityLog(Guid activityLogId, ActivityLog activityLog)
+        {
+            var activityLogs = FileHandlingService.ReadFile<ActivityLog>(FilePathResource.ActivityLogFilePath);
+            var activityLogToUpdate = activityLogs.FirstOrDefault(a => a.ActivityLogId == activityLogId);
+            activityLogToUpdate.LogStatus = activityLog.LogStatus;
+            activityLogToUpdate.EndTime = activityLog.EndTime;
+            activityLogToUpdate.Duration = activityLog.Duration;
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
         }
 
