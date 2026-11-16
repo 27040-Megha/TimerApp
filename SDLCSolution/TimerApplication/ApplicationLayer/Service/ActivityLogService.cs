@@ -49,8 +49,35 @@ public class ActivityLogService
         this._activityService.EditTaskDuration(activityLog);
     }
 
-    public IEnumerable<ActivityLog> GetAllActivityLogs()
-    {
-        return this._activityLogRepository.FetchAllActivityLogs();
+        public List<ActivityLog> GetAllActivityLogs()
+        {
+            return this._activityLogRepository.FetchAllActivityLogs().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId).ToList();
+        }
+
+        public void DeleteActivityLogsByTaskId(Guid activityId)
+        {
+            var activityLogs = this.GetAllActivityLogs().Where(a => a.TaskId == activityId).ToList();
+            foreach (var log in activityLogs)
+            {
+                this._activityLogRepository.DeleteActivityLog(log.ActivityLogId);
+            }
+        }
+
+        public bool DeleteActivityLogByLogId(Guid activityLogId)
+        {
+            var activityLogToDelete = this.GetAllActivityLogs().FirstOrDefault(a => a.ActivityLogId == activityLogId);
+            if (activityLogToDelete.LogStatus == TimerStatus.Running)
+            {
+                return false;
+            }
+
+            this._activityLogRepository.DeleteActivityLog(activityLogId);
+            return true;
+        }
+
+        public void EditTaskLog(ActivityLog activityLogToBeEdited)
+        {
+            this._activityLogRepository.EditActivityLog(activityLogToBeEdited.ActivityLogId, activityLogToBeEdited);
+        }
     }
 }

@@ -15,9 +15,12 @@ namespace TimerApplication.InfrastructureLayer
             FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
         }
 
-        public void DeleteActivity(Guid ActivityId)
+        public void DeleteActivity(Guid activityId)
         {
-            throw new NotImplementedException();
+            var activities = FileHandlingService.ReadFile<Activity>(FilePathResource.ActivityRepoFilePath);
+            var activityToDelete = activities.FirstOrDefault(a => a.ActivityId == activityId);
+            activities.Remove(activityToDelete);
+            FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
         }
 
         public void EditActivity(Guid activityIdToEdit, Activity activityToBeAssigned)
@@ -32,7 +35,8 @@ namespace TimerApplication.InfrastructureLayer
 
         public Activity GetActivityById(Guid activityId)
         {
-            throw new NotImplementedException();
+            var activities = FileHandlingService.ReadFile<Activity>(FilePathResource.ActivityRepoFilePath);
+            return activities.FirstOrDefault(a => a.ActivityId == activityId);
         }
 
         public IEnumerable<Activity> GetAllActivities()

@@ -69,10 +69,10 @@ namespace TimerApplication.PresentationLayer.View
                         this.AddNewTask();
                         break;
                     case 2:
-                        this.EditTask();
+                        this.Edit();
                         break;
                     case 3:
-                        this.DeleteTask();
+                        this.Delete();
                         break;
                     case 4:
                         this.ViewSpecificTaskLog();
@@ -98,6 +98,167 @@ namespace TimerApplication.PresentationLayer.View
                 }
             }
             while (choice != 9);
+        }
+
+        private void Edit()
+        {
+            int choice;
+            Console.WriteLine("1. Edit Task");
+            Console.WriteLine("2. Edit Task Logs");
+            Console.WriteLine("Enter Your Option (1/2): ");
+            bool isValidChoice = InputValidator.ValidateInteger(Console.ReadLine(), out choice);
+            if (!isValidChoice)
+            {
+                TextColor.WriteColoredLine($"Invalid Integer format, Enter a valid integer!", ConsoleColor.Red);
+                return;
+            }
+            switch (choice)
+            {
+                case 1:
+                    this.EditTask();
+                    break;
+                case 2:
+                    this.EditTaskLog();
+                    break;
+                default:
+                    TextColor.WriteColoredLine("Invalid Choice, Enter a valid choice between 1 or 2", ConsoleColor.Red);
+                    break;
+            }
+        }
+
+        private void Delete()
+        {
+            int choice;
+            Console.WriteLine("1. Delete Task");
+            Console.WriteLine("2. Delete Task Logs");
+            Console.WriteLine("Enter Your Option (1/2): ");
+            bool isValidChoice = InputValidator.ValidateInteger(Console.ReadLine(), out choice);
+            if (!isValidChoice)
+            {
+                TextColor.WriteColoredLine($"Invalid Integer format, Enter a valid integer!", ConsoleColor.Red);
+                return;
+            }
+            switch (choice)
+            {
+                case 1:
+                    this.DeleteTask();
+                    break;
+                case 2:
+                    this.DeleteTaskLogs();
+                    break;
+                default:
+                    TextColor.WriteColoredLine("Invalid Choice, Enter a valid choice between 1 or 2", ConsoleColor.Red);
+                    break;
+            }
+        }
+
+        private void DisplayActivities(List<Activity> activities)
+        {
+            for (int i = 0; i < activities.Count; i++)
+            {
+                var task = activities[i];
+                Console.WriteLine($"{i + 1}. {task.ActivityName}  Duration: {task.TotalDuration.ToString(@"hh\:mm\:ss")}");
+            }
+        }
+
+        private void DeleteTask()
+        {
+            var activities = this._activityService.GetAllActivities();
+            this.DisplayActivities(activities);
+            TextColor.WriteColoredLine($"Enter index of task to be deleted: ", ConsoleColor.Cyan);
+            int index;
+            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            if (index < 1 || index > activities.Count)
+            {
+                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                return;
+            }
+
+            var activityToDelete = activities[index - 1];
+            if (activityToDelete.TaskStatus == TimerStatus.Running)
+            {
+                TextColor.WriteColoredLine($"Task with Active timer can't be deleted, Stop the timer first!", ConsoleColor.Red);
+                return;
+            }
+
+            this._activityLogService.DeleteActivityLogsByTaskId(activityToDelete.ActivityId);
+            this._activityService.DeleteActivity(activityToDelete.ActivityId);
+            TextColor.WriteColoredLine($"Task Deleted Successfully!", ConsoleColor.Green);
+        }
+
+        private void DeleteTaskLogs()
+        {
+            var activityLogs = this._activityLogService.GetAllActivityLogs();
+            this.DisplayActivityLogs(activityLogs);
+            TextColor.WriteColoredLine($"Enter index of task log to be deleted: ", ConsoleColor.Cyan);
+            int index;
+            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            if (index < 1 || index > activityLogs.Count)
+            {
+                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                return;
+            }
+
+            index = index - 1;
+            var activityLogToBeDeleted = activityLogs[index];
+            this._activityService.RemoveLogDuration(activityLogToBeDeleted.TaskId, activityLogToBeDeleted.Duration);
+            bool deletionStatus = this._activityLogService.DeleteActivityLogByLogId(activityLogToBeDeleted.ActivityLogId);           
+            if (!deletionStatus)
+            {
+                TextColor.WriteColoredLine($"Cannot delete a log while running timer!, Stop the timer first", ConsoleColor.Red);
+                return;
+            }
+
+            TextColor.WriteColoredLine($"Activity Log Deleted Successfully!", ConsoleColor.Green);
+        }
+
+        private void EditTaskLog()
+        {
+            var activityLogs = this._activityLogService.GetAllActivityLogs();
+            this.DisplayActivityLogs(activityLogs);
+            TextColor.WriteColoredLine($"Enter index of task log to be edited: ", ConsoleColor.Cyan);
+            int index;
+            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            if (index < 1 || index > activityLogs.Count)
+            {
+                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                return;
+            }
+
+            index = index - 1;
+            var activityLogToBeEdited = activityLogs[index];
+            Console.WriteLine("Enter new task log name: ");
+            activityLogToBeEdited.LogName = Console.ReadLine();
+            this._activityLogService.EditTaskLog(activityLogToBeEdited);
+            TextColor.WriteColoredLine($"Task log name edited successfully!", ConsoleColor.Green);
+        }
+
+        private void DisplayActivityLogs(List<ActivityLog> activityLogs)
+        {
+            for (int i = 0; i < activityLogs.Count; i++)
+            {
+                var activityLog = activityLogs[i];
+                Console.WriteLine($"{i + 1}. {activityLog.LogName},  Start: {activityLog.StartTime}, End: {activityLog.EndTime}, Duration: {activityLog.Duration.ToString(@"hh\:mm\:ss")}");
+            }
+        }
+
+        private void EditTask()
+        {
+            var activities = this._activityService.GetAllActivities();
+            this.DisplayActivities(activities);
+            int index;
+            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            if (index < 1 || index > activities.Count)
+            {
+                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                return;
+            }
+
+            index = index - 1;
+            Console.WriteLine("Enter new task name: ");
+            var input = Console.ReadLine();
+            this._activityService.EditTaskName(activities[index].ActivityId, input);
+            TextColor.WriteColoredLine($"Task name edited successfully!", ConsoleColor.Green);
         }
 
         private void Logout()
@@ -128,16 +289,6 @@ namespace TimerApplication.PresentationLayer.View
         }
 
             return true;
-        }
-
-        private void EditTask()
-        {
-            throw new NotImplementedException();
-        }
-
-        private void DeleteTask()
-        {
-            throw new NotImplementedException();
         }
 
         private void ViewSpecificTaskLog()

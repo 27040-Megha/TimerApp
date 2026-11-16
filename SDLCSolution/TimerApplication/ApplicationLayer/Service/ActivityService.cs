@@ -40,4 +40,23 @@ public class ActivityService
             activity.TaskStatus = timerStatus;
             this._activityRepository.EditActivity(taskId, activity);
         }
+
+        public void DeleteActivity(Guid activityId)
+        {
+            this._activityRepository.DeleteActivity(activityId);
+        }
+
+        public void RemoveLogDuration(Guid taskId, TimeSpan duration)
+        {
+            var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == taskId);
+            activity.TotalDuration -= duration;
+            this._activityRepository.EditActivity(activity.ActivityId, activity);
+        }
+
+        public void EditTaskName(Guid activityId, string input)
+        {
+            var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == activityId);
+            activity.ActivityName = input;
+            this._activityRepository.EditActivity(activityId, activity);
+        }
     }
