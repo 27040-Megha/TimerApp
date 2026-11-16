@@ -156,7 +156,7 @@ namespace TimerApplication.PresentationLayer.View
             for (int i = 0; i < activities.Count; i++)
             {
                 var activity = activities[i];
-                Console.WriteLine($"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration}");
+                Console.WriteLine($"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}");
             }
 
             TextColor.WriteColoredLine($"Enter index of task to Start Timer: ", ConsoleColor.Cyan);
@@ -170,6 +170,7 @@ namespace TimerApplication.PresentationLayer.View
 
             index = index - 1;
             this._activityLogService.StartTimer(activities[index].ActivityId);
+            TextColor.WriteColoredLine($"Timer started Successfully!", ConsoleColor.Green);
         }
 
         private void StopTimer()
