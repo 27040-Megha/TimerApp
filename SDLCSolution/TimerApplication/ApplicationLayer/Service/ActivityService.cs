@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using TimerApplication.ApplicationLayer.Interface;
+using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.ApplicationLayer.Service;
@@ -29,7 +30,15 @@ public class ActivityService
         {
             var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == activityLog.TaskId);
             activity.TotalDuration += activityLog.Duration;
-            this._activityRepository.EditActivity(activityLog.ActivityLogId, activity);
+            activity.TaskStatus = TimerStatus.Stopped;
+            this._activityRepository.EditActivity(activityLog.TaskId, activity);
+        }
+
+        public void EditTaskStatus(Guid taskId, TimerStatus timerStatus)
+        {
+            var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == taskId);
+            activity.TaskStatus = timerStatus;
+            this._activityRepository.EditActivity(taskId, activity);
         }
     }
 }

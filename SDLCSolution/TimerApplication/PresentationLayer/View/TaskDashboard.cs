@@ -4,7 +4,8 @@ using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.PresentationLayer.Helper;
 using TimerApplication.Domain.Model;
-using System.Collections.Generic;
+using TimerApplication.Domain.Enums;
+using System.Linq;
 
 namespace TimerApplication.PresentationLayer.View
 {
@@ -16,10 +17,13 @@ namespace TimerApplication.PresentationLayer.View
 
         private readonly ActivityService _activityService;
 
-        public TaskDashboard(UserService userService, ActivityService activityService, IUserIO userIO)
+        private readonly ActivityLogService _activityLogService;
+
+        public TaskDashboard(UserService userService, ActivityService activityService, ActivityLogService activityLogService, IUserIO userIO)
         {
             this._userService = userService;
             this._activityService = activityService;
+            this._activityLogService = activityLogService;
             this._userIO = userIO;
         }
 
@@ -142,12 +146,47 @@ namespace TimerApplication.PresentationLayer.View
 
         private void StartTimer()
         {
-            throw new NotImplementedException();
+            var activities = this._activityService.GetAllActivities().Where(a => a.TaskStatus != TimerStatus.Running).ToList();
+            for (int i = 0; i < activities.Count; i++)
+            {
+                var activity = activities[i];
+                Console.WriteLine($"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration}");
+            }
+
+            TextColor.WriteColoredLine($"Enter index of task to Start Timer: ", ConsoleColor.Cyan);
+            int index;
+            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            if (index < 1 || index > activities.Count)
+            {
+                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                return;
+            }
+
+            index = index - 1;
+            this._activityLogService.StartTimer(activities[index].ActivityId);
         }
 
         private void StopTimer()
         {
-            throw new NotImplementedException();
+            var activityLogs = this._activityLogService.GetAllActivityLogs().Where(a => a.LogStatus == TimerStatus.Running).ToList();
+            for (int i = 0; i < activityLogs.Count; i++)
+            {
+                var activitylog = activityLogs[i];
+                Console.WriteLine($"{i + 1}. {activitylog.LogName}");
+            }
+
+            TextColor.WriteColoredLine($"Enter index of task to Stop Timer: ", ConsoleColor.Cyan);
+            int index;
+            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            if (index < 1 || index > activityLogs.Count)
+            {
+                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                return;
+            }
+
+            index = index - 1;
+            this._activityLogService.StopTimer(activityLogs[index].ActivityLogId);
+            TextColor.WriteColoredLine($"Timer stopped successfully!", ConsoleColor.Green);
         }
 
         private void ImportTimeLog()

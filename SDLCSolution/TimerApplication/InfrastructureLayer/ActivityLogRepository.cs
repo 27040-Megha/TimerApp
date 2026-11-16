@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using TimerApplication.ApplicationLayer.Interface;
+using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.InfrastructureLayer
@@ -29,7 +29,7 @@ namespace TimerApplication.InfrastructureLayer
         public IEnumerable<ActivityLog> FetchAllActivityLogs()
         {
             var activityLogs = FileHandlingService.ReadFile<ActivityLog>(FilePathResource.ActivityLogFilePath);
-            return activityLogs.Select(a => new ActivityLog(a.ActivityLogId, a.StartTime, a.EndTime, a.Duration, a.LogStatus, a.TaskId)).ToList();
+            return activityLogs.Select(a => new ActivityLog(a.ActivityLogId, a.LogName, a.StartTime, a.EndTime, a.Duration, a.LogStatus, a.TaskId, CurrentSessionManager.CurrentSessionUser.UserId)).ToList();
         }
     }
 }

@@ -5,19 +5,27 @@ namespace TimerApplication.Domain.Model
 {
     public class ActivityLog
     {
-        public ActivityLog(Guid activitylogId, DateTime startTime, DateTime? endTime, TimeSpan duration, TimerStatus logStatus, Guid taskId)
+        public ActivityLog()
+        {
+        }
+
+        public ActivityLog(Guid activitylogId, string logName, DateTime startTime, DateTime? endTime, TimeSpan duration, TimerStatus logStatus, Guid taskId, Guid userId)
         {
             this.ActivityLogId = activitylogId;
+            this.LogName = logName;
             this.StartTime = startTime;
             this.EndTime = endTime;
             this.Duration = duration;
             this.LogStatus = logStatus;
             this.TaskId = taskId;
+            this.UserId = userId;
         }
 
         public Guid ActivityLogId { get; set; }
 
-    public DateTime StartTime { get; set; }
+        public string LogName { get; set; }
+
+        public DateTime StartTime { get; set; }
 
     public DateTime EndTime { get; set; }
 

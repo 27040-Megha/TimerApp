@@ -25,6 +25,7 @@ namespace TimerApplication.InfrastructureLayer
             var activities = FileHandlingService.ReadFile<Activity>(FilePathResource.ActivityRepoFilePath);
             var activityToEdit = activities.FirstOrDefault(a => a.ActivityId.Equals(activityIdToEdit));
             activityToEdit.ActivityName = activityToBeAssigned.ActivityName;
+            activityToEdit.TaskStatus = activityToBeAssigned.TaskStatus;
             activityToEdit.TotalDuration = activityToBeAssigned.TotalDuration;
             FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
         }
