@@ -147,6 +147,12 @@ namespace TimerApplication.PresentationLayer.View
         private void StartTimer()
         {
             var activities = this._activityService.GetAllActivities().Where(a => a.TaskStatus != TimerStatus.Running).ToList();
+            if (activities.Count == 0)
+            {
+                TextColor.WriteColoredLine($"No activities found to start Timer, first add new tasks", ConsoleColor.Yellow);
+                return;
+            }
+
             for (int i = 0; i < activities.Count; i++)
             {
                 var activity = activities[i];
@@ -169,6 +175,12 @@ namespace TimerApplication.PresentationLayer.View
         private void StopTimer()
         {
             var activityLogs = this._activityLogService.GetAllActivityLogs().Where(a => a.LogStatus == TimerStatus.Running).ToList();
+            if (activityLogs.Count == 0)
+            {
+                TextColor.WriteColoredLine($"No Active timers to stop", ConsoleColor.Yellow);
+                return;
+            }
+
             for (int i = 0; i < activityLogs.Count; i++)
             {
                 var activitylog = activityLogs[i];
