@@ -201,7 +201,6 @@ namespace TimerApplication.PresentationLayer.View
 
             index = index - 1;
             var activityLogToBeDeleted = activityLogs[index];
-            this._activityService.RemoveLogDuration(activityLogToBeDeleted.TaskId, activityLogToBeDeleted.Duration);
             bool deletionStatus = this._activityLogService.DeleteActivityLogByLogId(activityLogToBeDeleted.ActivityLogId);           
             if (!deletionStatus)
             {
@@ -209,6 +208,7 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
+            this._activityService.RemoveLogDuration(activityLogToBeDeleted.TaskId, activityLogToBeDeleted.Duration);
             TextColor.WriteColoredLine($"Activity Log Deleted Successfully!", ConsoleColor.Green);
         }
 
@@ -227,8 +227,13 @@ namespace TimerApplication.PresentationLayer.View
 
             index = index - 1;
             var activityLogToBeEdited = activityLogs[index];
-            Console.WriteLine("Enter new task log name: ");
-            activityLogToBeEdited.LogName = Console.ReadLine();
+            var input = this.GetTaskName();
+            if (input == null)
+            {
+                return;
+            }
+
+            activityLogToBeEdited.LogName = input;
             this._activityLogService.EditTaskLog(activityLogToBeEdited);
             TextColor.WriteColoredLine($"Task log name edited successfully!", ConsoleColor.Green);
         }
@@ -255,8 +260,12 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             index = index - 1;
-            Console.WriteLine("Enter new task name: ");
-            var input = Console.ReadLine();
+            var input = this.GetTaskName();
+            if (input == null)
+            {
+                return;
+            }
+
             this._activityService.EditTaskName(activities[index].ActivityId, input);
             TextColor.WriteColoredLine($"Task name edited successfully!", ConsoleColor.Green);
         }
