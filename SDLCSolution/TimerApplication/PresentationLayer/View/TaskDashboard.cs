@@ -149,7 +149,7 @@ namespace TimerApplication.PresentationLayer.View
                 Console.WriteLine($"{i + 1}. {task.ActivityName}  Duration: {task.TotalDuration.ToString(@"hh\:mm\:ss")}");
             }
 
-            TextColor.WriteColoredLine($"Enter index of task to Start Timer: ", ConsoleColor.Cyan);
+            TextColor.WriteColoredLine($"Enter index of task to view activity details: ", ConsoleColor.Cyan);
             int index;
             bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
             if (index < 1 || index > activities.Count)
