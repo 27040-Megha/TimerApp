@@ -142,7 +142,30 @@ namespace TimerApplication.PresentationLayer.View
 
         private void ViewSpecificTaskLog()
         {
-            throw new NotImplementedException();
+            var activities = this._activityService.GetAllActivities();
+            for (int i = 0; i < activities.Count; i++)
+            {
+                var task = activities[i];
+                Console.WriteLine($"{i + 1}. {task.ActivityName}  Duration: {task.TotalDuration.ToString(@"hh\:mm\:ss")}");
+            }
+
+            TextColor.WriteColoredLine($"Enter index of task to Start Timer: ", ConsoleColor.Cyan);
+            int index;
+            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            if (index < 1 || index > activities.Count)
+            {
+                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                return;
+            }
+
+            index = index - 1;
+            var activity = activities[index];
+            var activityLogs = this._activityLogService.GetAllActivityLogs().Where(a => a.TaskId == activity.ActivityId).OrderBy(a => a.StartTime);
+            TextColor.WriteColoredLine($"{activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}", ConsoleColor.DarkCyan);
+            foreach (var log in activityLogs)
+            {
+                Console.WriteLine($"{log.LogName},  Start: {log.StartTime},  End: {log.EndTime}, Duration: {log.Duration.ToString(@"hh\:mm\:ss")}");
+            }
         }
 
         private void StartTimer()
