@@ -243,7 +243,10 @@ namespace TimerApplication.PresentationLayer.View
             for (int i = 0; i < activityLogs.Count; i++)
             {
                 var activityLog = activityLogs[i];
-                Console.WriteLine($"{i + 1}. {activityLog.LogName},  Start: {activityLog.StartTime}, End: {activityLog.EndTime}, Duration: {activityLog.Duration.ToString(@"hh\:mm\:ss")}");
+                string endDisplay = activityLog.EndTime.HasValue ? activityLog.EndTime.ToString() : "Running";
+                TimeSpan duration = activityLog.LogStatus == TimerStatus.Running ? (DateTime.Now - activityLog.StartTime) : activityLog.Duration;
+                Console.WriteLine($"{i + 1}. {activityLog.LogName} Duration: {duration.ToString(@"hh\:mm\:ss")}");
+                Console.WriteLine($"   {activityLog.StartTime} - {endDisplay}");
             }
         }
 
