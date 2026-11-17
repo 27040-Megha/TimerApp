@@ -103,7 +103,7 @@ public class ActivityLogService
         }
 
 
-        private Result ImportLogs(string filePath, int index)
+        public Result ImportLogs(string filePath, int index)
         {
             try
             {
@@ -119,13 +119,19 @@ public class ActivityLogService
                 var logsToValidateAgainst = new List<ActivityLog>(existingActivityLogs);
                 TimeSpan totalTaskDuration = TimeSpan.Zero;
                 int importedCount = 0;
-                var overlapEntries = new List<ActivityLog>();
+                var skippedEntries = new List<ActivityLog>();
                 foreach (var importedLog in importedLogs)
                 {
+                    if (importedLog.EndTime <= importedLog.StartTime)
+                    {
+                        skippedEntries.Add(importedLog);
+                        continue;
+                    }
+
                     bool hasOverlap = logsToValidateAgainst.Any(existing => importedLog.StartTime < existing.EndTime && importedLog.EndTime > existing.StartTime);
                     if (hasOverlap)
                     {
-                        overlapEntries.Add(importedLog);
+                        skippedEntries.Add(importedLog);
                         continue;
                     }
 
@@ -139,13 +145,13 @@ public class ActivityLogService
                 if (importedCount > 0)
                 {
                     this._activityService.UpdateTaskTotalDuration(activitySelected, totalTaskDuration);
-                    if (!overlapEntries.Any())
+                    if (!skippedEntries.Any())
                     {
                         return new Result(true, "Logs imported successfully!");
                     }
 
-                    string skippedEntries = string.Join("\n", overlapEntries.Select(o => $"-{o.LogName} ({o.StartTime:yyyy-MM-dd HH:mm:ss} to {o.EndTime:yyyy-MM-dd HH:mm:ss})"));
-                    return new Result(true, $"{importedCount} logs imported, Overlapping log entries were found and skipped+\n");
+                    string skippedDetails = string.Join("\n", skippedEntries.Select(o => $"-{o.LogName} ({o.StartTime:yyyy-MM-dd HH:mm:ss} to {o.EndTime:yyyy-MM-dd HH:mm:ss})"));
+                    return new Result(true, $"{importedCount} logs imported, Overlapping log entries were found and skipped+\n+{skippedEntries}");
                 }
                 else
                 {

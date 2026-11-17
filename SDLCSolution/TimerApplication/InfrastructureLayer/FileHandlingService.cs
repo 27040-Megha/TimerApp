@@ -113,7 +113,7 @@ public static class FileHandlingService
                     }
 
                     string[] columns = line.Split(',');
-                    if (columns.Length != 6)
+                    if (columns.Length != 5)
                     {
                         throw new FormatException($"Invalid CSV format at line {i+1}!");
                     }
@@ -124,24 +124,24 @@ public static class FileHandlingService
                         throw new FormatException($"Invalid data format at line {i + 1}, {logName} cannot be null or empty");
                     }
 
-                    if (!Enum.TryParse(columns[2].Trim(), true, out TimerStatus logStatus))
+                    if (!Enum.TryParse(columns[1].Trim(), true, out TimerStatus logStatus))
+                    {
+                        throw new FormatException($"Invalid data format at line {i + 1}, {columns[1]} is invalid");
+                    }
+
+                    if (!DateTime.TryParse(columns[2].Trim(), out DateTime startTime))
                     {
                         throw new FormatException($"Invalid data format at line {i + 1}, {columns[2]} is invalid");
                     }
 
-                    if (!DateTime.TryParse(columns[3].Trim(), out DateTime startTime))
+                    if (!DateTime.TryParse(columns[3].Trim(), out DateTime endTime))
                     {
                         throw new FormatException($"Invalid data format at line {i + 1}, {columns[3]} is invalid");
                     }
 
-                    if (!DateTime.TryParse(columns[4].Trim(), out DateTime endTime))
+                    if (!TimeSpan.TryParse(columns[4].Trim(), out TimeSpan duration))
                     {
-                        throw new FormatException($"Invalid data format at line {i + 1}, {columns[4]} is invalid");
-                    }
-
-                    if (!TimeSpan.TryParse(columns[5].Trim(), out TimeSpan duration))
-                    {
-                        throw new FormatException($"Invalid data format at line {i+1}, {columns[5]} is invalid");
+                        throw new FormatException($"Invalid data format at line {i+1}, {columns[4]} is invalid");
                     }
 
                     var log = new ActivityLog(Guid.NewGuid(), logName, startTime, endTime, duration, logStatus, taskId, CurrentSessionManager.CurrentSessionUser.UserId);
@@ -150,6 +150,10 @@ public static class FileHandlingService
                 return logs;
             }
             catch (FormatException)
+            {
+                throw;
+            }
+            catch (FileNotFoundException)
             {
                 throw;
             }

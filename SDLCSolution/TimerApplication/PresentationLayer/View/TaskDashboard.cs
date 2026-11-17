@@ -7,6 +7,7 @@ using TimerApplication.Domain.Model;
 using TimerApplication.Domain.Enums;
 using System.Linq;
 using System.Collections.Generic;
+using System.IO;
 
 namespace TimerApplication.PresentationLayer.View
 {
@@ -423,7 +424,39 @@ namespace TimerApplication.PresentationLayer.View
 
         private void ImportTimeLog()
         {
-            throw new NotImplementedException();
+            var activities = this._activityService.GetAllActivities();
+            this.DisplayActivities(activities);
+            TextColor.WriteColoredLine($"Enter index of task to import its logs: ", ConsoleColor.Cyan);
+            int index;
+            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            if (index < 1 || index > activities.Count)
+            {
+                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                return;
+            }
+
+            TextColor.WriteColoredLine("Enter file path to import logs: ", ConsoleColor.Cyan);
+            var filePath = Console.ReadLine();
+            if (!InputValidator.ValidateString(filePath))
+            {
+                TextColor.WriteColoredLine("File path should not be null or empty", ConsoleColor.Red);
+                return;
+            }
+
+            if (!Path.GetExtension(filePath).Equals(".csv",  StringComparison.OrdinalIgnoreCase))
+            {
+                TextColor.WriteColoredLine("Invalid file path, give a valid .csv file path", ConsoleColor.Red);
+                return;
+            }
+
+            var importResult = this._activityLogService.ImportLogs(filePath, index-1);
+            if (!importResult.IsSuccess)
+            {
+                TextColor.WriteColoredLine(importResult.Message, ConsoleColor.Red);
+                return;
+            }
+
+            TextColor.WriteColoredLine(importResult.Message, ConsoleColor.Green);
         }
 
         private void ExportTimeLog()
