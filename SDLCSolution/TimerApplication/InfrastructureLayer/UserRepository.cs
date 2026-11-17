@@ -14,9 +14,8 @@ public class UserRepository : IUserRepository
         FileHandlingService.WriteFile(userRepo, FilePathResource.UserRepoFilePath);
     }
 
-    public IEnumerable<User> FetchAllUsers()
+    public IReadOnlySet<User> FetchAllUsers()
     {
-        var userRepo = FileHandlingService.ReadFile<User>(FilePathResource.UserRepoFilePath);
-        return userRepo.Select(user => new User(user.UserId, user.UserName, user.Email, user.Password, user.Activities));
+        return FileHandlingService.ReadFile<User>(FilePathResource.UserRepoFilePath);       
     }
 }

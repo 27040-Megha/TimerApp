@@ -4,9 +4,21 @@ namespace TimerApplication.Domain.Model;
 
 public class User
 {
+    public User()
+    {
+    }
+
     public User(string userName, string email, string password)
     {
         this.UserId = Guid.NewGuid();
+        this.UserName = userName;
+        this.Email = email;
+        this.Password = password;
+    }
+
+    public User(Guid userId, string userName, string email, string password)
+    {
+        this.UserId = userId;
         this.UserName = userName;
         this.Email = email;
         this.Password = password;

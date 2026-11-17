@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Model;
@@ -16,15 +17,19 @@ public class UserService
 
     public bool CreateUser(User newUser)
     {
-        var existingUsers = this.FetchAllUsers();
-        var duplicateUser = existingUsers.Any(u => string.Equals(u.Email, newUser.Email));
-        if (duplicateUser)
+        if (DoesEmailExists(newUser.Email))
         {
             return false;
         }
 
         this._userRepository.CreateUser(newUser);
         return true;
+    }
+
+    private bool DoesEmailExists(string email)
+    {
+        var existingEmails = this.FetchAllUsers().Select(user => user.Email).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return existingEmails.Contains(email);
     }
 
     public IEnumerable<User> FetchAllUsers()

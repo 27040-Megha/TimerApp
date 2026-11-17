@@ -7,5 +7,5 @@ public interface IUserRepository
 {
     public void CreateUser(User user);
 
-    public IEnumerable<User> FetchAllUsers();
+    public IReadOnlySet<User> FetchAllUsers();
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.Domain.Model;
@@ -34,8 +35,18 @@ public class ViewOperator
                 _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
                 continue;
             }
-
-            this.HandleMenuChoice(choice);
+            try
+            {
+                this.HandleMenuChoice(choice);
+            }
+            catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
+            {
+                _userIO.DisplayMessage($"Exception occurred during file Handling - {ex.Message}", MessageType.Error);
+            }
+            catch (Exception ex)
+            {
+                _userIO.DisplayMessage($"An unexpected error occurred: {ex.Message}", MessageType.Error);
+            }
         }
         while (choice != 3);
     }
@@ -61,7 +72,7 @@ public class ViewOperator
 
     private void DisplayMenu()
     {
-        _userIO.DisplayMessage("1. Signup \n 2. Login \n 3. Exit \n Enter Your Option (1/2/3): ");
+        _userIO.DisplayMessage("1. Signup \n2. Login \n3. Exit \nEnter Your Option (1/2/3): ");
     }
 
     private void LoginUser()
@@ -125,6 +136,7 @@ public class ViewOperator
         error = "Invalid email format!";
         return InputValidator.ValidateEmail(input);
     }
+
 
     private static bool ValidatePassword(string input, out string error)
     {
