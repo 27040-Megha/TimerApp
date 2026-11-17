@@ -1,4 +1,6 @@
-﻿namespace TimerApplication.ApplicationLayer.Interface;
+﻿using TimerApplication.ApplicationLayer.Domain.Enums;
+
+namespace TimerApplication.ApplicationLayer.Interface;
 
 public interface IUserIO
 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
+using TimerApplication.ApplicationLayer.Domain.Enums;
 using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.InfrastructureLayer;

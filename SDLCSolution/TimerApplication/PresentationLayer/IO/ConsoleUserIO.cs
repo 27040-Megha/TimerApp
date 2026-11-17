@@ -1,4 +1,5 @@
 ﻿using System;
+using TimerApplication.ApplicationLayer.Domain.Enums;
 using TimerApplication.ApplicationLayer.Interface;
 
 namespace TimerApplication.PresentationLayer.IO;

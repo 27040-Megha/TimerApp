@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using TimerApplication.ApplicationLayer.Domain.Enums;
 using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.Domain.Model;

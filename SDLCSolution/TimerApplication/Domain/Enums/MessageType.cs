@@ -1,4 +1,4 @@
-﻿namespace TimerApplication.ApplicationLayer.Interface;
+﻿namespace TimerApplication.ApplicationLayer.Domain.Enums;
 
 public enum MessageType
 {
