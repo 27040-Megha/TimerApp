@@ -42,6 +42,12 @@ public static class FileHandlingService
     {
         try
         {
+            string directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
             string jsonTextToWrite = JsonSerializer.Serialize(data);
             File.WriteAllText(filePath, jsonTextToWrite);
         }
