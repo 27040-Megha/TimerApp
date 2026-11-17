@@ -15,5 +15,7 @@ public interface IActivityLogRepository
         public IEnumerable<ActivityLog> FetchAllActivityLogs();
 
         public void ExportActivityLogsToCsv(string fileName, List<ActivityLog> logsToExport);
+
+        public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid taskId);
     }
 }

@@ -59,4 +59,11 @@ public class ActivityService
             activity.ActivityName = input;
             this._activityRepository.EditActivity(activityId, activity);
         }
+
+        public void UpdateTaskTotalDuration(Activity activitySelected, TimeSpan totalTaskDuration)
+        {
+            var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == activitySelected.ActivityId);
+            activity.TotalDuration += totalTaskDuration;
+            this._activityRepository.EditActivity(activity.ActivityId, activity);
+        }
     }

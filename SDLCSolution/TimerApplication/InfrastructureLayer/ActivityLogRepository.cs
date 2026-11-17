@@ -39,6 +39,11 @@ namespace TimerApplication.InfrastructureLayer
             FileHandlingService.ExportToCSV(fileName, logsToExport);
         }
 
+        public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid taskId)
+        {
+            return FileHandlingService.DeserializeActivityLogsFromCsv(filePath, taskId);
+        }
+
         public IEnumerable<ActivityLog> FetchAllActivityLogs()
         {
             return FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);          

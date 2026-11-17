@@ -2,6 +2,8 @@
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using TimerApplication.ApplicationLayer.Service;
+using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.InfrastructureLayer;
@@ -78,6 +80,83 @@ public static class FileHandlingService
             }
 
             return csvBuilder.ToString();
+        }
+
+        public static List<ActivityLog> DeserializeActivityLogsFromCsv(string filePath, Guid taskId)
+        {
+            var logs = new List<ActivityLog>();
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    throw new FileNotFoundException($"The specified csv file is not present in {filePath}");
+                }
+
+                string[] lines = File.ReadAllLines(filePath);
+                if (lines.Length < 2)
+                {
+                    throw new FormatException("The CSV file is empty or missing log entries");
+                }
+
+                string expectedHeader = "Log Name, Status, Start Time, End Time, Duration";
+                if (!lines[0].Trim().Equals(expectedHeader, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new FormatException("Invalid CSV format: Header does not match the expected format");
+                }
+
+                for (int i = 1; i < lines.Length; i++)
+                {
+                    string line = lines[i];
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        continue;
+                    }
+
+                    string[] columns = line.Split(',');
+                    if (columns.Length != 6)
+                    {
+                        throw new FormatException($"Invalid CSV format at line {i+1}!");
+                    }
+
+                    string logName = columns[0].Trim();
+                    if (string.IsNullOrWhiteSpace(logName))
+                    {
+                        throw new FormatException($"Invalid data format at line {i + 1}, {logName} cannot be null or empty");
+                    }
+
+                    if (!Enum.TryParse(columns[2].Trim(), true, out TimerStatus logStatus))
+                    {
+                        throw new FormatException($"Invalid data format at line {i + 1}, {columns[2]} is invalid");
+                    }
+
+                    if (!DateTime.TryParse(columns[3].Trim(), out DateTime startTime))
+                    {
+                        throw new FormatException($"Invalid data format at line {i + 1}, {columns[3]} is invalid");
+                    }
+
+                    if (!DateTime.TryParse(columns[4].Trim(), out DateTime endTime))
+                    {
+                        throw new FormatException($"Invalid data format at line {i + 1}, {columns[4]} is invalid");
+                    }
+
+                    if (!TimeSpan.TryParse(columns[5].Trim(), out TimeSpan duration))
+                    {
+                        throw new FormatException($"Invalid data format at line {i+1}, {columns[5]} is invalid");
+                    }
+
+                    var log = new ActivityLog(Guid.NewGuid(), logName, startTime, endTime, duration, logStatus, taskId, CurrentSessionManager.CurrentSessionUser.UserId);
+                    logs.Add(log);
+                }
+                return logs;
+            }
+            catch (FormatException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new FormatException($"Failed to Deserialize CSV file, {ex.Message}");
+            }
         }
     }
 }
