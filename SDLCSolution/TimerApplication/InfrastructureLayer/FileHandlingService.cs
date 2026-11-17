@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Text.Json;
+using TimerApplication.Domain.Model;
 
 namespace TimerApplication.InfrastructureLayer;
 
@@ -61,6 +63,21 @@ public static class FileHandlingService
         catch (UnauthorizedAccessException ex)
         {
             throw new UnauthorizedAccessException($"Access denied to write file {filePath}.", ex);
+        }
+
+        private static string SerializeCsvContent(List<ActivityLog> logsToExport)
+        {
+            var csvBuilder = new StringBuilder();
+            csvBuilder.AppendLine("Log Name, Status, Start Time, End Time, Duration");
+            foreach (var log in logsToExport)
+            {
+                var startTime = log.StartTime.ToString("yyyy-MM-dd HH:mm:ss");
+                var endTime = log.EndTime.HasValue ? log.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "In-Progress";
+                var duration = log.Duration.ToString(@"hh\:mm\:ss");
+                csvBuilder.AppendLine($"{log.LogName}, {log.LogStatus}, {startTime}, {endTime}, {duration}");
+            }
+
+            return csvBuilder.ToString();
         }
     }
 }

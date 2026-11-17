@@ -34,9 +34,9 @@ namespace TimerApplication.InfrastructureLayer
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
         }
 
-        public void ExportActivityLogsToCsv(string fileName, string csvContent)
+        public void ExportActivityLogsToCsv(string fileName, List<ActivityLog> logsToExport)
         {
-            FileHandlingService.ExportToCSV(fileName, csvContent);
+            FileHandlingService.ExportToCSV(fileName, logsToExport);
         }
 
         public IEnumerable<ActivityLog> FetchAllActivityLogs()

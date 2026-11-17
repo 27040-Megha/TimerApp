@@ -97,24 +97,14 @@ public class ActivityLogService
                 return new Result(false, "No logs recorded for the activity to export");
             }
 
-            var csvContent = this.GetCsvContent(logsToExport);
-            this._activityLogRepository.ExportActivityLogsToCsv($"{selectedActivity.ActivityName}.csv", csvContent);
+            this._activityLogRepository.ExportActivityLogsToCsv($"{selectedActivity.ActivityName}.csv", logsToExport);
             return new Result(true, $"Logs exported Successfully");
         }
 
-        private string GetCsvContent(List<ActivityLog> logsToExport)
-        {
-            var csvBuilder = new StringBuilder();
-            csvBuilder.AppendLine("Log Name, Status, Start Time, End Time, Duration");
-            foreach (var log in logsToExport)
-            {
-                var startTime = log.StartTime.ToString("yyyy-MM-dd HH:mm:ss");
-                var endTime = log.EndTime.HasValue ? log.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "In-Progress";
-                var duration = log.Duration.ToString(@"hh\:mm\:ss");
-                csvBuilder.AppendLine($"{log.LogName}, {log.LogStatus}, {startTime}, {endTime}, {duration}");
-            }
 
-            return csvBuilder.ToString();
+        private List<ActivityLog> DeserializeCsvContent(string fileName)
+        {
+
         }
     }
 
