@@ -79,5 +79,42 @@ public class ActivityLogService
         {
             this._activityLogRepository.EditActivityLog(activityLogToBeEdited.ActivityLogId, activityLogToBeEdited);
         }
+
+        public Result ExportLogs(int indexOfActivity)
+        {
+            var activities = this._activityService.GetAllActivities();
+            if (indexOfActivity >= activities.Count)
+            {
+                return new Result(false, "Index Out Of Range");
+            }
+
+            var selectedActivity = activities[indexOfActivity];
+            var logsToExport = this.GetAllActivityLogs().Where(log => log.TaskId == selectedActivity.ActivityId)
+                .OrderBy(log => log.StartTime)
+                .ToList();
+            if (!logsToExport.Any())
+            {
+                return new Result(false, "No logs recorded for the activity to export");
+            }
+
+            var csvContent = this.GetCsvContent(logsToExport);
+            this._activityLogRepository.ExportActivityLogsToCsv($"{selectedActivity.ActivityName}.csv", csvContent);
+            return new Result(true, $"Logs exported Successfully");
+        }
+
+        private string GetCsvContent(List<ActivityLog> logsToExport)
+        {
+            var csvBuilder = new StringBuilder();
+            csvBuilder.AppendLine("Log Name, Status, Start Time, End Time, Duration");
+            foreach (var log in logsToExport)
+            {
+                var startTime = log.StartTime.ToString("yyyy-MM-dd HH:mm:ss");
+                var endTime = log.EndTime.HasValue ? log.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "In-Progress";
+                var duration = log.Duration.ToString(@"hh\:mm\:ss");
+                csvBuilder.AppendLine($"{log.LogName}, {log.LogStatus}, {startTime}, {endTime}, {duration}");
+            }
+
+            return csvBuilder.ToString();
+        }
     }
 

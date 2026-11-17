@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using TimerApplication.ApplicationLayer.Interface;
-using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.InfrastructureLayer
@@ -33,6 +32,11 @@ namespace TimerApplication.InfrastructureLayer
             activityLogToUpdate.EndTime = activityLog.EndTime;
             activityLogToUpdate.Duration = activityLog.Duration;
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
+        }
+
+        public void ExportActivityLogsToCsv(string fileName, string csvContent)
+        {
+            FileHandlingService.ExportToCSV(fileName, csvContent);
         }
 
         public IEnumerable<ActivityLog> FetchAllActivityLogs()

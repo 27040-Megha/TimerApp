@@ -12,5 +12,8 @@ public interface IActivityLogRepository
 
     public void EditActivityLog(Guid activityLogId, ActivityLog activityLog);
 
-    public IEnumerable<ActivityLog> FetchAllActivityLogs();
+        public IEnumerable<ActivityLog> FetchAllActivityLogs();
+
+        public void ExportActivityLogsToCsv(string fileName, string csvContent);
+    }
 }

@@ -428,7 +428,25 @@ namespace TimerApplication.PresentationLayer.View
 
         private void ExportTimeLog()
         {
-            throw new NotImplementedException();
+            var activities = this._activityService.GetAllActivities();
+            this.DisplayActivities(activities);
+            TextColor.WriteColoredLine($"Enter index of task to export its logs: ", ConsoleColor.Cyan);
+            int index;
+            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            if (index < 1 || index > activities.Count)
+            {
+                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                return;
+            }
+
+            var exportResult = this._activityLogService.ExportLogs(index-1);
+            if (!exportResult.IsSuccess)
+            {
+                TextColor.WriteColoredLine($"{exportResult.Message}", ConsoleColor.Red);
+                return;
+            }
+
+            TextColor.WriteColoredLine($"Task logs exported successfully, check in your Downloads", ConsoleColor.Green);
         }
     }
 }
