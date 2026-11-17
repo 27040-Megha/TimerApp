@@ -43,11 +43,6 @@ public static class InputValidator
 
     public static bool ValidateString(string input)
     {
-        if (string.IsNullOrEmpty(input))
-        {
-            return false;
-        }
-
-        return true;
+        return !string.IsNullOrEmpty(input);
     }
 }

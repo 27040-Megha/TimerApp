@@ -1,15 +1,14 @@
-﻿namespace TimerApplication.ApplicationLayer.Interface
+﻿namespace TimerApplication.ApplicationLayer.Interface;
+
+public enum MessageType
 {
-    public enum MessageType
-    {
-        Default,
+    Default,
 
-        Info,
+    Info,
 
-        Success,
+    Success,
 
-        Warning,
+    Warning,
 
-        Error
-    }
+    Error
 }
