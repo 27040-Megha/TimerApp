@@ -1,14 +1,13 @@
 ﻿using System;
 
-namespace TimerApplication.PresentationLayer.Helper
+namespace TimerApplication.PresentationLayer.Helper;
+
+public static class TextColor
 {
-    public static class TextColor
+    public static void WriteColoredLine(string input, ConsoleColor colorChoice)
     {
-        public static void WriteColoredLine(string input, ConsoleColor colorChoice)
-        {
-            Console.ForegroundColor = colorChoice;
-            Console.WriteLine(input);
-            Console.ResetColor();
-        }
+        Console.ForegroundColor = colorChoice;
+        Console.WriteLine(input);
+        Console.ResetColor();
     }
 }

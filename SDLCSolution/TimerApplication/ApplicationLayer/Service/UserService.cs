@@ -3,33 +3,32 @@ using System.Linq;
 using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Model;
 
-namespace TimerApplication.ApplicationLayer.Service
+namespace TimerApplication.ApplicationLayer.Service;
+
+public class UserService
 {
-    public class UserService
+    private readonly IUserRepository _userRepository;
+
+    public UserService(IUserRepository userRepository)
     {
-        private readonly IUserRepository _userRepository;
+        this._userRepository = userRepository;
+    }
 
-        public UserService(IUserRepository userRepository)
+    public bool CreateUser(User newUser)
+    {
+        var existingUsers = this.FetchAllUsers();
+        var duplicateUser = existingUsers.Any(u => string.Equals(u.Email, newUser.Email));
+        if (duplicateUser)
         {
-            this._userRepository = userRepository;
+            return false;
         }
 
-        public bool CreateUser(User newUser)
-        {
-            var existingUsers = this.FetchAllUsers();
-            var duplicateUser = existingUsers.Any(u => string.Equals(u.Email, newUser.Email));
-            if (duplicateUser)
-            {
-                return false;
-            }
+        this._userRepository.CreateUser(newUser);
+        return true;
+    }
 
-            this._userRepository.CreateUser(newUser);
-            return true;
-        }
-
-        public IEnumerable<User> FetchAllUsers()
-        {
-            return this._userRepository.FetchAllUsers();
-        }
+    public IEnumerable<User> FetchAllUsers()
+    {
+        return this._userRepository.FetchAllUsers();
     }
 }

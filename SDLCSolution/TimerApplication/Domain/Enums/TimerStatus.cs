@@ -1,11 +1,10 @@
-﻿namespace TimerApplication.Domain.Enums
+﻿namespace TimerApplication.Domain.Enums;
+
+public enum TimerStatus
 {
-    public enum TimerStatus
-    {
-        NotStarted,
+    NotStarted,
 
-        Running,
+    Running,
 
-        Stopped,
-    }
+    Stopped,
 }
