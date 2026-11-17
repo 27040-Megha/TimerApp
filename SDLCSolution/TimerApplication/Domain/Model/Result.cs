@@ -1,15 +1,14 @@
-﻿namespace TimerApplication.Domain.Model
+﻿namespace TimerApplication.Domain.Model;
+
+public class Result
 {
-    public class Result
+    public Result(bool isSuccess, string message)
     {
-        public Result(bool isSuccess, string message)
-        {
-            this.IsSuccess = isSuccess;
-            this.Message = message;
-        }
-
-        public bool IsSuccess { get; set; }
-
-        public string Message { get; set; }
+        this.IsSuccess = isSuccess;
+        this.Message = message;
     }
+
+    public bool IsSuccess { get; set; }
+
+    public string Message { get; set; }
 }

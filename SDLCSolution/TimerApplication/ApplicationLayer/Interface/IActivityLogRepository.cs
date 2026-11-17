@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace TimerApplication.ApplicationLayer.Interface;
 
-namespace TimerApplication.ApplicationLayer.Interface
+internal class IActivityLogRepository
 {
-    internal class IActivityLogRepository
-    {
-    }
 }

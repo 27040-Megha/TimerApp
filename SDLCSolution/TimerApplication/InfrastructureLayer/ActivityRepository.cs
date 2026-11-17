@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace TimerApplication.InfrastructureLayer;
 
-namespace TimerApplication.InfrastructureLayer
+internal class ActivityRepository
 {
-    internal class ActivityRepository
-    {
-    }
 }

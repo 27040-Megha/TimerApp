@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace TimerApplication.ApplicationLayer.Service;
 
-namespace TimerApplication.ApplicationLayer.Service
+internal class ActivityLogService
 {
-    internal class ActivityLogService
-    {
-    }
 }
