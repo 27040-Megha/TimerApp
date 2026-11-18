@@ -3,6 +3,7 @@ using System.IO;
 using TimerApplication.ApplicationLayer.Domain.Enums;
 using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.ApplicationLayer.Service;
+using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
 using TimerApplication.PresentationLayer.Helper;
 
@@ -16,16 +17,20 @@ public class ViewOperator
 
     private readonly IUserIO _userIO;
 
+    private readonly TaskDashboard _taskDashboard;
+
     private delegate bool ValidateInput(string input, out string errorMessage);
 
-    public ViewOperator(UserService userService, IUserIO userIO)
+    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard)
     {
         this._userService = userService;
         this._userIO = userIO;
+        this._taskDashboard = taskDashboard;
     }
 
     public void Run()
     {
+        LoadPreviousUserSession();
         _userIO.DisplayMessage("Welcome to Time Logger", MessageType.Info);
         int choice;
         do
@@ -50,6 +55,22 @@ public class ViewOperator
             }
         }
         while (choice != 3);
+    }
+
+    public void SaveCurrentActiveUser()
+    {
+        this._userService.SaveCurrentActiveUser();
+    }
+
+    private void LoadPreviousUserSession()
+    {
+        User activeUser = _userService.FetchActiveUser();
+        if (activeUser != null)
+        {
+            CurrentSessionManager.CurrentSessionUser = activeUser;
+            _userIO.DisplayMessage($"Welcome back {CurrentSessionManager.CurrentSessionUser.UserName}!", MessageType.Info);
+            _taskDashboard.RunDashboard();
+        }
     }
 
     private void HandleMenuChoice(int choice)
@@ -78,12 +99,36 @@ public class ViewOperator
 
     private void LoginUser()
     {
-        throw new NotImplementedException();
+        if (!TryGetInput("Email", _userIO.ReadInput, ValidateEmail, out string email) ||
+            !TryGetInput("Password", _userIO.ReadMaskedPassword, ValidatePassword, out string password))
+        {
+            _userIO.DisplayMessage("Login failed: Due to many failed attempts", MessageType.Warning);
+            return;
+        }
+
+        Result authenticationStatus = this._userService.LoginUser(email, password);
+        if (authenticationStatus.IsSuccess)
+        {
+            _userIO.DisplayMessage("Login Successful", MessageType.Success);
+            _taskDashboard.RunDashboard();
+        }
+        else
+        {
+            if (authenticationStatus.LoginStatus == AuthenticationStatus.AccountNotExists)
+            {
+                _userIO.DisplayMessage("Account doesn't exist, Signup first", MessageType.Warning);
+                SignupUser();
+            }
+            else
+            {
+                _userIO.DisplayMessage("Invalid credentials, Try logging in again", MessageType.Error);
+                return;
+            }
+        }
     }
 
     private void SignupUser()
     {
-        _userIO.ClearOutput();
         if (!TryGetInput("User name",_userIO.ReadInput, ValidateName, out string userName) ||
             !TryGetInput("Email", _userIO.ReadInput, ValidateEmail, out string email) ||
             !TryGetInput("Password", _userIO.ReadMaskedPassword, ValidatePassword, out string password))

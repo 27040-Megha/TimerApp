@@ -12,9 +12,11 @@ public static class DependencyInjection
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddSingleton<IUserRepository, UserRepository>();
+        services.AddSingleton<IActiveUserRepository, ActiveUserRepository>();
         services.AddTransient<UserService>();
         services.AddSingleton<IUserIO, ConsoleUserIO>();
         services.AddTransient<ViewOperator>();
+        services.AddTransient<TaskDashboard>();
         return services;
     }
 }

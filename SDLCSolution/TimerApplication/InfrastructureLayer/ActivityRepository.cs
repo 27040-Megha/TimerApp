@@ -1,4 +1,4 @@
-﻿namespace TimerApplication.InfrastructureLayer;
+﻿namespace TimerApplication.InfrastructureLayer; 
 
 internal class ActivityRepository
 {

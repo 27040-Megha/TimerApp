@@ -8,13 +8,13 @@ public class UserRepository : IUserRepository
 {
     public void CreateUser(User user)
     {
-        var userRepo = FileHandlingService.ReadFile<User>(FilePathResource.UserRepoFilePath);
+        var userRepo = FileHandlingService.ReadFile<HashSet<User>>(FilePathResource.UserRepoFilePath);
         userRepo.Add(user);
         FileHandlingService.WriteFile(userRepo, FilePathResource.UserRepoFilePath);
     }
 
     public IReadOnlySet<User> FetchAllUsers()
     {
-        return FileHandlingService.ReadFile<User>(FilePathResource.UserRepoFilePath);       
+        return FileHandlingService.ReadFile<HashSet<User>>(FilePathResource.UserRepoFilePath) ?? new HashSet<User>();       
     }
 }

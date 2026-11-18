@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
@@ -7,22 +6,22 @@ namespace TimerApplication.InfrastructureLayer;
 
 public static class FileHandlingService
 {
-    public static HashSet<T> ReadFile<T>(string filePath)
+    public static T ReadFile<T>(string filePath)
     {
         try
         {
             if (!File.Exists(filePath))
             {
-                return new HashSet<T>();
+                return default;
             }
 
             string existingJson = File.ReadAllText(filePath);
             if (string.IsNullOrWhiteSpace(existingJson))
             {
-                return new HashSet<T>();
+                return default;
             }
 
-            return JsonSerializer.Deserialize<HashSet<T>>(existingJson) ?? new HashSet<T>();
+            return JsonSerializer.Deserialize<T>(existingJson);
         }
         catch (JsonException ex)
         {
@@ -38,7 +37,7 @@ public static class FileHandlingService
         }
     }
 
-    public static void WriteFile<T>(HashSet<T> data, string filePath)
+    public static void WriteFile<T>(T data, string filePath)
     {
         try
         {
@@ -50,6 +49,10 @@ public static class FileHandlingService
 
             string jsonTextToWrite = JsonSerializer.Serialize(data);
             File.WriteAllText(filePath, jsonTextToWrite);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidDataException($"Data in file {filePath} is corrupted and can't be parsed.", ex);
         }
         catch (IOException ex)
         {
