@@ -8,4 +8,3 @@ namespace TimerApplication.ApplicationLayer.Interface;
 
         public User FetchActiveUser();
     }
-}

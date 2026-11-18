@@ -96,8 +96,6 @@ namespace TimerApplication.PresentationLayer.View
                     _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
                         break;
                 }
-            }
-            while (choice != 9);
         }
 
         private void Logout()
@@ -142,31 +140,45 @@ namespace TimerApplication.PresentationLayer.View
 
         private void ViewSpecificTaskLog()
         {
-            var activities = this._activityService.GetAllActivities();
-            for (int i = 0; i < activities.Count; i++)
-            {
-                var task = activities[i];
-                Console.WriteLine($"{i + 1}. {task.ActivityName}  Duration: {task.TotalDuration.ToString(@"hh\:mm\:ss")}");
-            }
+            HashSet<Activity> activities = this._activityService.GetAllActivities().ToHashSet();
+            this.DisplayActivities(activities);
 
-            TextColor.WriteColoredLine($"Enter index of task to view activity details: ", ConsoleColor.Cyan);
-            int index;
-            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
-            if (index < 1 || index > activities.Count)
+            _userIO.DisplayMessage($"Enter index of task to view activity details: ", MessageType.Info);
+            if (!TryGetInputIndex(out int index))
             {
-                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
             }
 
-            index = index - 1;
-            var activity = activities[index];
-            var activityLogs = this._activityLogService.GetAllActivityLogs().Where(a => a.TaskId == activity.ActivityId).OrderBy(a => a.StartTime);
-            TextColor.WriteColoredLine($"{activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}", ConsoleColor.DarkCyan);
-            foreach (var log in activityLogs)
+            if (index < 1 || index > activities.Count)
             {
-                Console.WriteLine($"{log.LogName},  Start: {log.StartTime},  End: {log.EndTime}, Duration: {log.Duration.ToString(@"hh\:mm\:ss")}");
+                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
+                return;
+            }
+
+            var activity = activities.ElementAt(index-1);
+            var activityLogs = this._activityLogService.GetAllActivityLogs().Where(log => log.ActivityId == activity.ActivityId).OrderBy(a => a.StartTime);
+            _userIO.DisplayMessage($"{activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}", MessageType.Info);
+            this.DisplayLogDetails(activityLogs);
+        }
+
+        private void DisplayLogDetails(IOrderedEnumerable<ActivityLog> activityLogs)
+        {
+            var logsList = activityLogs.ToList();
+            for (int i = 0; i < logsList.Count; i++)
+            {
+                var log = logsList[i];
+                bool isRunning = log.LogStatus == TimerStatus.Running;
+                string duration = isRunning ? string.Empty : $", Duration: {log.Duration:hh\\:mm\\:ss}";
+                string endText = isRunning ? "Running" : log.EndTime?.ToString();
+                MessageType messageType = isRunning ? MessageType.Success : MessageType.Default;
+                _userIO.DisplayMessage(
+                    $"{i + 1}. {log.LogName} {duration}\n" +
+                    $"   Start: {log.StartTime},  End: {endText}",
+                    messageType);
             }
         }
+
 
         private void StartTimer()
         {
