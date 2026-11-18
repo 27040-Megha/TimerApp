@@ -11,25 +11,25 @@ namespace TimerApplication.InfrastructureLayer
     {
         public void CreateActivityLog(ActivityLog activityLog)
         {
-            var activityLogs = FileHandlingService.ReadFile<ActivityLog>(FilePathResource.ActivityLogFilePath);
+            var activityLogs = FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);
             activityLogs.Add(activityLog);
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
         }
 
-        public void EditActivityLog(Guid activityLogId, ActivityLog activityLog)
+        public void EditActivityLog(Guid activityLogId, ActivityLog activityLogToBeAssigned)
         {
-            var activityLogs = FileHandlingService.ReadFile<ActivityLog>(FilePathResource.ActivityLogFilePath);
+            var activityLogs = FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);
             var activityLogToUpdate = activityLogs.FirstOrDefault(a => a.ActivityLogId == activityLogId);
-            activityLogToUpdate.LogStatus = activityLog.LogStatus;
-            activityLogToUpdate.EndTime = activityLog.EndTime;
-            activityLogToUpdate.Duration = activityLog.Duration;
+            activityLogToUpdate.LogStatus = activityLogToBeAssigned.LogStatus;
+            activityLogToUpdate.EndTime = activityLogToBeAssigned.EndTime;
+            activityLogToUpdate.Duration = activityLogToBeAssigned.Duration;
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
         }
 
         public IEnumerable<ActivityLog> FetchAllActivityLogs()
         {
-            var activityLogs = FileHandlingService.ReadFile<ActivityLog>(FilePathResource.ActivityLogFilePath);
-            return activityLogs.Select(a => new ActivityLog(a.ActivityLogId, a.LogName, a.StartTime, a.EndTime, a.Duration, a.LogStatus, a.TaskId, CurrentSessionManager.CurrentSessionUser.UserId)).ToList();
+            var activityLogs = FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);
+            return activityLogs.Select(activity => new ActivityLog(activity.ActivityLogId, activity.LogName, activity.StartTime, activity.EndTime, activity.Duration, activity.LogStatus, activity.ActivityId, CurrentSessionManager.CurrentSessionUser.UserId)).ToHashSet();
         }
     }
 }

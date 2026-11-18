@@ -28,17 +28,16 @@ public class ActivityService
 
         public void EditTaskDuration(ActivityLog activityLog)
         {
-            var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == activityLog.TaskId);
+            Activity activity = this.GetAllActivities().FirstOrDefault(activity => activity.ActivityId == activityLog.ActivityId);
             activity.TotalDuration += activityLog.Duration;
             activity.TaskStatus = TimerStatus.Stopped;
-            this._activityRepository.EditActivity(activityLog.TaskId, activity);
+            this._activityRepository.EditActivity(activityLog.ActivityId, activity);
         }
 
         public void EditTaskStatus(Guid taskId, TimerStatus timerStatus)
         {
-            var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == taskId);
+            Activity activity = this.GetAllActivities().FirstOrDefault(activity => activity.ActivityId == taskId);
             activity.TaskStatus = timerStatus;
             this._activityRepository.EditActivity(taskId, activity);
         }
     }
-}

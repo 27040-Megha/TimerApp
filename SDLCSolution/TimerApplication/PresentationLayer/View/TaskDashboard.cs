@@ -6,6 +6,7 @@ using TimerApplication.PresentationLayer.Helper;
 using TimerApplication.Domain.Model;
 using TimerApplication.Domain.Enums;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace TimerApplication.PresentationLayer.View
 {
@@ -62,41 +63,39 @@ namespace TimerApplication.PresentationLayer.View
 
         private void HandleMenu(int choice)
         {
-                switch (choice)
-                {
-                    case 1:
-                        this.AddNewTask();
-                        break;
-                    case 2:
-                        this.EditTask();
-                        break;
-                    case 3:
-                        this.DeleteTask();
-                        break;
-                    case 4:
-                        this.ViewSpecificTaskLog();
-                        break;
-                    case 5:
-                        this.StartTimer();
-                        break;
-                    case 6:
-                        this.StopTimer();
-                        break;
-                    case 7:
-                        this.ImportTimeLog();
-                        break;
-                    case 8:
-                        this.ExportTimeLog();
-                        break;
-                    case 9:
-                        this.Logout();
-                        break;
-                    default:
+            switch (choice)
+            {
+                case 1:
+                    this.AddNewTask();
+                    break;
+                case 2:
+                    this.EditTask();
+                    break;
+                case 3:
+                    this.DeleteTask();
+                    break;
+                case 4:
+                    this.ViewSpecificTaskLog();
+                    break;
+                case 5:
+                    this.StartTimer();
+                    break;
+                case 6:
+                    this.StopTimer();
+                    break;
+                case 7:
+                    this.ImportTimeLog();
+                    break;
+                case 8:
+                    this.ExportTimeLog();
+                    break;
+                case 9:
+                    this.Logout();
+                    break;
+                default:
                     _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
-                        break;
-                }
+                    break;
             }
-            while (choice != 9);
         }
 
         private void Logout()
@@ -109,7 +108,7 @@ namespace TimerApplication.PresentationLayer.View
         {
             if (!TryGetTaskName(out string taskName))
             {
-                _userIO.DisplayMessage($"Invalid strig format, Task name should not be null or empty!", MessageType.Error);
+                _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
             }
 
@@ -146,60 +145,92 @@ namespace TimerApplication.PresentationLayer.View
 
         private void StartTimer()
         {
-            var activities = this._activityService.GetAllActivities().Where(a => a.TaskStatus != TimerStatus.Running).ToList();
+            HashSet<Activity> activities = this.GetAllActivities().Where(a => a.TaskStatus != TimerStatus.Running).ToHashSet();
             if (activities.Count == 0)
             {
-                TextColor.WriteColoredLine($"No activities found to start Timer, first add new tasks", ConsoleColor.Yellow);
+                _userIO.DisplayMessage($"No activities found to start Timer, first add new tasks", MessageType.Warning);
                 return;
             }
 
-            for (int i = 0; i < activities.Count; i++)
+            this.DisplayActivities(activities);
+            _userIO.DisplayMessage($"Enter index of task to Start Timer: ", MessageType.Info);
+            if (!TryGetInputIndex(out int index))
             {
-                var activity = activities[i];
-                Console.WriteLine($"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}");
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+                return;
             }
 
-            TextColor.WriteColoredLine($"Enter index of task to Start Timer: ", ConsoleColor.Cyan);
-            int index;
-            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
             if (index < 1 || index > activities.Count)
             {
-                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
             index = index - 1;
-            this._activityLogService.StartTimer(activities[index].ActivityId);
-            TextColor.WriteColoredLine($"Timer started Successfully!", ConsoleColor.Green);
+            this._activityLogService.StartTimer(activities.ElementAt(index).ActivityId);
+            _userIO.DisplayMessage($"Timer started Successfully!", MessageType.Success);
+        }
+
+        private IEnumerable<Activity> GetAllActivities()
+        {
+            return this._activityService.GetAllActivities();
+        }
+
+        private void DisplayActivities(HashSet<Activity> activities)
+        {
+            for (int i = 0; i < activities.Count; i++)
+            {
+                var activity = activities.ElementAt(i);
+                _userIO.DisplayMessage($"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}");
+            }
+        }
+
+        private bool TryGetInputIndex(out int index)
+        {
+            return InputValidator.ValidateInteger(_userIO.ReadInput(), out index);
         }
 
         private void StopTimer()
         {
-            var activityLogs = this._activityLogService.GetAllActivityLogs().Where(a => a.LogStatus == TimerStatus.Running).ToList();
+            HashSet<ActivityLog> activityLogs = this.GetAllActivityLogs().Where(a => a.LogStatus == TimerStatus.Running).ToHashSet();
             if (activityLogs.Count == 0)
             {
-                TextColor.WriteColoredLine($"No Active timers to stop", ConsoleColor.Yellow);
+                _userIO.DisplayMessage($"No Active timers to stop", MessageType.Warning);
                 return;
             }
 
-            for (int i = 0; i < activityLogs.Count; i++)
+            this.DisplayActivityLogs(activityLogs);
+            _userIO.DisplayMessage($"Enter index of task to Stop Timer: ", MessageType.Info);
+            if (!TryGetInputIndex(out int index))
             {
-                var activitylog = activityLogs[i];
-                Console.WriteLine($"{i + 1}. {activitylog.LogName}");
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+                return;
             }
 
-            TextColor.WriteColoredLine($"Enter index of task to Stop Timer: ", ConsoleColor.Cyan);
-            int index;
-            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
             if (index < 1 || index > activityLogs.Count)
             {
-                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
             index = index - 1;
-            this._activityLogService.StopTimer(activityLogs[index].ActivityLogId);
-            TextColor.WriteColoredLine($"Timer stopped successfully!", ConsoleColor.Green);
+            this._activityLogService.StopTimer(activityLogs.ElementAt(index).ActivityLogId);
+            _userIO.DisplayMessage($"Timer stopped successfully!", MessageType.Success);
+        }
+
+        private void DisplayActivityLogs(HashSet<ActivityLog> activityLogs)
+        {
+
+            for (int i = 0; i < activityLogs.Count; i++)
+            {
+                var activitylog = activityLogs.ElementAt(i);
+                _userIO.DisplayMessage($"{i + 1}. {activitylog.LogName}");
+            }
+        }
+
+        private IEnumerable<ActivityLog> GetAllActivityLogs()
+        {
+            return this._activityLogService.GetAllActivityLogs();
         }
 
         private void ImportTimeLog()

@@ -22,8 +22,8 @@ namespace TimerApplication.InfrastructureLayer
 
         public void EditActivity(Guid activityIdToEdit, Activity activityToBeAssigned)
         {
-            var activities = FileHandlingService.ReadFile<Activity>(FilePathResource.ActivityRepoFilePath);
-            var activityToEdit = activities.FirstOrDefault(a => a.ActivityId.Equals(activityIdToEdit));
+            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
+            var activityToEdit = activities.FirstOrDefault(activity => activity.ActivityId.Equals(activityIdToEdit));
             activityToEdit.ActivityName = activityToBeAssigned.ActivityName;
             activityToEdit.TaskStatus = activityToBeAssigned.TaskStatus;
             activityToEdit.TotalDuration = activityToBeAssigned.TotalDuration;
@@ -37,8 +37,7 @@ namespace TimerApplication.InfrastructureLayer
 
         public IEnumerable<Activity> GetAllActivities()
         {
-            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
-            return activities.Select(activity => new Activity(activity.ActivityId, activity.ActivityName, activity.TotalDuration, activity.UserId));
+            return FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);            
         }
     }
 }

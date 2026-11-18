@@ -16,28 +16,26 @@ public class Program
         using ServiceProvider serviceProvider = services.BuildServiceProvider();        
         ViewOperator viewOperator = serviceProvider.GetRequiredService<ViewOperator>();
         IUserIO userIO = serviceProvider.GetRequiredService<IUserIO>();
-
-        AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
-        {
-            viewOperator.SaveCurrentActiveUser();
-        };
-
-        System.Timers.Timer timer = new System.Timers.Timer();
-        timer.Interval = 1000;
-        timer.Elapsed += (sender, e) =>
-        {
-            viewOperator.DisplayCurrentUsersTask();
-        };
-        timer.Start();
-
-
         while (true)
         {
             try
             {
+                AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
+                {
+                    viewOperator.SaveCurrentActiveUser();
+                };
+
+                System.Timers.Timer timer = new System.Timers.Timer();
+                timer.Interval = 1000;
+                timer.Elapsed += (sender, e) =>
+                {
+                    viewOperator.DisplayCurrentUsersTask();
+                    viewOperator.DisplayActiveTimers();
+                };
+                timer.Start();
                 viewOperator.Run();
-                break;
                 timer.Stop();
+                break;
             }
             catch (Exception ex)
             {
@@ -45,7 +43,5 @@ public class Program
                 userIO.DisplayMessage("Returnting to Main menu", MessageType.Warning);
             }
         }
-
-        timer.Stop();
     }
 }

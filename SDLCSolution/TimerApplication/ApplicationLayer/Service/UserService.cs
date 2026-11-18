@@ -59,36 +59,6 @@ public class UserService
         {
             return new Result(false, AuthenticationStatus.InvalidPassword);
         }
-
-        public Result LoginUser(string email, string password)
-        {
-            var users = this.FetchAllUsers();
-            var matchingUser = users.FirstOrDefault(u => string.Equals(u.Email, email));
-            if (matchingUser == null)
-            {
-                return new Result(false, AuthenticationStatus.AccountNotExists);
-            }
-
-            if (BCrypt.Net.BCrypt.Verify(password, matchingUser.Password))
-            {
-                CurrentSessionManager.CurrentSessionUser = matchingUser;
-                return new Result(true, AuthenticationStatus.Successful);
-            }
-            else
-            {
-                return new Result(false, AuthenticationStatus.InvalidPassword);
-            }
-        }
-
-        public void SaveCurrentActiveUser()
-        {
-            this._activeUserRepository.SaveCurrentActiveUser(CurrentSessionManager.CurrentSessionUser);
-        }
-
-        public User FetchActiveUser()
-        {
-            return this._activeUserRepository.FetchActiveUser();
-        }
     }
 
     private bool CheckPassword(string password, string hash)

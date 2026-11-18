@@ -11,11 +11,6 @@ namespace TimerApplication.InfrastructureLayer
         public User FetchActiveUser()
         {
             return FileHandlingService.ReadFile<User>(FilePathResource.LastActiveUser);
-            }
-
-            string existingJson = File.ReadAllText(FilePathResource.LastActiveUser);
-            var user = JsonSerializer.Deserialize<User>(existingJson) ?? null;
-            return user;
         }
 
         public void SaveCurrentActiveUser(User user)
