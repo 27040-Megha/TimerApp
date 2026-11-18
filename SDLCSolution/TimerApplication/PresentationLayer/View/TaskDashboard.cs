@@ -31,40 +31,7 @@ namespace TimerApplication.PresentationLayer.View
                     _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
                     continue;
                 }
-
-                switch (choice)
-                {
-                    case 1:
-                        this.AddNewTask();
-                        break;
-                    case 2:
-                        this.EditTask();
-                        break;
-                    case 3:
-                        this.DeleteTask();
-                        break;
-                    case 4:
-                        this.ViewSpecificTaskLog();
-                        break;
-                    case 5:
-                        this.StartTimer();
-                        break;
-                    case 6:
-                        this.StopTimer();
-                        break;
-                    case 7:
-                        this.ImportTimeLog();
-                        break;
-                    case 8:
-                        this.ExportTimeLog();
-                        break;
-                    case 9:
-                        this.Logout();
-                        break;
-                    default:
-                        _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
-                        break;
-                }
+                this.HandleMenu(choice);
             }
             while (choice != 9);
         }
@@ -82,6 +49,43 @@ namespace TimerApplication.PresentationLayer.View
                 "9. Logout\n" +
                 "Enter your option (1 to 9): "
                 );
+        }
+
+        private void HandleMenu(int choice)
+        {
+            switch (choice)
+            {
+                case 1:
+                    this.AddNewTask();
+                    break;
+                case 2:
+                    this.EditTask();
+                    break;
+                case 3:
+                    this.DeleteTask();
+                    break;
+                case 4:
+                    this.ViewSpecificTaskLog();
+                    break;
+                case 5:
+                    this.StartTimer();
+                    break;
+                case 6:
+                    this.StopTimer();
+                    break;
+                case 7:
+                    this.ImportTimeLog();
+                    break;
+                case 8:
+                    this.ExportTimeLog();
+                    break;
+                case 9:
+                    this.Logout();
+                    break;
+                default:
+                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
+                    break;
+            }
         }
 
         private void Logout()

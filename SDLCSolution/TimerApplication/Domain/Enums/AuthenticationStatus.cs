@@ -1,11 +1,10 @@
-﻿namespace TimerApplication.Domain.Enums
+﻿namespace TimerApplication.Domain.Enums;
+
+public enum AuthenticationStatus
 {
-    public enum AuthenticationStatus
-    {
-        AccountNotExists,
+    AccountNotExists,
 
-        InvalidPassword,
+    InvalidPassword,
 
-        Successful,
-    }
+    Successful,
 }
