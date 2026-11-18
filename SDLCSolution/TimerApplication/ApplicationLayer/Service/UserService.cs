@@ -41,7 +41,6 @@ public class UserService
         return this._userRepository.FetchAllUsers();
     }
 
-
     public Result LoginUser(string email, string password)
     {
         var users = this.FetchAllUsers();

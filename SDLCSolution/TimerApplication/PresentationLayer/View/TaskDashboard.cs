@@ -3,6 +3,8 @@ using TimerApplication.ApplicationLayer.Domain.Enums;
 using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.PresentationLayer.Helper;
+using TimerApplication.Domain.Model;
+using System.Collections.Generic;
 
 namespace TimerApplication.PresentationLayer.View
 {
@@ -12,9 +14,12 @@ namespace TimerApplication.PresentationLayer.View
 
         private readonly IUserIO _userIO;
 
-        public TaskDashboard(UserService userService, IUserIO userIO)
+        private readonly ActivityService _activityService;
+
+        public TaskDashboard(UserService userService, ActivityService activityService, IUserIO userIO)
         {
             this._userService = userService;
+            this._activityService = activityService;
             this._userIO = userIO;
         }
 
@@ -96,7 +101,26 @@ namespace TimerApplication.PresentationLayer.View
 
         private void AddNewTask()
         {
-            throw new NotImplementedException();
+            if (!TryGetTaskName(out string taskName))
+            {
+                _userIO.DisplayMessage($"Invalid strig format, Task name should not be null or empty!", MessageType.Error);
+                return;
+            }
+
+            this._activityService.CreateNewTask(new Activity(taskName, TimeSpan.Zero, CurrentSessionManager.CurrentSessionUser.UserId));
+            _userIO.DisplayMessage("Task Added Successfully!", MessageType.Success);
+        }
+
+        private bool TryGetTaskName(out string result)
+        {
+            _userIO.DisplayMessage("Enter Task Name: ");
+            result = _userIO.ReadInput();
+            if (!InputValidator.ValidateString(result))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private void EditTask()

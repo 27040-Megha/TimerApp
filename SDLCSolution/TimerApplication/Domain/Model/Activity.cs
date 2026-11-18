@@ -9,6 +9,14 @@ public class Activity
 
     }
 
+    public Activity(Guid activityId, string activityName, TimeSpan totalDuration, Guid userId)
+    {
+        this.ActivityId = activityId;
+        this.ActivityName = activityName;
+        this.TotalDuration = totalDuration;
+        this.UserId = userId;
+    }
+
     public Activity(string activityName, TimeSpan totalDuration, Guid userId)
     {
         this.ActivityId = Guid.NewGuid();
