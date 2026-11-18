@@ -30,6 +30,7 @@ public class ViewOperator
 
     public void Run()
     {
+        LoadPreviousUserSession();
         _userIO.DisplayMessage("Welcome to Time Logger", MessageType.Info);
         int choice;
         do
@@ -54,6 +55,22 @@ public class ViewOperator
             }
         }
         while (choice != 3);
+    }
+
+    public void SaveCurrentActiveUser()
+    {
+        this._userService.SaveCurrentActiveUser();
+    }
+
+    private void LoadPreviousUserSession()
+    {
+        User activeUser = _userService.FetchActiveUser();
+        if (activeUser != null)
+        {
+            CurrentSessionManager.CurrentSessionUser = activeUser;
+            _userIO.DisplayMessage($"Welcome back {CurrentSessionManager.CurrentSessionUser.UserName}!", MessageType.Info);
+            _taskDashboard.RunDashboard();
+        }
     }
 
     private void HandleMenuChoice(int choice)
@@ -112,7 +129,6 @@ public class ViewOperator
 
     private void SignupUser()
     {
-        _userIO.ClearOutput();
         if (!TryGetInput("User name",_userIO.ReadInput, ValidateName, out string userName) ||
             !TryGetInput("Email", _userIO.ReadInput, ValidateEmail, out string email) ||
             !TryGetInput("Password", _userIO.ReadMaskedPassword, ValidatePassword, out string password))

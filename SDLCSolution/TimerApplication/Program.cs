@@ -13,9 +13,14 @@ public class Program
     {
         ServiceCollection services = new ServiceCollection();
         services.AddApplicationServices();
-        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();        
         ViewOperator viewOperator = serviceProvider.GetRequiredService<ViewOperator>();
         IUserIO userIO = serviceProvider.GetRequiredService<IUserIO>();
+        AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
+        {
+            viewOperator.SaveCurrentActiveUser();
+        };
+
         while (true)
         {
             try

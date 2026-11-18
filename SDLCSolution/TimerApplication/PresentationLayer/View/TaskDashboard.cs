@@ -25,8 +25,7 @@ namespace TimerApplication.PresentationLayer.View
             int choice;
             do
             {
-
-                bool isValidChoice = InputValidator.ValidateInteger(Console.ReadLine(), out choice);
+                this.DisplayMenu();               
                 if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out choice))
                 {
                     _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
@@ -89,11 +88,6 @@ namespace TimerApplication.PresentationLayer.View
         {
             CurrentSessionManager.CurrentSessionUser = null;
             _userIO.DisplayMessage("Logging out", MessageType.Info);
-        }
-
-        private void SaveCurrentActiveUser()
-        {
-            this._userService.SaveCurrentActiveUser();
         }
 
         private void AddNewTask()

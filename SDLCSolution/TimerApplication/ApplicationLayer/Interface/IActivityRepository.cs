@@ -1,5 +1,5 @@
 ﻿namespace TimerApplication.ApplicationLayer.Interface;
 
-internal class IActivityRepository
+public interface IActivityRepository
 {
 }

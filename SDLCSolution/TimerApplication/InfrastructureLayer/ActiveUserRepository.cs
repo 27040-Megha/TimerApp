@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
-using TimerApplication.ApplicationLayer.Interface;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.InfrastructureLayer
@@ -10,20 +7,12 @@ namespace TimerApplication.InfrastructureLayer
     {
         public User FetchActiveUser()
         {
-            if (!File.Exists(FilePathResource.LastActiveUser))
-            {
-                return null;
-            }
-
-            string existingJson = File.ReadAllText(FilePathResource.LastActiveUser);
-            var user = JsonSerializer.Deserialize<User>(existingJson) ?? null;
-            return user;
+            return FileHandlingService.ReadFile<User>(FilePathResource.LastActiveUser);
         }
 
         public void SaveCurrentActiveUser(User user)
         {
-            string jsonTextToWrite = JsonSerializer.Serialize(user);
-            File.WriteAllText(FilePathResource.LastActiveUser, jsonTextToWrite);
+            FileHandlingService.WriteFile(user, FilePathResource.LastActiveUser);
         }
     }
 }
