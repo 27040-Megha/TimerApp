@@ -11,13 +11,13 @@ public class UserService
 {
     private readonly IUserRepository _userRepository;
 
-        private readonly IActiveUserRepository _activeUserRepository;
+    private readonly IActiveUserRepository _activeUserRepository;
 
-        public UserService(IUserRepository userRepository, IActiveUserRepository activeUserRepository)
-        {
-            this._userRepository = userRepository;
-            this._activeUserRepository = activeUserRepository;
-        }
+    public UserService(IUserRepository userRepository, IActiveUserRepository activeUserRepository)
+    {
+        this._userRepository = userRepository;
+        this._activeUserRepository = activeUserRepository;
+    }
 
     public bool CreateUser(User newUser)
     {
@@ -42,34 +42,39 @@ public class UserService
     }
 
 
-        public Result LoginUser(string email, string password)
+    public Result LoginUser(string email, string password)
+    {
+        var users = this.FetchAllUsers();
+        var matchingUser = users.FirstOrDefault(u => string.Equals(u.Email, email));
+        if (matchingUser == null)
         {
-            var users = this.FetchAllUsers();
-            var matchingUser = users.FirstOrDefault(u => string.Equals(u.Email, email));
-            if (matchingUser == null)
-            {
-                return new Result(false, AuthenticationStatus.AccountNotExists);
-            }
-
-            if (BCrypt.Net.BCrypt.Verify(password, matchingUser.Password))
-            {
-                CurrentSessionManager.CurrentSessionUser = matchingUser;
-                return new Result(true, AuthenticationStatus.Successful);
-            }
-            else
-            {
-                return new Result(false, AuthenticationStatus.InvalidPassword);
-            }
+            return new Result(false, AuthenticationStatus.AccountNotExists);
         }
 
-        public void SaveCurrentActiveUser()
+        if (CheckPassword(password, matchingUser.Password))
         {
-            this._activeUserRepository.SaveCurrentActiveUser(CurrentSessionManager.CurrentSessionUser);
+            CurrentSessionManager.CurrentSessionUser = matchingUser;
+            return new Result(true, AuthenticationStatus.Successful);
         }
-
-        public User FetchActiveUser()
+        else
         {
-            return this._activeUserRepository.FetchActiveUser();
+            return new Result(false, AuthenticationStatus.InvalidPassword);
         }
     }
+
+    private bool CheckPassword(string password, string hash)
+    {
+        return BCrypt.Net.BCrypt.Verify(password, hash);
+    }
+
+    public void SaveCurrentActiveUser()
+    {
+        this._activeUserRepository.SaveCurrentActiveUser(CurrentSessionManager.CurrentSessionUser);
+    }
+
+    public User FetchActiveUser()
+    {
+        return this._activeUserRepository.FetchActiveUser();
+    }
 }
+

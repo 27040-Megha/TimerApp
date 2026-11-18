@@ -15,6 +15,7 @@ public static class DependencyInjection
         services.AddTransient<UserService>();
         services.AddSingleton<IUserIO, ConsoleUserIO>();
         services.AddTransient<ViewOperator>();
+        services.AddTransient<TaskDashboard>();
         return services;
     }
 }

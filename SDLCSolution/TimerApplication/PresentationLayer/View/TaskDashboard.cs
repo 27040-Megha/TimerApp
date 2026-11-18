@@ -1,4 +1,6 @@
 ﻿using System;
+using TimerApplication.ApplicationLayer.Domain.Enums;
+using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.PresentationLayer.Helper;
 
@@ -8,34 +10,26 @@ namespace TimerApplication.PresentationLayer.View
     {
         private readonly UserService _userService;
 
-        public TaskDashboard(UserService userService)
+        private readonly IUserIO _userIO;
+
+        public TaskDashboard(UserService userService, IUserIO userIO)
         {
             this._userService = userService;
+            this._userIO = userIO;
         }
 
         public void RunDashboard()
         {
-            Console.Clear();
-            Console.WriteLine("\x1b[3J");
-            Console.Clear();
-            TextColor.WriteColoredLine($"Welcome {CurrentSessionManager.CurrentSessionUser.UserName}", ConsoleColor.Blue);
+            _userIO.ClearOutput();
+            _userIO.DisplayMessage($"Welcome {CurrentSessionManager.CurrentSessionUser.UserName}", MessageType.Info);
             int choice;
             do
             {
-                Console.WriteLine("1. Add new Task");
-                Console.WriteLine("2. Edit Task");
-                Console.WriteLine("3. Delete Task");
-                Console.WriteLine("4. View Specific Task Log");
-                Console.WriteLine("5. Start Timer");
-                Console.WriteLine("6. Stop Timer");
-                Console.WriteLine("7. Import Time Log");
-                Console.WriteLine("8. Export Time Log");
-                Console.WriteLine("9. Logout");
-                Console.WriteLine("Enter Your Option (1 to 9): ");
+
                 bool isValidChoice = InputValidator.ValidateInteger(Console.ReadLine(), out choice);
-                if (!isValidChoice)
+                if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out choice))
                 {
-                    TextColor.WriteColoredLine($"Invalid Integer format, Enter a valid integer!", ConsoleColor.Red);
+                    _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
                     continue;
                 }
 
@@ -69,18 +63,37 @@ namespace TimerApplication.PresentationLayer.View
                         this.Logout();
                         break;
                     default:
-                        TextColor.WriteColoredLine("Invalid Choice, Enter a valid choice between 1 to 9", ConsoleColor.Red);
+                        _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
                         break;
                 }
             }
             while (choice != 9);
         }
 
+        private void DisplayMenu()
+        {
+            _userIO.DisplayMessage("1. Add new Task \n" +
+                "2. Edit Task\n" +
+                "3. Delete Task\n" +
+                "4. View Specific Task Log\n" +
+                "5. Start Timer\n" +
+                "6. Stop Timer\n" +
+                "7. Import Time log\n" +
+                "8. Export Time logs\n" +
+                "9. Logout\n" +
+                "Enter your option (1 to 9): "
+                );
+        }
+
         private void Logout()
         {
             CurrentSessionManager.CurrentSessionUser = null;
+            _userIO.DisplayMessage("Logging out", MessageType.Info);
+        }
+
+        private void SaveCurrentActiveUser()
+        {
             this._userService.SaveCurrentActiveUser();
-            TextColor.WriteColoredLine("Logging out", ConsoleColor.Yellow);
         }
 
         private void AddNewTask()
