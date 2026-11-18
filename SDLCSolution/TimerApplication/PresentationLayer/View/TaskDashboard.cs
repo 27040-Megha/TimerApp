@@ -96,20 +96,14 @@ namespace TimerApplication.PresentationLayer.View
                     _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
                         break;
                 }
-            }
-            while (choice != 9);
         }
 
         private void Edit()
         {
-            int choice;
-            Console.WriteLine("1. Edit Task");
-            Console.WriteLine("2. Edit Task Logs");
-            Console.WriteLine("Enter Your Option (1/2): ");
-            bool isValidChoice = InputValidator.ValidateInteger(Console.ReadLine(), out choice);
-            if (!isValidChoice)
+            _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \nEnter Your Option (1/2): ");
+            if (!TryGetInputIndex(out int choice))
             {
-                TextColor.WriteColoredLine($"Invalid Integer format, Enter a valid integer!", ConsoleColor.Red);
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
             }
             switch (choice)
@@ -121,21 +115,17 @@ namespace TimerApplication.PresentationLayer.View
                     this.EditTaskLog();
                     break;
                 default:
-                    TextColor.WriteColoredLine("Invalid Choice, Enter a valid choice between 1 or 2", ConsoleColor.Red);
+                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 or 2", MessageType.Error);
                     break;
             }
         }
 
         private void Delete()
         {
-            int choice;
-            Console.WriteLine("1. Delete Task");
-            Console.WriteLine("2. Delete Task Logs");
-            Console.WriteLine("Enter Your Option (1/2): ");
-            bool isValidChoice = InputValidator.ValidateInteger(Console.ReadLine(), out choice);
-            if (!isValidChoice)
+            _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \nEnter Your Option (1/2): ");
+            if (!TryGetInputIndex(out int choice))
             {
-                TextColor.WriteColoredLine($"Invalid Integer format, Enter a valid integer!", ConsoleColor.Red);
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
             }
             switch (choice)
@@ -147,130 +137,123 @@ namespace TimerApplication.PresentationLayer.View
                     this.DeleteTaskLogs();
                     break;
                 default:
-                    TextColor.WriteColoredLine("Invalid Choice, Enter a valid choice between 1 or 2", ConsoleColor.Red);
+                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 or 2", MessageType.Error);
                     break;
-            }
-        }
-
-        private void DisplayActivities(List<Activity> activities)
-        {
-            for (int i = 0; i < activities.Count; i++)
-            {
-                var task = activities[i];
-                Console.WriteLine($"{i + 1}. {task.ActivityName}  Duration: {task.TotalDuration.ToString(@"hh\:mm\:ss")}");
             }
         }
 
         private void DeleteTask()
         {
-            var activities = this._activityService.GetAllActivities();
+            var activities = this._activityService.GetAllActivities().ToHashSet();
             this.DisplayActivities(activities);
-            TextColor.WriteColoredLine($"Enter index of task to be deleted: ", ConsoleColor.Cyan);
-            int index;
-            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
-            if (index < 1 || index > activities.Count)
+            _userIO.DisplayMessage($"Enter index of task to be deleted: ", MessageType.Info);
+            if (!TryGetInputIndex(out int index))
             {
-                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
             }
 
-            var activityToDelete = activities[index - 1];
+            if (index < 1 || index > activities.Count)
+            {
+                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
+                return;
+            }
+
+            var activityToDelete = activities.ElementAt(index - 1);
             if (activityToDelete.TaskStatus == TimerStatus.Running)
             {
-                TextColor.WriteColoredLine($"Task with Active timer can't be deleted, Stop the timer first!", ConsoleColor.Red);
+                _userIO.DisplayMessage($"Task with Active timer can't be deleted, Stop the timer first!", MessageType.Warning);
                 return;
             }
 
             this._activityLogService.DeleteActivityLogsByTaskId(activityToDelete.ActivityId);
             this._activityService.DeleteActivity(activityToDelete.ActivityId);
-            TextColor.WriteColoredLine($"Task Deleted Successfully!", ConsoleColor.Green);
+            _userIO.DisplayMessage($"Task Deleted Successfully!", MessageType.Success);
         }
 
         private void DeleteTaskLogs()
         {
-            var activityLogs = this._activityLogService.GetAllActivityLogs();
+            var activityLogs = this._activityLogService.GetAllActivityLogs().ToHashSet();
             this.DisplayActivityLogs(activityLogs);
-            TextColor.WriteColoredLine($"Enter index of task log to be deleted: ", ConsoleColor.Cyan);
-            int index;
-            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
-            if (index < 1 || index > activityLogs.Count)
+            _userIO.DisplayMessage($"Enter index of task log to be deleted: ", MessageType.Info);
+            if (!TryGetInputIndex(out int index))
             {
-                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
             }
 
-            index = index - 1;
-            var activityLogToBeDeleted = activityLogs[index];
+            if (index < 1 || index > activityLogs.Count)
+            {
+                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
+                return;
+            }
+
+            var activityLogToBeDeleted = activityLogs.ElementAt(index-1);
             bool deletionStatus = this._activityLogService.DeleteActivityLogByLogId(activityLogToBeDeleted.ActivityLogId);           
             if (!deletionStatus)
             {
-                TextColor.WriteColoredLine($"Cannot delete a log while running timer!, Stop the timer first", ConsoleColor.Red);
+                _userIO.DisplayMessage($"Cannot delete a log while running timer!, Stop the timer first", MessageType.Error);
                 return;
             }
 
-            this._activityService.RemoveLogDuration(activityLogToBeDeleted.TaskId, activityLogToBeDeleted.Duration);
-            TextColor.WriteColoredLine($"Activity Log Deleted Successfully!", ConsoleColor.Green);
+            this._activityService.RemoveLogDuration(activityLogToBeDeleted.ActivityId, activityLogToBeDeleted.Duration);
+            _userIO.DisplayMessage($"Activity Log Deleted Successfully!", MessageType.Success);
         }
 
         private void EditTaskLog()
         {
-            var activityLogs = this._activityLogService.GetAllActivityLogs();
+            var activityLogs = this._activityLogService.GetAllActivityLogs().ToHashSet();
             this.DisplayActivityLogs(activityLogs);
-            TextColor.WriteColoredLine($"Enter index of task log to be edited: ", ConsoleColor.Cyan);
-            int index;
-            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            _userIO.DisplayMessage($"Enter index of task log to be edited: ", MessageType.Info);
+            if (!TryGetInputIndex(out int index))
+            {
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+                return;
+            }
+
             if (index < 1 || index > activityLogs.Count)
             {
-                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
-            index = index - 1;
-            var activityLogToBeEdited = activityLogs[index];
-            var input = this.GetTaskName();
-            if (input == null)
+            var activityLogToBeEdited = activityLogs.ElementAt(index-1);
+            if (!TryGetTaskName(out string taskName))
             {
+                _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
             }
 
-            activityLogToBeEdited.LogName = input;
+            activityLogToBeEdited.LogName = taskName;
             this._activityLogService.EditTaskLog(activityLogToBeEdited);
-            TextColor.WriteColoredLine($"Task log name edited successfully!", ConsoleColor.Green);
-        }
-
-        private void DisplayActivityLogs(List<ActivityLog> activityLogs)
-        {
-            for (int i = 0; i < activityLogs.Count; i++)
-            {
-                var activityLog = activityLogs[i];
-                string endDisplay = activityLog.EndTime.HasValue ? activityLog.EndTime.ToString() : "Running";
-                TimeSpan duration = activityLog.LogStatus == TimerStatus.Running ? (DateTime.Now - activityLog.StartTime) : activityLog.Duration;
-                Console.WriteLine($"{i + 1}. {activityLog.LogName} Duration: {duration.ToString(@"hh\:mm\:ss")}");
-                Console.WriteLine($"   {activityLog.StartTime} - {endDisplay}");
-            }
+            _userIO.DisplayMessage($"Task log name edited successfully!", MessageType.Success);
         }
 
         private void EditTask()
         {
-            var activities = this._activityService.GetAllActivities();
+            var activities = this._activityService.GetAllActivities().ToHashSet();
             this.DisplayActivities(activities);
-            int index;
-            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            _userIO.DisplayMessage($"Enter index of task to be edited: ", MessageType.Info);
+            if (!TryGetInputIndex(out int index))
+            {
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+                return;
+            }
+
             if (index < 1 || index > activities.Count)
             {
-                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
-            index = index - 1;
-            var input = this.GetTaskName();
-            if (input == null)
+            if (!TryGetTaskName(out string taskName))
             {
+                _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
             }
 
-            this._activityService.EditTaskName(activities[index].ActivityId, input);
-            TextColor.WriteColoredLine($"Task name edited successfully!", ConsoleColor.Green);
+            this._activityService.EditTaskName(activities.ElementAt(index - 1).ActivityId, taskName);
+            _userIO.DisplayMessage($"Task name edited successfully!", MessageType.Success);
         }
 
         private void Logout()
@@ -334,14 +317,17 @@ namespace TimerApplication.PresentationLayer.View
             {
                 var log = logsList[i];
                 bool isRunning = log.LogStatus == TimerStatus.Running;
-                string duration = isRunning ? string.Empty : $", Duration: {log.Duration:hh\\:mm\\:ss}";
+
+                TimeSpan elapsed = isRunning ? (DateTime.Now - log.StartTime) : log.Duration;
+                string duration = elapsed.ToString(@"hh\:mm\:ss");
                 string endText = isRunning ? "Running" : log.EndTime?.ToString();
                 MessageType messageType = isRunning ? MessageType.Success : MessageType.Default;
+
                 _userIO.DisplayMessage(
-                    $"{i + 1}. {log.LogName} {duration}\n" +
+                    $"{i + 1}. {log.LogName}, Duration: {duration}\n" +
                     $"   Start: {log.StartTime},  End: {endText}",
                     messageType);
-        }
+            }
         }
 
 

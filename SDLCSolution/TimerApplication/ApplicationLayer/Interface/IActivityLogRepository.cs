@@ -8,9 +8,9 @@ public interface IActivityLogRepository
 {
     public void CreateActivityLog(ActivityLog activityLog);
 
-        public void DeleteActivityLog(Guid activityLogId);
+    public void DeleteActivityLog(Guid activityLogId);
 
-        public void EditActivityLog(Guid activityLogId, ActivityLog activityLog);
+    public void EditActivityLog(Guid activityLogId, ActivityLog activityLog);
 
     public IEnumerable<ActivityLog> FetchAllActivityLogs();
 }

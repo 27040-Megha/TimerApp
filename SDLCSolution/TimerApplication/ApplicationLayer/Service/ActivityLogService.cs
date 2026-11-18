@@ -37,7 +37,7 @@ public class ActivityLogService
 
     private HashSet<ActivityLog> GetLogsByActivityId(Guid activityId)
     {
-        return this.GetAllActivityLogs().Where(a => a.ActivityLogId == activityId).ToHashSet();
+        return this.GetAllActivityLogs().Where(activity => activity.ActivityId == activityId).ToHashSet();
     }
     public void StopTimer(Guid activityLogId)
     {
@@ -56,7 +56,7 @@ public class ActivityLogService
 
         public void DeleteActivityLogsByTaskId(Guid activityId)
         {
-            var activityLogs = this.GetAllActivityLogs().Where(a => a.TaskId == activityId).ToList();
+            var activityLogs = this.GetAllActivityLogs().Where(a => a.ActivityId == activityId).ToList();
             foreach (var log in activityLogs)
             {
                 this._activityLogRepository.DeleteActivityLog(log.ActivityLogId);
@@ -80,4 +80,4 @@ public class ActivityLogService
             this._activityLogRepository.EditActivityLog(activityLogToBeEdited.ActivityLogId, activityLogToBeEdited);
         }
     }
-}
+

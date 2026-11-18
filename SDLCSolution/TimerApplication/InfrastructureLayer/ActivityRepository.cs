@@ -17,7 +17,7 @@ namespace TimerApplication.InfrastructureLayer
 
         public void DeleteActivity(Guid activityId)
         {
-            var activities = FileHandlingService.ReadFile<Activity>(FilePathResource.ActivityRepoFilePath);
+            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
             var activityToDelete = activities.FirstOrDefault(a => a.ActivityId == activityId);
             activities.Remove(activityToDelete);
             FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
@@ -35,7 +35,7 @@ namespace TimerApplication.InfrastructureLayer
 
         public Activity GetActivityById(Guid activityId)
         {
-            var activities = FileHandlingService.ReadFile<Activity>(FilePathResource.ActivityRepoFilePath);
+            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
             return activities.FirstOrDefault(a => a.ActivityId == activityId);
         }
 
