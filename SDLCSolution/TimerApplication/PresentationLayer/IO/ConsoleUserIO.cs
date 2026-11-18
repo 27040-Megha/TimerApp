@@ -9,7 +9,7 @@ public class ConsoleUserIO : IUserIO
     /// <summary>
     /// Clears the currently visible screen using Console.Clear() and using \x1b[3J, erase all lines in the scrollback buffer
     /// </summary>
-    public void ClearScreen()
+    public void ClearOutput()
     {
         Console.Clear();
         Console.WriteLine("\x1b[3J");

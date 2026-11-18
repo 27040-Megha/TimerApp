@@ -83,7 +83,7 @@ public class ViewOperator
 
     private void SignupUser()
     {
-        _userIO.ClearScreen();
+        _userIO.ClearOutput();
         if (!TryGetInput("User name",_userIO.ReadInput, ValidateName, out string userName) ||
             !TryGetInput("Email", _userIO.ReadInput, ValidateEmail, out string email) ||
             !TryGetInput("Password", _userIO.ReadMaskedPassword, ValidatePassword, out string password))

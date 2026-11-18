@@ -10,5 +10,5 @@ public interface IUserIO
 
     public string ReadMaskedPassword();
 
-    public void ClearScreen();
+    public void ClearOutput();
 }
