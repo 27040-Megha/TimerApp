@@ -1,27 +1,26 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Model;
-using TimerApplication.InfrastructureLayer;
 
-namespace TimerApplication.ApplicationLayer.Service
+namespace TimerApplication.ApplicationLayer.Service;
+
+public class ActivityService
 {
-    public class ActivityService
+    private IActivityRepository _activityRepository;
+
+    public ActivityService(IActivityRepository activityRepository)
     {
-        private ActivityRepository _activityRepository;
+        this._activityRepository = activityRepository;
+    }
 
-        public ActivityService(ActivityRepository activityRepository)
-        {
-            this._activityRepository = activityRepository;
-        }
+    public void CreateNewTask(Activity activity)
+    {
+        this._activityRepository.CreateActivity(activity);
+    }
 
-        public void CreateNewTask(Activity activity)
-        {
-            this._activityRepository.CreateActivity(activity);
-        }
-
-        public List<Activity> GetAllActivities()
-        {
-            return this._activityRepository.GetAllActivities().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId).ToList();
-        }
+    public List<Activity> GetAllActivities()
+    {
+        return this._activityRepository.GetAllActivities().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId).ToList();
     }
 }

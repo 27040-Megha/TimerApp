@@ -10,7 +10,7 @@ namespace TimerApplication.InfrastructureLayer
     {
         public void CreateActivity(Activity activity)
         {
-            var activities = FileHandlingService.ReadFile<Activity>(FilePathResource.ActivityRepoFilePath);
+            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
             activities.Add(activity);
             FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
         }
@@ -32,8 +32,8 @@ namespace TimerApplication.InfrastructureLayer
 
         public IEnumerable<Activity> GetAllActivities()
         {
-            var activities = FileHandlingService.ReadFile<Activity>(FilePathResource.ActivityRepoFilePath);
-            return activities.Select(activity => new Activity(activity.ActivityId, activity.ActivityName, activity.TotalDuration, activity.ActivityLogs, activity.UserId));
+            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
+            return activities.Select(activity => new Activity(activity.ActivityId, activity.ActivityName, activity.TotalDuration, activity.UserId));
         }
     }
 }

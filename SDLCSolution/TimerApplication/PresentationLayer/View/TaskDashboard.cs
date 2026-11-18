@@ -16,10 +16,10 @@ namespace TimerApplication.PresentationLayer.View
 
         private readonly ActivityService _activityService;
 
-        public TaskDashboard(UserService userService, ActivityUser activityUser, IUserIO userIO)
+        public TaskDashboard(UserService userService, ActivityService activityService, IUserIO userIO)
         {
             this._userService = userService;
-            this._activityService = activityUser;
+            this._activityService = activityService;
             this._userIO = userIO;
         }
 
@@ -58,41 +58,39 @@ namespace TimerApplication.PresentationLayer.View
 
         private void HandleMenu(int choice)
         {
-                switch (choice)
-                {
-                    case 1:
-                        this.AddNewTask();
-                        break;
-                    case 2:
-                        this.EditTask();
-                        break;
-                    case 3:
-                        this.DeleteTask();
-                        break;
-                    case 4:
-                        this.ViewSpecificTaskLog();
-                        break;
-                    case 5:
-                        this.StartTimer();
-                        break;
-                    case 6:
-                        this.StopTimer();
-                        break;
-                    case 7:
-                        this.ImportTimeLog();
-                        break;
-                    case 8:
-                        this.ExportTimeLog();
-                        break;
-                    case 9:
-                        this.Logout();
-                        break;
-                    default:
+            switch (choice)
+            {
+                case 1:
+                    this.AddNewTask();
+                    break;
+                case 2:
+                    this.EditTask();
+                    break;
+                case 3:
+                    this.DeleteTask();
+                    break;
+                case 4:
+                    this.ViewSpecificTaskLog();
+                    break;
+                case 5:
+                    this.StartTimer();
+                    break;
+                case 6:
+                    this.StopTimer();
+                    break;
+                case 7:
+                    this.ImportTimeLog();
+                    break;
+                case 8:
+                    this.ExportTimeLog();
+                    break;
+                case 9:
+                    this.Logout();
+                    break;
+                default:
                     _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
-                        break;
-                }
+                    break;
             }
-            while (choice != 9);
         }
 
         private void Logout()
@@ -103,27 +101,26 @@ namespace TimerApplication.PresentationLayer.View
 
         private void AddNewTask()
         {
-            var taskName = this.GetTaskName();
-            if (taskName == null)
+            if (!TryGetTaskName(out string taskName))
             {
+                _userIO.DisplayMessage($"Invalid strig format, Task name should not be null or empty!", MessageType.Error);
                 return;
             }
 
-            this._activityService.CreateNewTask(new Activity(Guid.NewGuid(), taskName, TimeSpan.Zero, new List<ActivityLog>(), CurrentSessionManager.CurrentSessionUser.UserId));
-            TextColor.WriteColoredLine("Task Added Successfully!", ConsoleColor.Green);
+            this._activityService.CreateNewTask(new Activity(taskName, TimeSpan.Zero, CurrentSessionManager.CurrentSessionUser.UserId));
+            _userIO.DisplayMessage("Task Added Successfully!", MessageType.Success);
         }
 
-        private string GetTaskName()
+        private bool TryGetTaskName(out string result)
         {
-            Console.WriteLine("Enter Task Name: ");
-            string input = Console.ReadLine();
-            if (!InputValidator.ValidateString(input))
+            _userIO.DisplayMessage("Enter Task Name: ");
+            result = _userIO.ReadInput();
+            if (!InputValidator.ValidateString(result))
             {
-                TextColor.WriteColoredLine($"Invalid strig format, Task name should not be null or empty!", ConsoleColor.Red);
-                return null;
+                return false;
             }
 
-            return input;
+            return true;
         }
 
         private void EditTask()

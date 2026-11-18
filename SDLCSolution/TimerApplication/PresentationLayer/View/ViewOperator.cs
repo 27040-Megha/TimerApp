@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using TimerApplication.ApplicationLayer.Domain.Enums;
 using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.ApplicationLayer.Service;
@@ -21,9 +23,12 @@ public class ViewOperator
 
     private delegate bool ValidateInput(string input, out string errorMessage);
 
-    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard)
+    private readonly ActivityService _activityService;
+
+    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ActivityService activityService)
     {
         this._userService = userService;
+        this._activityService = activityService;
         this._userIO = userIO;
         this._taskDashboard = taskDashboard;
     }
@@ -60,6 +65,35 @@ public class ViewOperator
     public void SaveCurrentActiveUser()
     {
         this._userService.SaveCurrentActiveUser();
+    }
+
+    public void DisplayCurrentUsersTask()
+    {
+        if (CurrentSessionManager.CurrentSessionUser != null)
+        {
+            int left = 55;
+            int width = _userIO.WindowWidth - left - 1;
+            if (width <= 10)
+            {
+                return;
+            }
+
+            _userIO.DisplayMessageAt(left, 0, "Your activities: ", MessageType.Info);
+            var activities = this.GetAllActivities();
+            for (int i = 0; i < activities.Count; i++)
+            {
+                var activity = activities.ElementAt(i);
+                string text = $"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration}";
+                _userIO.DisplayMessageAt(left, i + 1, text.PadRight(width));
+            }
+
+            _userIO.DisplayMessageAt(left, activities.Count + 1, new string(' ', width));
+        }
+    }
+
+    private HashSet<Activity> GetAllActivities()
+    {
+        return this._activityService.GetAllActivities().ToHashSet();
     }
 
     private void LoadPreviousUserSession()
