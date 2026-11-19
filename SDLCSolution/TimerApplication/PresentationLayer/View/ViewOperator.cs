@@ -88,7 +88,7 @@ public class ViewOperator
                     TimeSpan cumulativeDuration = activity.TotalDuration +
                         activeTimeByActivity.GetValueOrDefault(activity.ActivityId);
 
-                    return $"{i + 1}. {activity.ActivityName} \n  Duration: {cumulativeDuration:hh\\:mm\\:ss}";
+                    return $"{i + 1}. {activity.ActivityName} Duration: {cumulativeDuration:hh\\:mm\\:ss}";
                 })
                 .ToList();
 
