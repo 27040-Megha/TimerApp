@@ -113,7 +113,6 @@ public class ActivityLogService
 
             var activitySelected = activities[index];
             var importedLogs = this._activityLogRepository.ImportActivityLogsFromCsv(filePath, activitySelected.ActivityId);
-
             return ProcessAndSaveLogs(activitySelected, importedLogs);
         }
         catch (Exception ex) when (ex is FormatException || ex is FileNotFoundException)
@@ -131,7 +130,6 @@ public class ActivityLogService
         TimeSpan totalDuration = TimeSpan.Zero;
         int importedCount = 0;
         var skippedEntries = new List<ActivityLog>();
-
         foreach (var log in importedLogs)
         {
             if (!IsValidAndNonOverlapping(log, existingLogs))
