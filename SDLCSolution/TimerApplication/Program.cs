@@ -36,9 +36,6 @@ public class Program
                 viewOperator.Run();
                 timer.Stop();
                 break;
-                timer.Stop();
-                timer.Stop();
-                timer.Stop();
             }
             catch (Exception ex)
             {

@@ -94,7 +94,7 @@ namespace TimerApplication.PresentationLayer.View
                         this.Logout();
                         break;
                     default:
-                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
+                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 9", MessageType.Error);
                         break;
                 }
         }
@@ -145,7 +145,13 @@ namespace TimerApplication.PresentationLayer.View
 
         private void DeleteTask()
         {
-            var activities = this._activityService.GetAllActivities().ToHashSet();
+            var activities = this._activityService.GetAllActivities().ToList();
+            if (!activities.Any())
+            {
+                _userIO.DisplayMessage("No tasks present to delete!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivities(activities);
             _userIO.DisplayMessage($"Enter index of task to be deleted: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -174,7 +180,13 @@ namespace TimerApplication.PresentationLayer.View
 
         private void DeleteTaskLogs()
         {
-            var activityLogs = this._activityLogService.GetAllActivityLogs().ToHashSet();
+            var activityLogs = this._activityLogService.GetAllActivityLogs();
+            if (!activityLogs.Any())
+            {
+                _userIO.DisplayMessage("No task logs present to delete!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivityLogs(activityLogs);
             _userIO.DisplayMessage($"Enter index of task log to be deleted: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -203,7 +215,13 @@ namespace TimerApplication.PresentationLayer.View
 
         private void EditTaskLog()
         {
-            var activityLogs = this._activityLogService.GetAllActivityLogs().ToHashSet();
+            var activityLogs = this._activityLogService.GetAllActivityLogs();
+            if (!activityLogs.Any())
+            {
+                _userIO.DisplayMessage("No task logs are present to edit!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivityLogs(activityLogs);
             _userIO.DisplayMessage($"Enter index of task log to be edited: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -232,7 +250,13 @@ namespace TimerApplication.PresentationLayer.View
 
         private void EditTask()
         {
-            var activities = this._activityService.GetAllActivities().ToHashSet();
+            var activities = this._activityService.GetAllActivities();
+            if (!activities.Any())
+            {
+                _userIO.DisplayMessage("No tasks present to edit task!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivities(activities);
             _userIO.DisplayMessage($"Enter index of task to be edited: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -289,9 +313,14 @@ namespace TimerApplication.PresentationLayer.View
 
         private void ViewSpecificTaskLog()
         {
-            HashSet<Activity> activities = this._activityService.GetAllActivities().ToHashSet();
-            this.DisplayActivities(activities);
+            IEnumerable<Activity> activities = this._activityService.GetAllActivities();
+            if (!activities.Any())
+            {
+                _userIO.DisplayMessage("No tasks added to view time logs!", MessageType.Warning);
+                return;
+            }
 
+            this.DisplayActivities(activities);
             _userIO.DisplayMessage($"Enter index of task to view activity details: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
             {
@@ -299,7 +328,7 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activities.Count)
+            if (index < 1 || index > activities.Count())
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
@@ -334,8 +363,8 @@ namespace TimerApplication.PresentationLayer.View
 
         private void StartTimer()
         {
-            HashSet<Activity> activities = this.GetAllActivities().Where(a => a.TaskStatus != TimerStatus.Running).ToHashSet();
-            if (activities.Count == 0)
+            IEnumerable<Activity> activities = this.GetAllActivities().Where(a => a.TaskStatus != TimerStatus.Running);
+            if (!activities.Any())
             {
                 _userIO.DisplayMessage($"No activities found to start Timer, first add new tasks", MessageType.Warning);
                 return;
@@ -349,7 +378,7 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activities.Count)
+            if (index < 1 || index > activities.Count())
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
@@ -365,9 +394,9 @@ namespace TimerApplication.PresentationLayer.View
             return this._activityService.GetAllActivities();
         }
 
-        private void DisplayActivities(HashSet<Activity> activities)
+        private void DisplayActivities(IEnumerable<Activity> activities)
         {
-            for (int i = 0; i < activities.Count; i++)
+            for (int i = 0; i < activities.Count(); i++)
             {
                 var activity = activities.ElementAt(i);
                 _userIO.DisplayMessage($"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}");
@@ -381,8 +410,8 @@ namespace TimerApplication.PresentationLayer.View
 
         private void StopTimer()
         {
-            HashSet<ActivityLog> activityLogs = this.GetAllActivityLogs().Where(a => a.LogStatus == TimerStatus.Running).ToHashSet();
-            if (activityLogs.Count == 0)
+            IEnumerable<ActivityLog> activityLogs = this.GetAllActivityLogs().Where(a => a.LogStatus == TimerStatus.Running);
+            if (!activityLogs.Any())
             {
                 _userIO.DisplayMessage($"No Active timers to stop", MessageType.Warning);
                 return;
@@ -396,7 +425,7 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activityLogs.Count)
+            if (index < 1 || index > activityLogs.Count())
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
@@ -407,10 +436,10 @@ namespace TimerApplication.PresentationLayer.View
             _userIO.DisplayMessage($"Timer stopped successfully!", MessageType.Success);
         }
 
-        private void DisplayActivityLogs(HashSet<ActivityLog> activityLogs)
+        private void DisplayActivityLogs(IEnumerable<ActivityLog> activityLogs)
         {
 
-            for (int i = 0; i < activityLogs.Count; i++)
+            for (int i = 0; i < activityLogs.Count(); i++)
             {
                 var activitylog = activityLogs.ElementAt(i);
                 _userIO.DisplayMessage($"{i + 1}. {activitylog.LogName}");
@@ -425,61 +454,81 @@ namespace TimerApplication.PresentationLayer.View
         private void ImportTimeLog()
         {
             var activities = this._activityService.GetAllActivities();
-            this.DisplayActivities(activities);
-            TextColor.WriteColoredLine($"Enter index of task to import its logs: ", ConsoleColor.Cyan);
-            int index;
-            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
-            if (index < 1 || index > activities.Count)
+            if (!activities.Any())
             {
-                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                _userIO.DisplayMessage("No tasks added to import timelogs!", MessageType.Warning);
                 return;
             }
 
-            TextColor.WriteColoredLine("Enter file path to import logs: ", ConsoleColor.Cyan);
+            this.DisplayActivities(activities);
+            _userIO.DisplayMessage($"Enter index of task to import its logs: ", MessageType.Info);
+            if (!TryGetInputIndex(out int index))
+            {
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+                return;
+            }
+
+            if (index < 1 || index > activities.Count)
+            {
+                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
+                return;
+            }
+
+            _userIO.DisplayMessage("Enter file path to import logs: ", MessageType.Info);
             var filePath = Console.ReadLine();
             if (!InputValidator.ValidateString(filePath))
             {
-                TextColor.WriteColoredLine("File path should not be null or empty", ConsoleColor.Red);
+                _userIO.DisplayMessage("File path should not be null or empty", MessageType.Info);
                 return;
             }
 
             if (!Path.GetExtension(filePath).Equals(".csv",  StringComparison.OrdinalIgnoreCase))
             {
-                TextColor.WriteColoredLine("Invalid file path, give a valid .csv file path", ConsoleColor.Red);
+                _userIO.DisplayMessage("Invalid file path, give a valid .csv file path", MessageType.Error);
                 return;
             }
 
             var importResult = this._activityLogService.ImportLogs(filePath, index-1);
             if (!importResult.IsSuccess)
             {
-                TextColor.WriteColoredLine(importResult.Message, ConsoleColor.Red);
+                _userIO.DisplayMessage(importResult.Message, MessageType.Error);
                 return;
             }
 
-            TextColor.WriteColoredLine(importResult.Message, ConsoleColor.Green);
+            _userIO.DisplayMessage(importResult.Message, MessageType.Success);
         }
 
         private void ExportTimeLog()
         {
             var activities = this._activityService.GetAllActivities();
+            if (!activities.Any())
+            {
+                _userIO.DisplayMessage("No tasks added to export timelogs!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivities(activities);
-            TextColor.WriteColoredLine($"Enter index of task to export its logs: ", ConsoleColor.Cyan);
-            int index;
-            bool isValidIndex = InputValidator.ValidateInteger(Console.ReadLine(), out index);
+            _userIO.DisplayMessage($"Enter index of task to export its logs: ", MessageType.Info);
+            if (!TryGetInputIndex(out int index))
+            {
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+                return;
+            }
+
             if (index < 1 || index > activities.Count)
             {
-                TextColor.WriteColoredLine($"Index Out of Range", ConsoleColor.Red);
+                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
             var exportResult = this._activityLogService.ExportLogs(index-1);
             if (!exportResult.IsSuccess)
             {
-                TextColor.WriteColoredLine($"{exportResult.Message}", ConsoleColor.Red);
+                _userIO.DisplayMessage($"{exportResult.Message}", MessageType.Error);
                 return;
             }
 
-            TextColor.WriteColoredLine($"Task logs exported successfully, check in your Downloads", ConsoleColor.Green);
+            _userIO.DisplayMessage($"Task logs exported successfully, check in your Downloads", MessageType.Success);
         }
     }
 }

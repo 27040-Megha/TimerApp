@@ -12,10 +12,9 @@ public interface IActivityLogRepository
 
     public void EditActivityLog(Guid activityLogId, ActivityLog activityLog);
 
-        public IEnumerable<ActivityLog> FetchAllActivityLogs();
+    public IEnumerable<ActivityLog> FetchAllActivityLogs();
 
-        public void ExportActivityLogsToCsv(string fileName, List<ActivityLog> logsToExport);
+    public void ExportActivityLogsToCsv(string fileName, List<ActivityLog> logsToExport);
 
-        public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid taskId);
-    }
+    public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid taskId);
 }
