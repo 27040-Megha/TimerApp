@@ -97,7 +97,7 @@ public class ActivityLogService
             return new Result(false, "No logs recorded for the activity to export");
         }
 
-        this._activityLogRepository.ExportActivityLogsToCsv($"{selectedActivity.ActivityName}.csv", logsToExport);
+        this._activityLogRepository.ExportActivityLogsToCsv($"{selectedActivity.ActivityName}-{DateTime.Now:dd-MM-yyyy_HH-mm-ss}.csv", logsToExport);
         return new Result(true, $"Logs exported Successfully");
     }
 

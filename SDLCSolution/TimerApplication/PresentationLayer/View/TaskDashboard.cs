@@ -49,7 +49,8 @@ namespace TimerApplication.PresentationLayer.View
 
         private void DisplayMenu()
         {
-            _userIO.DisplayMessage("1. Add new Task \n" +
+            _userIO.DisplayMessage("\nMENU OPTIONS", MessageType.Info);
+            _userIO.DisplayMessageAtSameLine("1. Add new Task \n" +
                 "2. Edit Task\n" +
                 "3. Delete Task\n" +
                 "4. View Specific Task Log\n" +
@@ -101,8 +102,8 @@ namespace TimerApplication.PresentationLayer.View
 
         private void Edit()
         {
-            _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \nEnter Your Option (1/2): ");
-            if (!TryGetInputIndex(out int choice))
+            _userIO.DisplayMessageAtSameLine("1. Edit Task \n2. Edit Task Logs \nEnter Your Option (1/2): ");
+            if (!InputValidator.ValidateInteger(Console.ReadLine(), out int choice))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -123,8 +124,8 @@ namespace TimerApplication.PresentationLayer.View
 
         private void Delete()
         {
-            _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \nEnter Your Option (1/2): ");
-            if (!TryGetInputIndex(out int choice))
+            _userIO.DisplayMessageAtSameLine("1. Delete Task \n2. Delete Task Logs \nEnter Your Option (1/2): ");
+            if (!InputValidator.ValidateInteger(Console.ReadLine(), out int choice))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -138,7 +139,7 @@ namespace TimerApplication.PresentationLayer.View
                     this.DeleteTaskLogs();
                     break;
                 default:
-                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 or 2", MessageType.Error);
+                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice 1 or 2", MessageType.Error);
                         break;
                 }
         }
@@ -153,8 +154,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             this.DisplayActivities(activities);
-            _userIO.DisplayMessage($"Enter index of task to be deleted: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
+            if (!TryGetInputIndex("delete a task", out int index))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -169,7 +169,7 @@ namespace TimerApplication.PresentationLayer.View
             var activityToDelete = activities.ElementAt(index - 1);
             if (activityToDelete.TaskStatus == TimerStatus.Running)
             {
-                _userIO.DisplayMessage($"Task with Active timer can't be deleted, Stop the timer first!", MessageType.Warning);
+                _userIO.DisplayMessage($"Can't delete task with active timer, Stop timer first", MessageType.Warning);
                 return;
             }
 
@@ -188,8 +188,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             this.DisplayActivityLogs(activityLogs);
-            _userIO.DisplayMessage($"Enter index of task log to be deleted: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
+            if (!TryGetInputIndex("delete a task log", out int index))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -205,7 +204,7 @@ namespace TimerApplication.PresentationLayer.View
             bool deletionStatus = this._activityLogService.DeleteActivityLogByLogId(activityLogToBeDeleted.ActivityLogId);           
             if (!deletionStatus)
             {
-                _userIO.DisplayMessage($"Cannot delete a log while running timer!, Stop the timer first", MessageType.Error);
+                _userIO.DisplayMessage($"Can't delete log with active timer, Stop timer first", MessageType.Error);
                 return;
             }
 
@@ -223,8 +222,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             this.DisplayActivityLogs(activityLogs);
-            _userIO.DisplayMessage($"Enter index of task log to be edited: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
+            if (!TryGetInputIndex("edit a task", out int index))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -237,7 +235,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             var activityLogToBeEdited = activityLogs.ElementAt(index-1);
-            if (!TryGetTaskName(out string taskName))
+            if (!TryGetTaskName("to edit task log name", out string taskName))
             {
                 _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
@@ -258,8 +256,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             this.DisplayActivities(activities);
-            _userIO.DisplayMessage($"Enter index of task to be edited: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
+            if (!TryGetInputIndex("edit task name", out int index))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -271,7 +268,7 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (!TryGetTaskName(out string taskName))
+            if (!TryGetTaskName("to edit task name", out string taskName))
             {
                 _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
@@ -289,7 +286,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void AddNewTask()
         {
-            if (!TryGetTaskName(out string taskName))
+            if (!TryGetTaskName("to add a new task", out string taskName))
             {
                 _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
@@ -299,9 +296,9 @@ namespace TimerApplication.PresentationLayer.View
             _userIO.DisplayMessage("Task Added Successfully!", MessageType.Success);
         }
 
-        private bool TryGetTaskName(out string result)
+        private bool TryGetTaskName(string message, out string result)
         {
-            _userIO.DisplayMessage("Enter Task Name: ");
+            _userIO.DisplayMessage($"Enter Task Name to {message}: ");
             result = _userIO.ReadInput();
             if (!InputValidator.ValidateString(result))
             {
@@ -321,8 +318,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             this.DisplayActivities(activities);
-            _userIO.DisplayMessage($"Enter index of task to view activity details: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
+            if (!TryGetInputIndex("view task details", out int index))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -355,7 +351,8 @@ namespace TimerApplication.PresentationLayer.View
 
                 _userIO.DisplayMessage(
                     $"{i + 1}. {log.LogName}, Duration: {duration}\n" +
-                    $"   Start: {log.StartTime},  End: {endText}",
+                    $"   Start: {log.StartTime}\n"+
+                    $"   End: {endText}",
                     messageType);
             }
         }
@@ -371,8 +368,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             this.DisplayActivities(activities);
-            _userIO.DisplayMessage($"Enter index of task to Start Timer: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
+            if (!TryGetInputIndex("Start timer for task", out int index))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -396,6 +392,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void DisplayActivities(IEnumerable<Activity> activities)
         {
+            _userIO.DisplayMessageAtSameLine("\nACTIVITIES\n", MessageType.Info);
             for (int i = 0; i < activities.Count(); i++)
             {
                 var activity = activities.ElementAt(i);
@@ -403,9 +400,11 @@ namespace TimerApplication.PresentationLayer.View
             }
         }
 
-        private bool TryGetInputIndex(out int index)
+        private bool TryGetInputIndex(string fieldName, out int index)
         {
-            return InputValidator.ValidateInteger(_userIO.ReadInput(), out index);
+            _userIO.DisplayMessageAtSameLine($"Enter index to {fieldName}: ", MessageType.Info);
+            bool isValidIndex =  InputValidator.ValidateInteger(_userIO.ReadInput(), out index);
+            return isValidIndex;
         }
 
         private void StopTimer()
@@ -418,8 +417,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             this.DisplayActivityLogs(activityLogs);
-            _userIO.DisplayMessage($"Enter index of task to Stop Timer: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
+            if (!TryGetInputIndex("Stop timer for a task", out int index))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -438,7 +436,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void DisplayActivityLogs(IEnumerable<ActivityLog> activityLogs)
         {
-
+            _userIO.DisplayMessageAtSameLine("\nACTIVITY LOGS\n", MessageType.Info);
             for (int i = 0; i < activityLogs.Count(); i++)
             {
                 var activitylog = activityLogs.ElementAt(i);
@@ -461,8 +459,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             this.DisplayActivities(activities);
-            _userIO.DisplayMessage($"Enter index of task to import its logs: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
+            if (!TryGetInputIndex("of task to import Task logs", out int index))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -478,7 +475,7 @@ namespace TimerApplication.PresentationLayer.View
             var filePath = Console.ReadLine();
             if (!InputValidator.ValidateString(filePath))
             {
-                _userIO.DisplayMessage("File path should not be null or empty", MessageType.Info);
+                _userIO.DisplayMessage("File path should not be null or empty", MessageType.Error);
                 return;
             }
 
@@ -508,8 +505,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             this.DisplayActivities(activities);
-            _userIO.DisplayMessage($"Enter index of task to export its logs: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
+            if (!TryGetInputIndex("of task to export its Logs", out int index))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;

@@ -6,7 +6,9 @@ namespace TimerApplication.ApplicationLayer.Interface;
 
 public interface IUserIO
 {
-    public void DisplayMessage(string message, MessageType type = MessageType.Default);
+    public void DisplayMessage(string message, MessageType messageType = MessageType.Default);
+
+    public void DisplayMessageAtSameLine(string message, MessageType messageType = MessageType.Default);
 
     void DisplayPanel(DisplayRegion region, string title, IReadOnlyList<string> items);
 

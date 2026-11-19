@@ -76,7 +76,7 @@ public static class FileHandlingService
         foreach (var log in logsToExport)
         {
             var startTime = log.StartTime.ToString("yyyy-MM-dd HH:mm:ss");
-            var endTime = log.EndTime.HasValue ? log.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "In-Progress";
+            var endTime = log.EndTime.HasValue ? log.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : TimerStatus.Running.ToString();
             var duration = log.Duration.ToString(@"hh\:mm\:ss");
             csvBuilder.AppendLine($"{log.LogName}, {log.LogStatus}, {startTime}, {endTime}, {duration}");
         }
@@ -189,7 +189,7 @@ public static class FileHandlingService
                 : Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string fullPath = Path.Combine(targetFolder, fileName);
             string csvContent = SerializeCsvContent(logsToExport);
-            File.WriteAllText(fullPath, csvContent, Encoding.UTF8);
+            File.WriteAllText(fullPath, csvContent);
         }
         catch (IOException ex)
         {
