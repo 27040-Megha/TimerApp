@@ -151,7 +151,6 @@ public class ViewOperator
 
     private void DisplayMenu()
     {
-        _userIO.ClearOutput();
         _userIO.DisplayMessage("Welcome to Time Logger", MessageType.Info);
         _userIO.DisplayMessageAtSameLine("1. Signup \n2. Login \n3. Exit \nEnter Your Option (1/2/3): ");
     }
