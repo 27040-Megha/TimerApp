@@ -102,7 +102,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void Edit()
         {
-            _userIO.DisplayMessageAtSameLine("1. Edit Task \n2. Edit Task Logs \nEnter Your Option (1/2): ");
+            _userIO.DisplayMessageAtSameLine("1. Edit Task Name\n2. Edit Task Log Name \nEnter Your Option (1/2): ");
             if (!InputValidator.ValidateInteger(Console.ReadLine(), out int choice))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
@@ -235,14 +235,20 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             var activityLogToBeEdited = activityLogs.ElementAt(index-1);
-            if (!TryGetTaskName("to edit task log name", out string taskName))
+            if (!TryGetTaskName("Enter new task log name", out string taskName))
             {
                 _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
-        }
+            }
 
             activityLogToBeEdited.LogName = taskName;
-            this._activityLogService.EditTaskLog(activityLogToBeEdited);
+            bool isLogEdited = this._activityLogService.EditTaskLog(activityLogToBeEdited);
+            if (!isLogEdited)
+            {
+                _userIO.DisplayMessage($"Unable to update. Another log with this name already exists", MessageType.Warning);
+                return;
+            }
+
             _userIO.DisplayMessage($"Task log name edited successfully!", MessageType.Success);
         }
 
@@ -268,7 +274,7 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (!TryGetTaskName("to edit task name", out string taskName))
+            if (!TryGetTaskName("Enter new task name", out string taskName))
             {
                 _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
@@ -286,7 +292,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void AddNewTask()
         {
-            if (!TryGetTaskName("to add a new task", out string taskName))
+            if (!TryGetTaskName("Enter task to add a new task", out string taskName))
             {
                 _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
@@ -298,7 +304,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private bool TryGetTaskName(string message, out string result)
         {
-            _userIO.DisplayMessage($"Enter Task Name to {message}: ");
+            _userIO.DisplayMessage($"{message}: ");
             result = _userIO.ReadInput();
             if (!InputValidator.ValidateString(result))
             {
@@ -332,7 +338,13 @@ namespace TimerApplication.PresentationLayer.View
 
             var activity = activities.ElementAt(index-1);
             var activityLogs = this._activityLogService.GetAllActivityLogs().Where(log => log.ActivityId == activity.ActivityId).OrderBy(a => a.StartTime);
-            _userIO.DisplayMessage($"{activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}", MessageType.Info);
+            if (!activityLogs.Any())
+            {
+                _userIO.DisplayMessage($"No tasks logs for {activity.ActivityName} task!", MessageType.Warning);
+                return;
+            }
+
+            _userIO.DisplayMessage($"{activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}", MessageType.Warning);
             this.DisplayLogDetails(activityLogs);
         }
 
@@ -471,7 +483,7 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            _userIO.DisplayMessage("Enter file path to import logs: ", MessageType.Info);
+            _userIO.DisplayMessage("Enter (.csv) file path to import logs: ", MessageType.Info);
             var filePath = Console.ReadLine();
             if (!InputValidator.ValidateString(filePath))
             {

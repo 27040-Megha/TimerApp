@@ -88,7 +88,7 @@ public class ViewOperator
                     TimeSpan cumulativeDuration = activity.TotalDuration +
                         activeTimeByActivity.GetValueOrDefault(activity.ActivityId);
 
-                    return $"{i + 1}. {activity.ActivityName}  Duration: {cumulativeDuration:hh\\:mm\\:ss}";
+                    return $"{i + 1}. {activity.ActivityName} \n  Duration: {cumulativeDuration:hh\\:mm\\:ss}";
                 })
                 .ToList();
 
@@ -109,6 +109,10 @@ public class ViewOperator
                     return $"{i + 1}. {log.LogName} Start: {log.StartTime} Duration: {duration}";
                 })
                 .ToList();
+            if (lines.Count() == 0)
+            {
+                lines.Add("No active timers running");
+            }
 
             _userIO.DisplayPanel(DisplayRegion.SecondarySidebar, "Active Timers: ", lines);
         }

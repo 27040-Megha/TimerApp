@@ -75,9 +75,19 @@ public class ActivityLogService
         return true;
     }
 
-    public void EditTaskLog(ActivityLog activityLogToBeEdited)
+    public bool EditTaskLog(ActivityLog activityLogToBeEdited)
     {
+        bool isDuplicate = this.GetAllActivityLogs().Any(log =>
+            log.ActivityLogId != activityLogToBeEdited.ActivityLogId &&
+            log.ActivityId == activityLogToBeEdited.ActivityId &&
+            string.Equals(log.LogName, activityLogToBeEdited.LogName, StringComparison.OrdinalIgnoreCase));
+        if (isDuplicate)
+        {
+            return false;
+        }
+
         this._activityLogRepository.EditActivityLog(activityLogToBeEdited.ActivityLogId, activityLogToBeEdited);
+        return true;
     }
 
     public Result ExportLogs(int indexOfActivity)
