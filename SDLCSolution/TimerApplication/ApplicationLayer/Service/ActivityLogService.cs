@@ -77,6 +77,6 @@ public class ActivityLogService
 
     public IEnumerable<ActivityLog> GetAllActivityLogs()
     {
-        return this._activityLogRepository.FetchAllActivityLogs();
+        return this._activityLogRepository.FetchAllActivityLogs().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId);
     }
 }

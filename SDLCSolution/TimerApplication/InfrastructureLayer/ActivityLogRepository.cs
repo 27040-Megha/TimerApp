@@ -29,7 +29,7 @@ namespace TimerApplication.InfrastructureLayer
         public IEnumerable<ActivityLog> FetchAllActivityLogs()
         {
             var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
-            return activityLogs.Select(activity => new ActivityLog(activity.ActivityLogId, activity.LogName, activity.StartTime, activity.EndTime, activity.Duration, activity.LogStatus, activity.ActivityId, CurrentSessionManager.CurrentSessionUser.UserId)).ToList();
+            return activityLogs.Select(activity => new ActivityLog(activity.ActivityLogId, activity.LogName, activity.StartTime, activity.EndTime, activity.Duration, activity.LogStatus, activity.ActivityId, activity.UserId)).ToList();
         }
     }
 }
