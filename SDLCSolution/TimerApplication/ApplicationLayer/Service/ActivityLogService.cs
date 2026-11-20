@@ -75,11 +75,6 @@ public class ActivityLogService
         return this.GetAllActivityLogs().Where(log => log.LogStatus == TimerStatus.Running);
     }
 
-    public List<ActivityLog> GetAllActivityLogs()
-    {
-        return this._activityLogRepository.FetchAllActivityLogs().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId).ToList();
-    }
-
     public void DeleteActivityLogsByTaskId(Guid activityId)
     {
         var activityLogs = this.GetAllActivityLogs().Where(a => a.ActivityId == activityId).ToList();
@@ -89,31 +84,58 @@ public class ActivityLogService
         }
     }
 
-    public bool DeleteActivityLogByLogId(Guid activityLogId)
+    public Result DeleteActivityLogByLogId(int index)
     {
-        var activityLogToDelete = this.GetAllActivityLogs().FirstOrDefault(a => a.ActivityLogId == activityLogId);
+        var activityLogs = this.GetAllActivityLogs().ToList();
+        if (activityLogs.Count == 0)
+        {
+            return new Result(false, "No activity logs found to delete");
+        }
+
+        if (index < 0 || index >= activityLogs.Count)
+        {
+            return new Result(false, "Index out of range");
+        }
+
+        var activityLogToDelete = activityLogs.ElementAt(index);
         if (activityLogToDelete.LogStatus == TimerStatus.Running)
         {
-            return false;
+            return new Result(false, "Cannot delete a log while running timer! Stop the timer first");
         }
 
-        this._activityLogRepository.DeleteActivityLog(activityLogId);
-        return true;
+        this._activityLogRepository.DeleteActivityLog(activityLogToDelete.ActivityLogId);
+        this._activityService.RemoveLogDuration(activityLogToDelete.ActivityId, activityLogToDelete.Duration);
+        return new Result(true, "Activity Log Deleted Successfully!");
     }
 
-    public bool EditTaskLog(ActivityLog activityLogToBeEdited)
+
+    public Result EditTaskLog(int index, string input)
     {
-        bool isDuplicate = this.GetAllActivityLogs().Any(log =>
-            log.ActivityLogId != activityLogToBeEdited.ActivityLogId &&
-            log.ActivityId == activityLogToBeEdited.ActivityId &&
-            string.Equals(log.LogName, activityLogToBeEdited.LogName, StringComparison.OrdinalIgnoreCase));
-        if (isDuplicate)
+        var activityLogs = this.GetAllActivityLogs().ToList();
+        if (activityLogs.Count == 0)
         {
-            return false;
+            return new Result(false, "No activity logs found to edit");
         }
 
+        if (index >= activityLogs.Count)
+        {
+            return new Result(false, "Index out of range");
+        }
+
+        var activityLogToBeEdited = activityLogs.ElementAt(index);
+        bool isDuplicate = activityLogs.Any(log =>
+            log.ActivityLogId != activityLogToBeEdited.ActivityLogId &&
+            log.ActivityId == activityLogToBeEdited.ActivityId &&
+            string.Equals(log.LogName, input, StringComparison.OrdinalIgnoreCase));
+
+        if (isDuplicate)
+        {
+            return new Result(false, "A log with this name already exists for this task!");
+        }
+
+        activityLogToBeEdited.LogName = input;
         this._activityLogRepository.EditActivityLog(activityLogToBeEdited.ActivityLogId, activityLogToBeEdited);
-        return true;
+        return new Result(true, "Edit Successful!");
     }
 
     public IEnumerable<ActivityLog> GetAllActivityLogs()

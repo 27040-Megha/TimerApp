@@ -172,7 +172,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void DeleteTaskLogs()
         {
-            var activityLogs = this._activityLogService.GetAllActivityLogs().ToHashSet();
+            var activityLogs = this._activityLogService.GetAllActivityLogs().ToList();
             this.DisplayActivityLogs(activityLogs);
             _userIO.DisplayMessage($"Enter index of task log to be deleted: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -181,27 +181,25 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activityLogs.Count)
+            if (index < 1)
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
-            var activityLogToBeDeleted = activityLogs.ElementAt(index-1);
-            bool deletionStatus = this._activityLogService.DeleteActivityLogByLogId(activityLogToBeDeleted.ActivityLogId);           
-            if (!deletionStatus)
+            Result deletionResult = this._activityLogService.DeleteActivityLogByLogId(index - 1);
+            if (!deletionResult.IsSuccess)
             {
-                _userIO.DisplayMessage($"Cannot delete a log while running timer!, Stop the timer first", MessageType.Error);
+                _userIO.DisplayMessage(deletionResult.Message, MessageType.Error);
                 return;
             }
 
-            this._activityService.RemoveLogDuration(activityLogToBeDeleted.ActivityId, activityLogToBeDeleted.Duration);
             _userIO.DisplayMessage($"Activity Log Deleted Successfully!", MessageType.Success);
         }
 
         private void EditTaskLog()
         {
-            var activityLogs = this._activityLogService.GetAllActivityLogs();
+            var activityLogs = this._activityLogService.GetAllActivityLogs().ToList();
             this.DisplayActivityLogs(activityLogs);
             _userIO.DisplayMessage($"Enter index of task log to be edited: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -210,23 +208,28 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activityLogs.Count)
+            if (index < 1)
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
-            var activityLogToBeEdited = activityLogs.ElementAt(index-1);
-            if (!TryGetTaskName(out string taskName))
+            if (!TryGetTaskName(out string logName))
             {
-                _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
+                _userIO.DisplayMessage($"Invalid string format, Task log name should not be null or empty!", MessageType.Error);
                 return;
             }
 
-            activityLogToBeEdited.LogName = taskName;
-            this._activityLogService.EditTaskLog(activityLogToBeEdited);
+            Result editResult = this._activityLogService.EditTaskLog(index - 1, logName);
+            if (!editResult.IsSuccess)
+            {
+                _userIO.DisplayMessage(editResult.Message, MessageType.Error);
+                return;
+            }
+
             _userIO.DisplayMessage($"Task log name edited successfully!", MessageType.Success);
         }
+
 
         private void EditTask()
         {
