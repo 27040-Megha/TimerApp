@@ -20,13 +20,26 @@ public class ActivityLogService
         this._activityService = activityService;
     }
 
-    public void StartTimer(Guid activityId)
+    public Result StartTimer(int index)
     {
-        HashSet<ActivityLog> logs = this.GetLogsByActivityId(activityId);
-        string taskName = this._activityService.GetAllActivities().FirstOrDefault(activity => activity.ActivityId == activityId).ActivityName;
+        IEnumerable<Activity> activities = this._activityService.GetAllActivities();
+        if (index >= activities.Count())
+        {
+            return new Result(false, "Index out of range");
+        }
+
+        Activity activityToStartTimer = activities.ElementAt(index);
+        if (activityToStartTimer.TaskStatus == TimerStatus.Running)
+        {
+            return new Result(false, "Can't Start, Timer is already running for this task");
+        }
+
+        IEnumerable<ActivityLog> logs = this.GetLogsByActivityId(activityToStartTimer.ActivityId);
+        string taskName = activityToStartTimer.ActivityName;
         string logName = $"{taskName}-Log{logs.Count() + 1}";
-        this.CreateActivityLog(logName, activityId);
-        this._activityService.EditTaskStatus(activityId, TimerStatus.Running);
+        this.CreateActivityLog(logName, activityToStartTimer.ActivityId);
+        this._activityService.EditTaskStatus(activityToStartTimer.ActivityId, TimerStatus.Running);
+        return new Result(true, "Timer started successfully!");
     }
 
     public void CreateActivityLog(string logName, Guid activityId)
@@ -35,18 +48,31 @@ public class ActivityLogService
         this._activityLogRepository.CreateActivityLog(activityLog);
     }
 
-    private HashSet<ActivityLog> GetLogsByActivityId(Guid activityId)
+    private IEnumerable<ActivityLog> GetLogsByActivityId(Guid activityId)
     {
-        return this.GetAllActivityLogs().Where(a => a.ActivityLogId == activityId).ToHashSet();
+        return this.GetAllActivityLogs().Where(a => a.ActivityLogId == activityId);
     }
-    public void StopTimer(Guid activityLogId)
+
+    public Result StopTimer(int index)
     {
-        ActivityLog activityLog = this._activityLogRepository.FetchAllActivityLogs().FirstOrDefault(activityLog => activityLog.ActivityLogId == activityLogId);
-        activityLog.LogStatus = TimerStatus.Stopped;
-        activityLog.EndTime = DateTime.Now;
-        activityLog.Duration = (TimeSpan)(activityLog.EndTime - activityLog.StartTime);
-        this._activityLogRepository.EditActivityLog(activityLogId, activityLog);
-        this._activityService.EditTaskDuration(activityLog);
+        IEnumerable<ActivityLog> activeLogs = this.GetAllActiveTimerLogs();
+        if (index >= activeLogs.Count())
+        {
+            return new Result(false, "Index out of range!");
+        }
+
+        ActivityLog logToStopTimer = activeLogs.ElementAt(index);
+        logToStopTimer.LogStatus = TimerStatus.Stopped;
+        logToStopTimer.EndTime = DateTime.Now;
+        logToStopTimer.Duration = (TimeSpan)(logToStopTimer.EndTime - logToStopTimer.StartTime);
+        this._activityLogRepository.EditActivityLog(logToStopTimer.ActivityLogId, logToStopTimer);
+        this._activityService.EditTaskDuration(logToStopTimer);
+        return new Result(true, "Timer stoppped successfully!");
+    }
+
+    public IEnumerable<ActivityLog> GetAllActiveTimerLogs()
+    {
+        return this.GetAllActivityLogs().Where(log => log.LogStatus == TimerStatus.Running);
     }
 
     public IEnumerable<ActivityLog> GetAllActivityLogs()
