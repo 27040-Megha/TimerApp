@@ -44,6 +44,11 @@ public class ActivityService
     public Result DeleteActivity(int index)
     {
         var activities = this.GetAllActivities();
+        if (activities.Count == 0)
+        {
+            return new Result(false, "No activities found to delete");
+        }
+
         if (index >= activities.Count)
         {
             return new Result(false, "Index out of range");
@@ -68,6 +73,11 @@ public class ActivityService
     public Result EditTaskName(int index, string input)
     {
         var activities = this.GetAllActivities();
+        if (activities.Count == 0)
+        {
+            return new Result(false, "No activities found to edit");
+        }
+
         if (index >= activities.Count)
         {
             return new Result(false, "Index out of range");
