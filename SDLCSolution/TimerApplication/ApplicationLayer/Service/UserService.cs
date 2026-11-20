@@ -60,7 +60,7 @@ public class UserService
             return new Result(false, AuthenticationStatus.InvalidPassword);
         }
     }
-
+ 
     private bool CheckPassword(string password, string hash)
     {
         return BCrypt.Net.BCrypt.Verify(password, hash);

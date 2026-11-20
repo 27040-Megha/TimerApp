@@ -63,39 +63,39 @@ namespace TimerApplication.PresentationLayer.View
 
         private void HandleMenu(int choice)
         {
-            switch (choice)
-            {
-                case 1:
-                    this.AddNewTask();
-                    break;
-                case 2:
-                    this.EditTask();
-                    break;
-                case 3:
-                    this.DeleteTask();
-                    break;
-                case 4:
-                    this.ViewSpecificTaskLog();
-                    break;
-                case 5:
-                    this.StartTimer();
-                    break;
-                case 6:
-                    this.StopTimer();
-                    break;
-                case 7:
-                    this.ImportTimeLog();
-                    break;
-                case 8:
-                    this.ExportTimeLog();
-                    break;
-                case 9:
-                    this.Logout();
-                    break;
-                default:
+                switch (choice)
+                {
+                    case 1:
+                        this.AddNewTask();
+                        break;
+                    case 2:
+                        this.EditTask();
+                        break;
+                    case 3:
+                        this.DeleteTask();
+                        break;
+                    case 4:
+                        this.ViewSpecificTaskLog();
+                        break;
+                    case 5:
+                        this.StartTimer();
+                        break;
+                    case 6:
+                        this.StopTimer();
+                        break;
+                    case 7:
+                        this.ImportTimeLog();
+                        break;
+                    case 8:
+                        this.ExportTimeLog();
+                        break;
+                    case 9:
+                        this.Logout();
+                        break;
+                    default:
                     _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
-                    break;
-            }
+                        break;
+                }
         }
 
         private void Logout()
@@ -140,8 +140,51 @@ namespace TimerApplication.PresentationLayer.View
 
         private void ViewSpecificTaskLog()
         {
-            throw new NotImplementedException();
+            List<Activity> activities = this._activityService.GetAllActivities();
+            this.DisplayActivities(activities);
+
+            _userIO.DisplayMessage($"Enter index of task to view activity details: ", MessageType.Info);
+            if (!TryGetInputIndex(out int index))
+            {
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+                return;
+            }
+
+            if (index < 1)
+            {
+                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
+                return;
+            }
+
+            Result isLogsFetched = this._activityLogService.GetAllActivityLogsByActivityIndex(index - 1, out IEnumerable<ActivityLog> activityLogs);
+            if (!isLogsFetched.IsSuccess)
+            {
+                _userIO.DisplayMessage(isLogsFetched.Message, MessageType.Error);
+                return;
+            }
+
+            Activity activity = activities.ElementAt(index - 1);
+            _userIO.DisplayMessage($"{activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}", MessageType.Info);
+            this.DisplayLogDetails(activityLogs);
         }
+
+        private void DisplayLogDetails(IEnumerable<ActivityLog> activityLogs)
+        {
+            var logsList = activityLogs.ToList();
+            for (int i = 0; i < logsList.Count; i++)
+            {
+                var log = logsList[i];
+                bool isRunning = log.LogStatus == TimerStatus.Running;
+                string duration = isRunning ? string.Empty : $", Duration: {log.Duration:hh\\:mm\\:ss}";
+                string endText = isRunning ? "Running" : log.EndTime?.ToString();
+                MessageType messageType = isRunning ? MessageType.Success : MessageType.Default;
+                _userIO.DisplayMessage(
+                    $"{i + 1}. {log.LogName} {duration}\n" +
+                    $"   Start: {log.StartTime},  End: {endText}",
+                    messageType);
+            }
+        }
+
 
         private void StartTimer()
         {
