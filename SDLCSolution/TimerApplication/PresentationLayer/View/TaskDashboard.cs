@@ -213,7 +213,7 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (!TryGetTaskName(out string logName))
+            if (!TryGetTaskName("Enter new task log name to edit: ", out string logName))
             {
                 _userIO.DisplayMessage($"Invalid string format, Task log name should not be null or empty!", MessageType.Error);
                 return;
@@ -396,8 +396,7 @@ namespace TimerApplication.PresentationLayer.View
         {
             IEnumerable<ActivityLog> activeLogs = this._activityLogService.GetAllActiveTimerLogs();
             this.DisplayActivityLogs(activeLogs);
-            _userIO.DisplayMessage($"Enter index of task to Stop Timer: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
+            if (!TryGetInputIndex("to stop timer", out int index))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
