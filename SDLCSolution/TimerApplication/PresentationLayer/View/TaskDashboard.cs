@@ -146,13 +146,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void DeleteTask()
         {
-            var activities = this._activityService.GetAllActivities().ToList();
-            if (!activities.Any())
-            {
-                _userIO.DisplayMessage("No tasks present to delete!", MessageType.Warning);
-                return;
-            }
-
+            var activities = this._activityService.GetAllActivities();
             this.DisplayActivities(activities);
             if (!TryGetInputIndex("delete a task", out int index))
             {
@@ -160,21 +154,20 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activities.Count)
+            if (index < 1)
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
-            var activityToDelete = activities.ElementAt(index - 1);
-            if (activityToDelete.TaskStatus == TimerStatus.Running)
+            Result deletionResult = this._activityService.DeleteActivity(index - 1);
+            if (!deletionResult.IsSuccess)
             {
-                _userIO.DisplayMessage($"Can't delete task with active timer, Stop timer first", MessageType.Warning);
+                _userIO.DisplayMessage(deletionResult.Message, MessageType.Error);
                 return;
             }
 
-            this._activityLogService.DeleteActivityLogsByTaskId(activityToDelete.ActivityId);
-            this._activityService.DeleteActivity(activityToDelete.ActivityId);
+            this._activityLogService.DeleteActivityLogsByTaskId(activities.ElementAt(index - 1).ActivityId);
             _userIO.DisplayMessage($"Task Deleted Successfully!", MessageType.Success);
         }
 
@@ -215,12 +208,6 @@ namespace TimerApplication.PresentationLayer.View
         private void EditTaskLog()
         {
             var activityLogs = this._activityLogService.GetAllActivityLogs();
-            if (!activityLogs.Any())
-            {
-                _userIO.DisplayMessage("No task logs are present to edit!", MessageType.Warning);
-                return;
-            }
-
             this.DisplayActivityLogs(activityLogs);
             if (!TryGetInputIndex("edit a task", out int index))
             {
@@ -254,13 +241,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void EditTask()
         {
-            var activities = this._activityService.GetAllActivities();
-            if (!activities.Any())
-            {
-                _userIO.DisplayMessage("No tasks present to edit task!", MessageType.Warning);
-                return;
-            }
-
+            var activities = this._activityService.GetAllActivities().ToList();
             this.DisplayActivities(activities);
             if (!TryGetInputIndex("edit task name", out int index))
             {
@@ -268,7 +249,7 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activities.Count)
+            if (index < 1)
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
@@ -280,7 +261,13 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            this._activityService.EditTaskName(activities.ElementAt(index - 1).ActivityId, taskName);
+            Result editResult = this._activityService.EditTaskName(index - 1, taskName);
+            if (!editResult.IsSuccess)
+            {
+                _userIO.DisplayMessage(editResult.Message, MessageType.Error);
+                return;
+            }
+
             _userIO.DisplayMessage($"Task name edited successfully!", MessageType.Success);
         }
 
@@ -404,7 +391,6 @@ namespace TimerApplication.PresentationLayer.View
 
         private void DisplayActivities(IEnumerable<Activity> activities)
         {
-            _userIO.DisplayMessageAtSameLine("\nACTIVITIES\n", MessageType.Info);
             for (int i = 0; i < activities.Count(); i++)
             {
                 var activity = activities.ElementAt(i);
@@ -448,7 +434,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void DisplayActivityLogs(IEnumerable<ActivityLog> activityLogs)
         {
-            _userIO.DisplayMessageAtSameLine("\nACTIVITY LOGS\n", MessageType.Info);
+
             for (int i = 0; i < activityLogs.Count(); i++)
             {
                 var activitylog = activityLogs.ElementAt(i);
