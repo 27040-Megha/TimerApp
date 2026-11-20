@@ -140,7 +140,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void ViewSpecificTaskLog()
         {
-            HashSet<Activity> activities = this._activityService.GetAllActivities().ToHashSet();
+            List<Activity> activities = this._activityService.GetAllActivities();
             this.DisplayActivities(activities);
 
             _userIO.DisplayMessage($"Enter index of task to view activity details: ", MessageType.Info);
@@ -150,19 +150,25 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activities.Count)
+            if (index < 1)
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
-            var activity = activities.ElementAt(index-1);
-            var activityLogs = this._activityLogService.GetAllActivityLogs().Where(log => log.ActivityId == activity.ActivityId).OrderBy(a => a.StartTime);
+            Result isLogsFetched = this._activityLogService.GetAllActivityLogsByActivityIndex(index - 1, out IEnumerable<ActivityLog> activityLogs);
+            if (!isLogsFetched.IsSuccess)
+            {
+                _userIO.DisplayMessage(isLogsFetched.Message, MessageType.Error);
+                return;
+            }
+
+            Activity activity = activities.ElementAt(index - 1);
             _userIO.DisplayMessage($"{activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}", MessageType.Info);
             this.DisplayLogDetails(activityLogs);
         }
 
-        private void DisplayLogDetails(IOrderedEnumerable<ActivityLog> activityLogs)
+        private void DisplayLogDetails(IEnumerable<ActivityLog> activityLogs)
         {
             var logsList = activityLogs.ToList();
             for (int i = 0; i < logsList.Count; i++)

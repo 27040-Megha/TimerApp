@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
@@ -50,7 +49,7 @@ public class ActivityLogService
 
     private IEnumerable<ActivityLog> GetLogsByActivityId(Guid activityId)
     {
-        return this.GetAllActivityLogs().Where(a => a.ActivityLogId == activityId);
+        return this.GetAllActivityLogs().Where(log => log.ActivityId == activityId);
     }
 
     public Result StopTimer(int index)
@@ -78,5 +77,24 @@ public class ActivityLogService
     public IEnumerable<ActivityLog> GetAllActivityLogs()
     {
         return this._activityLogRepository.FetchAllActivityLogs().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId);
+    }
+
+    public Result GetAllActivityLogsByActivityIndex(int index, out IEnumerable<ActivityLog> activityLogs)
+    {
+        var activities = this._activityService.GetAllActivities();
+        activityLogs = new List<ActivityLog>();
+        if (index >= activities.Count())
+        {
+            return new Result(false, "Index out of range");
+        }
+
+        Guid activityId = activities.ElementAt(index).ActivityId;
+        activityLogs = this.GetLogsByActivityId(activityId).OrderBy(a => a.StartTime);
+        if (activityLogs.Count() == 0)
+        {
+            return new Result(false, "No activity logs recorded for the activity!");
+        }
+
+        return new Result(true, "Logs fetched successfull!");
     }
 }
