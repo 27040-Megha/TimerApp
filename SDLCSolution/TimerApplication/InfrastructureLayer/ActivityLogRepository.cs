@@ -10,7 +10,7 @@ namespace TimerApplication.InfrastructureLayer
     {
         public void CreateActivityLog(ActivityLog activityLog)
         {
-            var activityLogs = FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);
+            var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
             activityLogs.Add(activityLog);
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
         }
@@ -46,7 +46,8 @@ namespace TimerApplication.InfrastructureLayer
 
         public IEnumerable<ActivityLog> FetchAllActivityLogs()
         {
-            return FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);          
+            var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
+            return activityLogs.Select(activity => new ActivityLog(activity.ActivityLogId, activity.LogName, activity.StartTime, activity.EndTime, activity.Duration, activity.LogStatus, activity.ActivityId, activity.UserId)).ToList();
         }
     }
 }

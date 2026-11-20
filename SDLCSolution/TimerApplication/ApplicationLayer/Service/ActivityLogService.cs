@@ -20,13 +20,26 @@ public class ActivityLogService
         this._activityService = activityService;
     }
 
-    public void StartTimer(Guid activityId)
+    public Result StartTimer(int index)
     {
-        HashSet<ActivityLog> logs = this.GetLogsByActivityId(activityId);
-        string taskName = this._activityService.GetAllActivities().FirstOrDefault(activity => activity.ActivityId == activityId).ActivityName;
+        IEnumerable<Activity> activities = this._activityService.GetAllActivities();
+        if (index >= activities.Count())
+        {
+            return new Result(false, "Index out of range");
+        }
+
+        Activity activityToStartTimer = activities.ElementAt(index);
+        if (activityToStartTimer.TaskStatus == TimerStatus.Running)
+        {
+            return new Result(false, "Can't Start, Timer is already running for this task");
+        }
+
+        IEnumerable<ActivityLog> logs = this.GetLogsByActivityId(activityToStartTimer.ActivityId);
+        string taskName = activityToStartTimer.ActivityName;
         string logName = $"{taskName}-Log{logs.Count() + 1}";
-        this.CreateActivityLog(logName, activityId);
-        this._activityService.EditTaskStatus(activityId, TimerStatus.Running);
+        this.CreateActivityLog(logName, activityToStartTimer.ActivityId);
+        this._activityService.EditTaskStatus(activityToStartTimer.ActivityId, TimerStatus.Running);
+        return new Result(true, "Timer started successfully!");
     }
 
     public void CreateActivityLog(string logName, Guid activityId)
@@ -35,23 +48,31 @@ public class ActivityLogService
         this._activityLogRepository.CreateActivityLog(activityLog);
     }
 
-    private HashSet<ActivityLog> GetLogsByActivityId(Guid activityId)
+    private IEnumerable<ActivityLog> GetLogsByActivityId(Guid activityId)
     {
-        return this.GetAllActivityLogs().Where(activity => activity.ActivityId == activityId).ToHashSet();
-    }
-    public void StopTimer(Guid activityLogId)
-    {
-        ActivityLog activityLog = this._activityLogRepository.FetchAllActivityLogs().FirstOrDefault(activityLog => activityLog.ActivityLogId == activityLogId);
-        activityLog.LogStatus = TimerStatus.Stopped;
-        activityLog.EndTime = DateTime.Now;
-        activityLog.Duration = (TimeSpan)(activityLog.EndTime - activityLog.StartTime);
-        this._activityLogRepository.EditActivityLog(activityLogId, activityLog);
-        this._activityService.EditTaskDuration(activityLog);
+        return this.GetAllActivityLogs().Where(log => log.ActivityId == activityId);
     }
 
-    public List<ActivityLog> GetAllActivityLogs()
+    public Result StopTimer(int index)
     {
-        return this._activityLogRepository.FetchAllActivityLogs().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId).ToList();
+        IEnumerable<ActivityLog> activeLogs = this.GetAllActiveTimerLogs();
+        if (index >= activeLogs.Count())
+        {
+            return new Result(false, "Index out of range!");
+        }
+
+        ActivityLog logToStopTimer = activeLogs.ElementAt(index);
+        logToStopTimer.LogStatus = TimerStatus.Stopped;
+        logToStopTimer.EndTime = DateTime.Now;
+        logToStopTimer.Duration = (TimeSpan)(logToStopTimer.EndTime - logToStopTimer.StartTime);
+        this._activityLogRepository.EditActivityLog(logToStopTimer.ActivityLogId, logToStopTimer);
+        this._activityService.EditTaskDuration(logToStopTimer);
+        return new Result(true, "Timer stoppped successfully!");
+    }
+
+    public IEnumerable<ActivityLog> GetAllActiveTimerLogs()
+    {
+        return this.GetAllActivityLogs().Where(log => log.LogStatus == TimerStatus.Running);
     }
 
     public void DeleteActivityLogsByTaskId(Guid activityId)
@@ -63,31 +84,82 @@ public class ActivityLogService
         }
     }
 
-    public bool DeleteActivityLogByLogId(Guid activityLogId)
+    public Result DeleteActivityLogByLogId(int index)
     {
-        var activityLogToDelete = this.GetAllActivityLogs().FirstOrDefault(a => a.ActivityLogId == activityLogId);
+        var activityLogs = this.GetAllActivityLogs().ToList();
+        if (activityLogs.Count == 0)
+        {
+            return new Result(false, "No activity logs found to delete");
+        }
+
+        if (index < 0 || index >= activityLogs.Count)
+        {
+            return new Result(false, "Index out of range");
+        }
+
+        var activityLogToDelete = activityLogs.ElementAt(index);
         if (activityLogToDelete.LogStatus == TimerStatus.Running)
         {
-            return false;
+            return new Result(false, "Cannot delete a log while running timer! Stop the timer first");
         }
 
-        this._activityLogRepository.DeleteActivityLog(activityLogId);
-        return true;
+        this._activityLogRepository.DeleteActivityLog(activityLogToDelete.ActivityLogId);
+        this._activityService.RemoveLogDuration(activityLogToDelete.ActivityId, activityLogToDelete.Duration);
+        return new Result(true, "Activity Log Deleted Successfully!");
     }
 
-    public bool EditTaskLog(ActivityLog activityLogToBeEdited)
+
+    public Result EditTaskLog(int index, string input)
     {
-        bool isDuplicate = this.GetAllActivityLogs().Any(log =>
-            log.ActivityLogId != activityLogToBeEdited.ActivityLogId &&
-            log.ActivityId == activityLogToBeEdited.ActivityId &&
-            string.Equals(log.LogName, activityLogToBeEdited.LogName, StringComparison.OrdinalIgnoreCase));
-        if (isDuplicate)
+        var activityLogs = this.GetAllActivityLogs().ToList();
+        if (activityLogs.Count == 0)
         {
-            return false;
+            return new Result(false, "No activity logs found to edit");
         }
 
+        if (index >= activityLogs.Count)
+        {
+            return new Result(false, "Index out of range");
+        }
+
+        var activityLogToBeEdited = activityLogs.ElementAt(index);
+        bool isDuplicate = activityLogs.Any(log =>
+            log.ActivityLogId != activityLogToBeEdited.ActivityLogId &&
+            log.ActivityId == activityLogToBeEdited.ActivityId &&
+            string.Equals(log.LogName, input, StringComparison.OrdinalIgnoreCase));
+
+        if (isDuplicate)
+        {
+            return new Result(false, "A log with this name already exists for this task!");
+        }
+
+        activityLogToBeEdited.LogName = input;
         this._activityLogRepository.EditActivityLog(activityLogToBeEdited.ActivityLogId, activityLogToBeEdited);
-        return true;
+        return new Result(true, "Edit Successful!");
+    }
+
+    public IEnumerable<ActivityLog> GetAllActivityLogs()
+    {
+        return this._activityLogRepository.FetchAllActivityLogs().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId);
+    }
+
+    public Result GetAllActivityLogsByActivityIndex(int index, out IEnumerable<ActivityLog> activityLogs)
+    {
+        var activities = this._activityService.GetAllActivities();
+        activityLogs = new List<ActivityLog>();
+        if (index >= activities.Count())
+        {
+            return new Result(false, "Index out of range");
+        }
+
+        Guid activityId = activities.ElementAt(index).ActivityId;
+        activityLogs = this.GetLogsByActivityId(activityId).OrderBy(a => a.StartTime);
+        if (activityLogs.Count() == 0)
+        {
+            return new Result(false, "No activity logs recorded for the activity!");
+        }
+
+        return new Result(true, "Logs fetched successfull!");
     }
 
     public Result ExportLogs(int indexOfActivity)
