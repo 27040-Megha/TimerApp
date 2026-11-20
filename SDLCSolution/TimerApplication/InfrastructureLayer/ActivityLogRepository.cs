@@ -11,14 +11,14 @@ namespace TimerApplication.InfrastructureLayer
     {
         public void CreateActivityLog(ActivityLog activityLog)
         {
-            var activityLogs = FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);
+            var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
             activityLogs.Add(activityLog);
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
         }
 
         public void EditActivityLog(Guid activityLogId, ActivityLog activityLogToBeAssigned)
         {
-            var activityLogs = FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);
+            var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
             var activityLogToUpdate = activityLogs.FirstOrDefault(a => a.ActivityLogId == activityLogId);
             activityLogToUpdate.LogStatus = activityLogToBeAssigned.LogStatus;
             activityLogToUpdate.EndTime = activityLogToBeAssigned.EndTime;
@@ -28,8 +28,8 @@ namespace TimerApplication.InfrastructureLayer
 
         public IEnumerable<ActivityLog> FetchAllActivityLogs()
         {
-            var activityLogs = FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);
-            return activityLogs.Select(activity => new ActivityLog(activity.ActivityLogId, activity.LogName, activity.StartTime, activity.EndTime, activity.Duration, activity.LogStatus, activity.ActivityId, CurrentSessionManager.CurrentSessionUser.UserId)).ToHashSet();
+            var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
+            return activityLogs.Select(activity => new ActivityLog(activity.ActivityLogId, activity.LogName, activity.StartTime, activity.EndTime, activity.Duration, activity.LogStatus, activity.ActivityId, activity.UserId)).ToList();
         }
     }
 }
