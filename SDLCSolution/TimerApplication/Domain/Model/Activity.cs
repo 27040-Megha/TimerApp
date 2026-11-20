@@ -1,4 +1,5 @@
 ﻿using System;
+using TimerApplication.Domain.Enums;
 
 namespace TimerApplication.Domain.Model;
 
@@ -27,6 +28,8 @@ public class Activity
     public Guid ActivityId { get; set; }
 
     public string ActivityName { get; set; }
+
+    public TimerStatus TaskStatus { get; set; }
 
     public TimeSpan TotalDuration { get; set; }
 

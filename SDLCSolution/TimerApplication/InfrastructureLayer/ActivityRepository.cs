@@ -20,9 +20,14 @@ namespace TimerApplication.InfrastructureLayer
             throw new NotImplementedException();
         }
 
-        public void EditActivity(Guid activityIdToEdit, string TaskName)
+        public void EditActivity(Guid activityIdToEdit, Activity activityToBeAssigned)
         {
-            throw new NotImplementedException();
+            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
+            var activityToEdit = activities.FirstOrDefault(activity => activity.ActivityId.Equals(activityIdToEdit));
+            activityToEdit.ActivityName = activityToBeAssigned.ActivityName;
+            activityToEdit.TaskStatus = activityToBeAssigned.TaskStatus;
+            activityToEdit.TotalDuration = activityToBeAssigned.TotalDuration;
+            FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
         }
 
         public Activity GetActivityById(Guid activityId)
@@ -32,8 +37,7 @@ namespace TimerApplication.InfrastructureLayer
 
         public IEnumerable<Activity> GetAllActivities()
         {
-            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
-            return activities.Select(activity => new Activity(activity.ActivityId, activity.ActivityName, activity.TotalDuration, activity.UserId));
+            return FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);            
         }
     }
 }

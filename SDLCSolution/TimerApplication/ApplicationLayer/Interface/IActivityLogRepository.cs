@@ -1,5 +1,14 @@
-﻿namespace TimerApplication.ApplicationLayer.Interface;
+﻿using System;
+using System.Collections.Generic;
+using TimerApplication.Domain.Model;
 
-internal class IActivityLogRepository
+namespace TimerApplication.ApplicationLayer.Interface;
+
+public interface IActivityLogRepository
 {
+    public void CreateActivityLog(ActivityLog activityLog);
+
+    public void EditActivityLog(Guid activityLogId, ActivityLog activityLog);
+
+    public IEnumerable<ActivityLog> FetchAllActivityLogs();
 }

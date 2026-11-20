@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using TimerApplication.ApplicationLayer.Domain.Enums;
 using TimerApplication.ApplicationLayer.Interface;
+using TimerApplication.Domain.Enums;
 
 namespace TimerApplication.PresentationLayer.IO;
 
@@ -8,7 +10,9 @@ public class ConsoleUserIO : IUserIO
 {
     private readonly object _consoleLock = new();
 
-    public int WindowWidth => Console.WindowWidth;
+    private int WindowWidth => Console.WindowWidth;
+
+    private int WindowTop => Console.WindowTop;
 
     /// <summary>
     /// Clears the currently visible screen using Console.Clear() and using \x1b[3J, erase all lines in the scrollback buffer
@@ -23,17 +27,17 @@ public class ConsoleUserIO : IUserIO
         }
     }
 
-    public void DisplayMessage(string message, MessageType type = MessageType.Default)
+    public void DisplayMessage(string message, MessageType messageType = MessageType.Default)
     {
         lock (_consoleLock)
         {
-            ApplyColor(type);
+            ApplyColor(messageType);
             Console.WriteLine(message);
             Console.ResetColor();
         }
     }
 
-    public void DisplayMessageAt(int left, int top, string message, MessageType messageType)
+    private void DisplayMessageAt(int left, int top, string message, MessageType messageType = MessageType.Default)
     {
         lock (_consoleLock)
         {
@@ -42,6 +46,50 @@ public class ConsoleUserIO : IUserIO
             Console.SetCursorPosition(left, top);
             this.DisplayMessage(message, messageType);
             Console.SetCursorPosition(currentLeft, currentTop);
+        }
+    }
+
+    public void DisplayPanel(DisplayRegion region, string title, IReadOnlyList<string> items)
+    {
+        int col2Left = Math.Max(45, (int)(WindowWidth * 0.28));
+        int col3Left = Math.Max(82, (int)(WindowWidth * 0.52));
+
+        switch (region)
+        {
+            case DisplayRegion.PrimarySidebar:
+                {
+                    int width = Math.Min(col3Left, WindowWidth) - col2Left - 2;
+                    if (width > 10)
+                    {
+                        DivideColumn(col2Left, topOffset: WindowTop, width, title, items);
+                    }
+                    break;
+                }
+            case DisplayRegion.SecondarySidebar:
+                {
+                    int width = WindowWidth - col3Left - 1;
+                    if (width > 10)
+                    {
+                        DivideColumn(col3Left, topOffset: WindowTop, width, title, items);
+                    }
+                    break;
+                }
+        }
+    }
+
+    private void DivideColumn(int left, int topOffset, int width, string title, IReadOnlyList<string> items)
+    {
+        lock (_consoleLock)
+        {
+            DisplayMessageAt(left, topOffset, title.PadRight(width), MessageType.Info);
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                string text = items[i].Length > width ? items[i].Substring(0, width) : items[i];
+                DisplayMessageAt(left, topOffset + i + 1, text.PadRight(width));
+            }
+
+            DisplayMessageAt(left, topOffset + items.Count + 1, new string(' ', width));
         }
     }
 

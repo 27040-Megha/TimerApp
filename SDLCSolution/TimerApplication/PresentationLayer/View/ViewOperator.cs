@@ -25,12 +25,15 @@ public class ViewOperator
 
     private readonly ActivityService _activityService;
 
-    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ActivityService activityService)
+    private readonly ActivityLogService _activityLogService;
+
+    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ActivityService activityService, ActivityLogService activityLogService)
     {
         this._userService = userService;
         this._activityService = activityService;
         this._userIO = userIO;
         this._taskDashboard = taskDashboard;
+        this._activityLogService = activityLogService;
     }
 
     public void Run()
@@ -71,23 +74,44 @@ public class ViewOperator
     {
         if (CurrentSessionManager.CurrentSessionUser != null)
         {
-            int left = 55;
-            int width = _userIO.WindowWidth - left - 1;
-            if (width <= 10)
-            {
-                return;
-            }
+            var activeTimeByActivity = this._activityLogService.GetAllActivityLogs()
+                .Where(a => a.LogStatus == TimerStatus.Running &&
+                            a.UserId == CurrentSessionManager.CurrentSessionUser.UserId)
+                .GroupBy(a => a.ActivityId)
+                .ToDictionary(
+                    group => group.Key,
+                    group => TimeSpan.FromTicks(group.Sum(log => (DateTime.Now - log.StartTime).Ticks))
+                );
 
-            _userIO.DisplayMessageAt(left, 0, "Your activities: ", MessageType.Info);
-            var activities = this.GetAllActivities();
-            for (int i = 0; i < activities.Count; i++)
-            {
-                var activity = activities.ElementAt(i);
-                string text = $"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration}";
-                _userIO.DisplayMessageAt(left, i + 1, text.PadRight(width));
-            }
+            var lines = this.GetAllActivities()
+                .Select((activity, i) =>
+                {
+                    TimeSpan cumulativeDuration = activity.TotalDuration +
+                        activeTimeByActivity.GetValueOrDefault(activity.ActivityId);
 
-            _userIO.DisplayMessageAt(left, activities.Count + 1, new string(' ', width));
+                    return $"{i + 1}. {activity.ActivityName}  Duration: {cumulativeDuration:hh\\:mm\\:ss}";
+                })
+                .ToList();
+
+            _userIO.DisplayPanel(DisplayRegion.PrimarySidebar, "Your activities: ", lines);
+        }
+    }
+
+    public void DisplayActiveTimers()
+    {
+        if (CurrentSessionManager.CurrentSessionUser != null)
+        {
+            var lines = this._activityLogService.GetAllActivityLogs()
+                .Where(a => a.LogStatus == TimerStatus.Running &&
+                            a.UserId == CurrentSessionManager.CurrentSessionUser.UserId)
+                .Select((log, i) =>
+                {
+                    string duration = (DateTime.Now - log.StartTime).ToString(@"hh\:mm\:ss");
+                    return $"{i + 1}. {log.LogName} Start: {log.StartTime} Duration: {duration}";
+                })
+                .ToList();
+
+            _userIO.DisplayPanel(DisplayRegion.SecondarySidebar, "Active Timers: ", lines);
         }
     }
 
@@ -216,7 +240,6 @@ public class ViewOperator
         error = "Invalid email format!";
         return InputValidator.ValidateEmail(input);
     }
-
 
     private static bool ValidatePassword(string input, out string error)
     {
