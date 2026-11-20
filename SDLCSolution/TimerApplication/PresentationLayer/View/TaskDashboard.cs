@@ -144,7 +144,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void DeleteTask()
         {
-            var activities = this._activityService.GetAllActivities().ToHashSet();
+            var activities = this._activityService.GetAllActivities();
             this.DisplayActivities(activities);
             _userIO.DisplayMessage($"Enter index of task to be deleted: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -201,7 +201,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void EditTaskLog()
         {
-            var activityLogs = this._activityLogService.GetAllActivityLogs().ToHashSet();
+            var activityLogs = this._activityLogService.GetAllActivityLogs();
             this.DisplayActivityLogs(activityLogs);
             _userIO.DisplayMessage($"Enter index of task log to be edited: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -230,7 +230,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void EditTask()
         {
-            var activities = this._activityService.GetAllActivities().ToHashSet();
+            var activities = this._activityService.GetAllActivities().ToList();
             this.DisplayActivities(activities);
             _userIO.DisplayMessage($"Enter index of task to be edited: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -239,7 +239,7 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activities.Count)
+            if (index < 1)
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
@@ -251,7 +251,13 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            this._activityService.EditTaskName(activities.ElementAt(index - 1).ActivityId, taskName);
+            Result editResult = this._activityService.EditTaskName(index - 1, taskName);
+            if (!editResult.IsSuccess)
+            {
+                _userIO.DisplayMessage(editResult.Message, MessageType.Error);
+                return;
+            }
+
             _userIO.DisplayMessage($"Task name edited successfully!", MessageType.Success);
         }
 
@@ -363,9 +369,9 @@ namespace TimerApplication.PresentationLayer.View
             return this._activityService.GetAllActivities();
         }
 
-        private void DisplayActivities(HashSet<Activity> activities)
+        private void DisplayActivities(IEnumerable<Activity> activities)
         {
-            for (int i = 0; i < activities.Count; i++)
+            for (int i = 0; i < activities.Count(); i++)
             {
                 var activity = activities.ElementAt(i);
                 _userIO.DisplayMessage($"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}");
@@ -405,10 +411,10 @@ namespace TimerApplication.PresentationLayer.View
             _userIO.DisplayMessage($"Timer stopped successfully!", MessageType.Success);
         }
 
-        private void DisplayActivityLogs(HashSet<ActivityLog> activityLogs)
+        private void DisplayActivityLogs(IEnumerable<ActivityLog> activityLogs)
         {
 
-            for (int i = 0; i < activityLogs.Count; i++)
+            for (int i = 0; i < activityLogs.Count(); i++)
             {
                 var activitylog = activityLogs.ElementAt(i);
                 _userIO.DisplayMessage($"{i + 1}. {activitylog.LogName}");

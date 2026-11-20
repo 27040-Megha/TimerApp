@@ -58,19 +58,26 @@ public class ActivityService
         return new Result(true, "Deletion successful!");
     }
 
-        public void RemoveLogDuration(Guid taskId, TimeSpan duration)
+    public void RemoveLogDuration(Guid taskId, TimeSpan duration)
+    {
+        var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == taskId);
+        activity.TotalDuration -= duration;
+        this._activityRepository.EditActivity(activity.ActivityId, activity);
+    }
+
+    public Result EditTaskName(int index, string input)
+    {
+        var activities = this.GetAllActivities();
+        if (index >= activities.Count)
         {
-            var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == taskId);
-            activity.TotalDuration -= duration;
-            this._activityRepository.EditActivity(activity.ActivityId, activity);
+            return new Result(false, "Index out of range");
         }
 
-        public void EditTaskName(Guid activityId, string input)
-        {
-            var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == activityId);
-            activity.ActivityName = input;
-            this._activityRepository.EditActivity(activityId, activity);
-        }
+        var activityToEdit = activities.ElementAt(index);
+        activityToEdit.ActivityName = input;
+        this._activityRepository.EditActivity(activityToEdit.ActivityId, activityToEdit);
+        return new Result(true, "Edit Successfull!");
+    }
 
     internal void UpdateTaskTotalDuration(Activity activity, TimeSpan totalDuration)
     {
