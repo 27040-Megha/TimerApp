@@ -48,10 +48,5 @@ namespace TimerApplication.InfrastructureLayer
         {
             return FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);          
         }
-
-        public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid activityId)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
