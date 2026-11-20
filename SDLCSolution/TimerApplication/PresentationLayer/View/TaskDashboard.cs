@@ -153,21 +153,20 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activities.Count)
+            if (index < 1)
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
-            var activityToDelete = activities.ElementAt(index - 1);
-            if (activityToDelete.TaskStatus == TimerStatus.Running)
+            Result deletionResult = this._activityService.DeleteActivity(index - 1);
+            if (!deletionResult.IsSuccess)
             {
-                _userIO.DisplayMessage($"Task with Active timer can't be deleted, Stop the timer first!", MessageType.Warning);
+                _userIO.DisplayMessage(deletionResult.Message, MessageType.Error);
                 return;
             }
 
-            this._activityLogService.DeleteActivityLogsByTaskId(activityToDelete.ActivityId);
-            this._activityService.DeleteActivity(activityToDelete.ActivityId);
+            this._activityLogService.DeleteActivityLogsByTaskId(activities.ElementAt(index - 1).ActivityId);
             _userIO.DisplayMessage($"Task Deleted Successfully!", MessageType.Success);
         }
 

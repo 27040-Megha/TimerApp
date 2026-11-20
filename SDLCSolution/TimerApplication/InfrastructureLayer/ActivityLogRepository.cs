@@ -35,9 +35,19 @@ namespace TimerApplication.InfrastructureLayer
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
         }
 
+        public void ExportActivityLogsToCsv(string v, List<ActivityLog> logsToExport)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<ActivityLog> FetchAllActivityLogs()
         {
             return FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);          
+        }
+
+        public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid activityId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

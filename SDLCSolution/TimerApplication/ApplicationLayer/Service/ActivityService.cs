@@ -41,10 +41,22 @@ public class ActivityService
             this._activityRepository.EditActivity(taskId, activity);
         }
 
-        public void DeleteActivity(Guid activityId)
+    public Result DeleteActivity(int index)
+    {
+        var activities = this.GetAllActivities();
+        if (index >= activities.Count)
         {
-            this._activityRepository.DeleteActivity(activityId);
+            return new Result(false, "Index out of range");
         }
+        var activityToDelete = activities.ElementAt(index);
+        if (activityToDelete.TaskStatus == TimerStatus.Running)
+        {
+            return new Result(false, "Deletion failed, Task with active timer can't be deleted!");
+        }
+
+        this._activityRepository.DeleteActivity(activityToDelete.ActivityId);
+        return new Result(true, "Deletion successful!");
+    }
 
         public void RemoveLogDuration(Guid taskId, TimeSpan duration)
         {
@@ -59,4 +71,9 @@ public class ActivityService
             activity.ActivityName = input;
             this._activityRepository.EditActivity(activityId, activity);
         }
+
+    internal void UpdateTaskTotalDuration(Activity activity, TimeSpan totalDuration)
+    {
+        throw new NotImplementedException();
     }
+}
