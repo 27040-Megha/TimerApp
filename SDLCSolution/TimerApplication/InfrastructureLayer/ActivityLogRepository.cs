@@ -11,22 +11,14 @@ namespace TimerApplication.InfrastructureLayer
     {
         public void CreateActivityLog(ActivityLog activityLog)
         {
-            var activityLogs = FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);
+            var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
             activityLogs.Add(activityLog);
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
         }
 
         public void DeleteActivityLog(Guid activityLogId)
         {
-            var activityLogs = FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);
-            var logToDelete = activityLogs.FirstOrDefault(a => a.ActivityLogId == activityLogId);
-            activityLogs.Remove(logToDelete);
-            FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
-        }
-
-        public void EditActivityLog(Guid activityLogId, ActivityLog activityLog)
-        {
-            var activityLogs = FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);
+            var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
             var activityLogToUpdate = activityLogs.FirstOrDefault(a => a.ActivityLogId == activityLogId);
             activityLogToUpdate.LogName = activityLog.LogName;
             activityLogToUpdate.LogStatus = activityLog.LogStatus;
@@ -42,12 +34,8 @@ namespace TimerApplication.InfrastructureLayer
 
         public IEnumerable<ActivityLog> FetchAllActivityLogs()
         {
-            return FileHandlingService.ReadFile<HashSet<ActivityLog>>(FilePathResource.ActivityLogFilePath);          
-        }
-
-        public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid activityId)
-        {
-            throw new NotImplementedException();
+            var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
+            return activityLogs.Select(activity => new ActivityLog(activity.ActivityLogId, activity.LogName, activity.StartTime, activity.EndTime, activity.Duration, activity.LogStatus, activity.ActivityId, activity.UserId)).ToList();
         }
     }
 }

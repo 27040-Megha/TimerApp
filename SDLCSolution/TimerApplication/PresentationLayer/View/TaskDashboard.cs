@@ -293,7 +293,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void ViewSpecificTaskLog()
         {
-            HashSet<Activity> activities = this._activityService.GetAllActivities().ToHashSet();
+            List<Activity> activities = this._activityService.GetAllActivities();
             this.DisplayActivities(activities);
 
             _userIO.DisplayMessage($"Enter index of task to view activity details: ", MessageType.Info);
@@ -303,19 +303,25 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activities.Count)
+            if (index < 1)
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
-            var activity = activities.ElementAt(index-1);
-            var activityLogs = this._activityLogService.GetAllActivityLogs().Where(log => log.ActivityId == activity.ActivityId).OrderBy(a => a.StartTime);
+            Result isLogsFetched = this._activityLogService.GetAllActivityLogsByActivityIndex(index - 1, out IEnumerable<ActivityLog> activityLogs);
+            if (!isLogsFetched.IsSuccess)
+            {
+                _userIO.DisplayMessage(isLogsFetched.Message, MessageType.Error);
+                return;
+            }
+
+            Activity activity = activities.ElementAt(index - 1);
             _userIO.DisplayMessage($"{activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}", MessageType.Info);
             this.DisplayLogDetails(activityLogs);
         }
 
-        private void DisplayLogDetails(IOrderedEnumerable<ActivityLog> activityLogs)
+        private void DisplayLogDetails(IEnumerable<ActivityLog> activityLogs)
         {
             var logsList = activityLogs.ToList();
             for (int i = 0; i < logsList.Count; i++)
@@ -338,13 +344,7 @@ namespace TimerApplication.PresentationLayer.View
 
         private void StartTimer()
         {
-            HashSet<Activity> activities = this.GetAllActivities().Where(a => a.TaskStatus != TimerStatus.Running).ToHashSet();
-            if (activities.Count == 0)
-            {
-                _userIO.DisplayMessage($"No activities found to start Timer, first add new tasks", MessageType.Warning);
-                return;
-            }
-
+            IEnumerable<Activity> activities = this.GetAllActivities();
             this.DisplayActivities(activities);
             _userIO.DisplayMessage($"Enter index of task to Start Timer: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -353,14 +353,20 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activities.Count)
+            if (index < 1)
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
             index = index - 1;
-            this._activityLogService.StartTimer(activities.ElementAt(index).ActivityId);
+            Result startTimerResult = this._activityLogService.StartTimer(index);
+            if (!startTimerResult.IsSuccess)
+            {
+                _userIO.DisplayMessage(startTimerResult.Message, MessageType.Error);
+                return;
+            }
+
             _userIO.DisplayMessage($"Timer started Successfully!", MessageType.Success);
         }
 
@@ -385,14 +391,8 @@ namespace TimerApplication.PresentationLayer.View
 
         private void StopTimer()
         {
-            HashSet<ActivityLog> activityLogs = this.GetAllActivityLogs().Where(a => a.LogStatus == TimerStatus.Running).ToHashSet();
-            if (activityLogs.Count == 0)
-            {
-                _userIO.DisplayMessage($"No Active timers to stop", MessageType.Warning);
-                return;
-            }
-
-            this.DisplayActivityLogs(activityLogs);
+            IEnumerable<ActivityLog> activeLogs = this._activityLogService.GetAllActiveTimerLogs();
+            this.DisplayActivityLogs(activeLogs);
             _userIO.DisplayMessage($"Enter index of task to Stop Timer: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
             {
@@ -400,14 +400,20 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activityLogs.Count)
+            if (index < 1)
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
             }
 
             index = index - 1;
-            this._activityLogService.StopTimer(activityLogs.ElementAt(index).ActivityLogId);
+            Result stopTimerResult = this._activityLogService.StopTimer(index);
+            if (!stopTimerResult.IsSuccess)
+            {
+                _userIO.DisplayMessage(stopTimerResult.Message, MessageType.Error);
+                return;
+            }
+
             _userIO.DisplayMessage($"Timer stopped successfully!", MessageType.Success);
         }
 
