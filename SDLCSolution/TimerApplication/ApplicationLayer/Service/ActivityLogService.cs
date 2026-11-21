@@ -92,7 +92,7 @@ public class ActivityLogService
             return new Result(false, "No activity logs found to delete");
         }
 
-        if (index < 0 || index >= activityLogs.Count)
+        if (index >= activityLogs.Count)
         {
             return new Result(false, "Index out of range");
         }
