@@ -297,7 +297,6 @@ namespace TimerApplication.PresentationLayer.View
             List<Activity> activities = this._activityService.GetAllActivities();
             this.DisplayActivities(activities);
 
-            this.DisplayActivities(activities);
             if (!TryGetInputIndex("view task details", out int index))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
