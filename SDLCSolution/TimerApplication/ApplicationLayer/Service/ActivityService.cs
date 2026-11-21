@@ -88,9 +88,10 @@ public class ActivityService
         this._activityRepository.EditActivity(activityToEdit.ActivityId, activityToEdit);
         return new Result(true, "Edit Successfull!");
     }
-
-    internal void UpdateTaskTotalDuration(Activity activity, TimeSpan totalDuration)
+    public void UpdateTaskTotalDuration(Activity activitySelected, TimeSpan totalTaskDuration)
     {
-        throw new NotImplementedException();
+        var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == activitySelected.ActivityId);
+        activity.TotalDuration += totalTaskDuration;
+        this._activityRepository.EditActivity(activity.ActivityId, activity);
     }
 }

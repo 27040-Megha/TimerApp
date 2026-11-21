@@ -39,7 +39,6 @@ public class ViewOperator
     public void Run()
     {
         LoadPreviousUserSession();
-        _userIO.DisplayMessage("Welcome to Time Logger", MessageType.Info);
         int choice;
         do
         {
@@ -89,7 +88,7 @@ public class ViewOperator
                     TimeSpan cumulativeDuration = activity.TotalDuration +
                         activeTimeByActivity.GetValueOrDefault(activity.ActivityId);
 
-                    return $"{i + 1}. {activity.ActivityName}  Duration: {cumulativeDuration:hh\\:mm\\:ss}";
+                    return $"{i + 1}. {activity.ActivityName} Duration: {cumulativeDuration:hh\\:mm\\:ss}";
                 })
                 .ToList();
 
@@ -110,6 +109,10 @@ public class ViewOperator
                     return $"{i + 1}. {log.LogName} Start: {log.StartTime} Duration: {duration}";
                 })
                 .ToList();
+            if (lines.Count() == 0)
+            {
+                lines.Add("No active timers running");
+            }
 
             _userIO.DisplayPanel(DisplayRegion.SecondarySidebar, "Active Timers: ", lines);
         }
@@ -152,11 +155,13 @@ public class ViewOperator
 
     private void DisplayMenu()
     {
-        _userIO.DisplayMessage("1. Signup \n2. Login \n3. Exit \nEnter Your Option (1/2/3): ");
+        _userIO.DisplayMessage("Welcome to Time Logger", MessageType.Info);
+        _userIO.DisplayMessageAtSameLine("1. Signup \n2. Login \n3. Exit \nEnter Your Option (1/2/3): ");
     }
 
     private void LoginUser()
     {
+        _userIO.DisplayMessage("LOGIN FORM", MessageType.Info);
         if (!TryGetInput("Email", _userIO.ReadInput, ValidateEmail, out string email) ||
             !TryGetInput("Password", _userIO.ReadMaskedPassword, ValidatePassword, out string password))
         {
@@ -187,6 +192,7 @@ public class ViewOperator
 
     private void SignupUser()
     {
+        _userIO.DisplayMessage("SIGNUP FORM", MessageType.Info);
         if (!TryGetInput("User name",_userIO.ReadInput, ValidateName, out string userName) ||
             !TryGetInput("Email", _userIO.ReadInput, ValidateEmail, out string email) ||
             !TryGetInput("Password", _userIO.ReadMaskedPassword, ValidatePassword, out string password))
@@ -204,6 +210,8 @@ public class ViewOperator
         }
 
         _userIO.DisplayMessage("Signup Successful!", MessageType.Success);
+        this._userService.LoginUser(email, password);
+        this._taskDashboard.RunDashboard();
     }
 
     private bool TryGetInput(string fieldName, Func<string> readInput, ValidateInput validateInput, out string result)

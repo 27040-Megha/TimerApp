@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using TimerApplication.ApplicationLayer.Interface;
-using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.InfrastructureLayer
@@ -35,20 +34,20 @@ namespace TimerApplication.InfrastructureLayer
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
         }
 
-        public void ExportActivityLogsToCsv(string v, List<ActivityLog> logsToExport)
+        public void ExportActivityLogsToCsv(string fileName, List<ActivityLog> logsToExport)
         {
-            throw new NotImplementedException();
+            FileHandlingService.ExportToCSV(fileName, logsToExport);
+        }
+
+        public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid taskId)
+        {
+            return FileHandlingService.DeserializeActivityLogsFromCsv(filePath, taskId);
         }
 
         public IEnumerable<ActivityLog> FetchAllActivityLogs()
         {
             var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
             return activityLogs.Select(activity => new ActivityLog(activity.ActivityLogId, activity.LogName, activity.StartTime, activity.EndTime, activity.Duration, activity.LogStatus, activity.ActivityId, activity.UserId)).ToList();
-        }
-
-        public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid activityId)
-        {
-            throw new NotImplementedException();
         }
     }
 }
