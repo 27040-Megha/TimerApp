@@ -188,7 +188,12 @@ public class ActivityLogService
         try
         {
             var activities = this._activityService.GetAllActivities();
-            if (index < 0 || index >= activities.Count)
+            if (!activities.Any())
+            {
+                return new Result(false, "No tasks found to import logs");
+            }
+                
+            if (index >= activities.Count)
             {
                 return new Result(false, "Index Out Of Range");
             }

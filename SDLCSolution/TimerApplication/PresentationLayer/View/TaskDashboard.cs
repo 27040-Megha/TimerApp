@@ -436,12 +436,6 @@ namespace TimerApplication.PresentationLayer.View
         private void ImportTimeLog()
         {
             var activities = this._activityService.GetAllActivities();
-            if (!activities.Any())
-            {
-                _userIO.DisplayMessage("No tasks added to import timelogs!", MessageType.Warning);
-                return;
-            }
-
             this.DisplayActivities(activities);
             if (!TryGetInputIndex("of task to import Task logs", out int index))
             {
@@ -449,7 +443,7 @@ namespace TimerApplication.PresentationLayer.View
                 return;
             }
 
-            if (index < 1 || index > activities.Count)
+            if (index < 1)
             {
                 _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
                 return;
