@@ -174,12 +174,27 @@ namespace TimerApplication.PresentationLayer.View
             Result deletionResult = this._activityService.DeleteActivity(index - 1);
             if (!deletionResult.IsSuccess)
             {
-                _userIO.DisplayMessage(deletionResult.Message, MessageType.Error);
+                string errorMessage = this.GetErrorMessage(deletionResult.ErrorType);
+                _userIO.DisplayMessage(errorMessage, MessageType.Error);
                 return;
             }
 
             this._activityLogService.DeleteActivityLogsByTaskId(activities.ElementAt(index - 1).ActivityId);
             _userIO.DisplayMessage($"Task Deleted Successfully!", MessageType.Success);
+        }
+
+        private string GetErrorMessage(ErrorCode errorCode)
+        {
+            string errorMessage = errorCode switch
+            {
+                ErrorCode.NoActivitiesFound => "No activities found to delete",
+                ErrorCode.IndexOutOfRange => "Index out of bounds, Deletion failed",
+                ErrorCode.TimerRunning => "Active timer running, Can't perform Operation",
+                ErrorCode.None => "No error, Operation Successful",
+                _ => "Deletion failed due to some unknown reasons"
+            };
+
+            return errorMessage;
         }
 
         private void DeleteTaskLogs()

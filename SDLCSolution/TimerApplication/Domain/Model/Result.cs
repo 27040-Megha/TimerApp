@@ -16,9 +16,17 @@ public class Result
         this.LoginStatus = authenticationStatus;
     }
 
+    public Result(bool isSuccess, ErrorCode errorCode)
+    {
+        this.IsSuccess = isSuccess;
+        this.ErrorType = errorCode;
+    }
+
     public bool IsSuccess { get; set; }
 
     public string Message { get; set; }
+
+    public ErrorCode ErrorType { get; set; }
 
     public AuthenticationStatus LoginStatus { get; set; }
 }
