@@ -109,7 +109,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \nEnter Your Option (1/2): ");
-            if (!TryGetInputIndex(out int choice))
+            if (!InputValidator.ValidateInteger(Console.ReadLine(), out int choice))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -137,7 +137,7 @@ namespace TimerApplication.PresentationLayer.View
             }
 
             _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \nEnter Your Option (1/2): ");
-            if (!TryGetInputIndex(out int choice))
+            if (!InputValidator.ValidateInteger(Console.ReadLine(), out int choice))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -496,6 +496,12 @@ namespace TimerApplication.PresentationLayer.View
         private void ImportTimeLog()
         {
             var activities = this._activityService.GetAllActivities();
+            if (!HasAnyItems(activities))
+            {
+                _userIO.DisplayMessage("No activity found to import time log", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivities(activities);
             if (!TryGetInputIndex("of task to import Task logs", out int index))
             {
@@ -536,9 +542,9 @@ namespace TimerApplication.PresentationLayer.View
         private void ExportTimeLog()
         {
             var activities = this._activityService.GetAllActivities();
-            if (!activities.Any())
+            if (!HasAnyItems(activities))
             {
-                _userIO.DisplayMessage("No tasks added to export timelogs!", MessageType.Warning);
+                _userIO.DisplayMessage("No activity found to export time log", MessageType.Warning);
                 return;
             }
 
