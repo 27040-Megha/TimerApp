@@ -100,6 +100,12 @@ namespace TimerApplication.PresentationLayer.View
 
         private void Edit()
         {
+            if (!HasAnyItems(GetAllActivities()))
+            {
+                _userIO.DisplayMessage("No activities found to Edit", MessageType.Warning);
+                return;
+            }
+
             _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \nEnter Your Option (1/2): ");
             if (!TryGetInputIndex(out int choice))
             {
@@ -122,6 +128,12 @@ namespace TimerApplication.PresentationLayer.View
 
         private void Delete()
         {
+            if (!HasAnyItems(GetAllActivities()))
+            {
+                _userIO.DisplayMessage("No activities found to Delete", MessageType.Warning);
+                return;
+            }
+
             _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \nEnter Your Option (1/2): ");
             if (!TryGetInputIndex(out int choice))
             {
@@ -173,6 +185,12 @@ namespace TimerApplication.PresentationLayer.View
         private void DeleteTaskLogs()
         {
             var activityLogs = this._activityLogService.GetAllActivityLogs().ToList();
+            if (!HasAnyItems(activityLogs))
+            {
+                _userIO.DisplayMessage("No activity logs found to delete!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivityLogs(activityLogs);
             _userIO.DisplayMessage($"Enter index of task log to be deleted: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -200,6 +218,12 @@ namespace TimerApplication.PresentationLayer.View
         private void EditTaskLog()
         {
             var activityLogs = this._activityLogService.GetAllActivityLogs().ToList();
+            if (!HasAnyItems(activityLogs))
+            {
+                _userIO.DisplayMessage("No activity logs found to edit!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivityLogs(activityLogs);
             _userIO.DisplayMessage($"Enter index of task log to be edited: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
