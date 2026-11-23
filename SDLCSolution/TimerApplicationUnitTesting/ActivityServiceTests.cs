@@ -38,9 +38,8 @@ public class ActivityServiceTests
     public void DeleteActivity_ShallReturnFailure_WhenNoActivitiesExist()
     {
         Result actualResult = _activityService.DeleteActivity(2);
-        string expectedResult = "No activities found to delete";
         Assert.That(actualResult.IsSuccess, Is.EqualTo(false));
-        Assert.That(actualResult.Message, Is.EqualTo(expectedResult));
+        Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.NoActivitiesFound));
     }
 
     [Test]
@@ -62,9 +61,8 @@ public class ActivityServiceTests
     {
         AddSampleActivity();
         Result actualResult = _activityService.DeleteActivity(5);
-        string expectedResult = "Index out of range";
         Assert.That(actualResult.IsSuccess, Is.EqualTo(false));
-        Assert.That(actualResult.Message, Is.EqualTo(expectedResult));
+        Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.IndexOutOfRange));
     }
 
     [Test]
@@ -72,9 +70,8 @@ public class ActivityServiceTests
     {
         AddSampleActivity(TimerStatus.Running);
         Result actualResult = _activityService.DeleteActivity(0);
-        string expectedResult = "Deletion failed, Task with active timer can't be deleted!";
         Assert.That(actualResult.IsSuccess, Is.EqualTo(false));
-        Assert.That(actualResult.Message, Is.EqualTo(expectedResult));
+        Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.TimerRunning));
     }
 
     [Test]
@@ -82,9 +79,8 @@ public class ActivityServiceTests
     {
         AddSampleActivity();
         Result actualResult = _activityService.DeleteActivity(0);
-        string expectedResult = "Deletion successful!";
         Assert.That(actualResult.IsSuccess, Is.EqualTo(true));
-        Assert.That(actualResult.Message, Is.EqualTo(expectedResult));
+        Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.None));
         Assert.That(_mockActivityRepository.GetAllActivities().Count(), Is.EqualTo(0));
     }
 }
