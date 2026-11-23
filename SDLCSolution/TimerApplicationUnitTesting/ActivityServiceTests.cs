@@ -35,7 +35,7 @@ public class ActivityServiceTests
     }
 
     [Test]
-    public void DeleteActivity_WhenNoActivitiesExist()
+    public void DeleteActivity_ShallReturnFailure_WhenNoActivitiesExist()
     {
         Result actualResult = _activityService.DeleteActivity(2);
         string expectedResult = "No activities found to delete";
@@ -44,27 +44,21 @@ public class ActivityServiceTests
     }
 
     [Test]
-    public void DeleteActivity_WhenIndexIsInvalidInteger()
+    public void DeleteActivity_ThrowsFormatException_WhenIndexIsInvalidInteger()
     {
         AddSampleActivity();
-        Result actualResult = _activityService.DeleteActivity(int.Parse("ab"));
-        string expectedResult = "Invalid integer format";
-        Assert.That(actualResult.IsSuccess, Is.EqualTo(false));
-        Assert.That(actualResult.Message, Is.EqualTo(expectedResult));
+        Assert.Throws<FormatException>(() => _activityService.DeleteActivity(int.Parse("ab")));
     }
 
     [Test]
-    public void DeleteActivity_WhenIndexIsNegative()
+    public void DeleteActivity_ThrowsArgumentOutOfRangeException_WhenIndexIsNegative()
     {
         AddSampleActivity();
-        Result actualResult = _activityService.DeleteActivity(-1);
-        string expectedResult = "Index out of range";
-        Assert.That(actualResult.IsSuccess, Is.EqualTo(false));
-        Assert.That(actualResult.Message, Is.EqualTo(expectedResult));
+        Assert.Throws<ArgumentOutOfRangeException>(() => _activityService.DeleteActivity(-1));
     }
 
     [Test]
-    public void DeleteActivity_WhenIndexIsOutOfBoundsOfActivitylist()
+    public void DeleteActivity_ShallReturnFailure_WhenIndexIsOutOfBoundsOfActivitylist()
     {
         AddSampleActivity();
         Result actualResult = _activityService.DeleteActivity(5);
@@ -74,7 +68,7 @@ public class ActivityServiceTests
     }
 
     [Test]
-    public void DeleteActivity_WhenTimerIsRunning()
+    public void DeleteActivity_ShallReturnFailure_WhenTimerIsRunning()
     {
         AddSampleActivity(TimerStatus.Running);
         Result actualResult = _activityService.DeleteActivity(0);
@@ -84,7 +78,7 @@ public class ActivityServiceTests
     }
 
     [Test]
-    public void DeleteActivity_WhenTimerIsStopped()
+    public void DeleteActivity_ShallReturnSuccess_WhenTimerIsStopped()
     {
         AddSampleActivity();
         Result actualResult = _activityService.DeleteActivity(0);
