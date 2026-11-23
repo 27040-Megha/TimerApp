@@ -142,6 +142,11 @@ namespace TimerApplication.PresentationLayer.View
         {
             List<Activity> activities = this._activityService.GetAllActivities();
             this.DisplayActivities(activities);
+            if (! HasAnyItems(activities))
+            {
+                _userIO.DisplayMessage("No activies found to view specific logs!", MessageType.Warning);
+                return;
+            }
 
             _userIO.DisplayMessage($"Enter index of task to view activity details: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
