@@ -1,79 +1,64 @@
-﻿# Assignment-10 : Understanding the .NET
- 
-## Overview
- 
-Create a simple C# console application Calculator App that performs Add, Subtract, Multiply and Divide operations.
+﻿# Timer Activities Test Plan
 
----
-	
-##  Project Structure
-```text
-CalculatorApp
-|
-├── ApplicationLayer
-│   └── Service
-│      └── MathUtility.cs
-│
-├── PresentationLayer
-│   └── View
-│       └── ConsoleOperations.cs
-│   └── Helper
-│       └── InputValidation.cs
-│
-└── Program.cs
-```
-
----
-
-# Folder Structure
- 
-# ApplicationLayer
-
-# Service
- 
-## MathUtility.cs
-
-- Contains all Business logic to perform Calculator Operations.
- 
-Methods
-
-- int Add(int number1, int number2) - Returns the sum of two integers
-- int Subtract(int number1, int number2) - Returns the difference between two integers
-- int Multiply(int number1, int number2) - Returns the product of two integers
-- int Divide(int number1, int number2) - Checks if number2 is 0 and Returns the quotient
-
----
-
-# PresentationLayer
-
-## View
-
-## ConsoleOperations.cs
- 
-- Shows Output to User
-
-Methods
-
-- void Run()
-- int GetNumbers()
-- void DisplayAddition()
-- void DisplaySubtraction()
-- void DisplayMultiplication()
-- void DisplayDivision()
-
-## Helper
-## InputValidation.cs
- 
-- Contains helper methods that validates user input
-
-Methods
-
-- bool ValidateInteger(out int number) - Checks if given input is a valid integer.
-
----
-
- 
-## Program.cs
- 
-- Creates object for ApplicationLayer and PresentationLayer and inject their dependencies and start the application by using Run().
----
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Scenario / Description</th>
+      <th>Input Parameters</th>
+      <th>Test Data</th>
+      <th>Expected Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="5"><strong>Start Timer</strong></td>
+      <td>Index out of range</td>
+      <td rowspan="5">Index</td>
+      <td><code>-1</code> or any value below 0</td>
+      <td>ERROR: Argument out of range exception</td>
+    </tr>
+    <tr>
+      <td>Invalid Integer format</td>
+      <td><code>ab</code>, <code>$</code>, <code>+</code></td>
+      <td>ERROR: Format Exception - Invalid integer format</td>
+    </tr>
+    <tr>
+      <td>Index out of range</td>
+      <td>above <code>activities.Count</code></td>
+      <td>ERROR: Index out of range</td>
+    </tr>
+    <tr>
+      <td>Valid index, Timer Status - Running</td>
+      <td><code>1</code></td>
+      <td>ERROR: Can't Start Timer, Timer is actively running</td>
+    </tr>
+    <tr>
+      <td>Valid index, Timer Status - Not Started/ Stopped</td>
+      <td><code>2</code></td>
+      <td>SUCCESS: Timer started successfully</td>
+    </tr>
+    <tr>
+      <td rowspan="4"><strong>Stop Timer</strong><br><em>(Only tasks with active timers will be displayed)</em></td>
+      <td>Index out of range</td>
+      <td rowspan="4">Index</td>
+      <td><code>-1</code> or any value below 0</td>
+      <td>ERROR: Argument out of range exception</td>
+    </tr>
+    <tr>
+      <td>Invalid Integer format</td>
+      <td><code>ab</code>, <code>$</code>, <code>+</code></td>
+      <td>ERROR: Format Exception - Invalid integer format</td>
+    </tr>
+    <tr>
+      <td>Index out of range</td>
+      <td>above <code>activities.Count</code></td>
+      <td>ERROR: Index out of range</td>
+    </tr>
+    <tr>
+      <td>Valid Index</td>
+      <td><code>2</code></td>
+      <td>SUCCESS: Timer stopped successfully</td>
+    </tr>
+  </tbody>
+</table>
