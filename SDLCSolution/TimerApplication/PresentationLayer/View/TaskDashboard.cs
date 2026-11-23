@@ -143,9 +143,20 @@ namespace TimerApplication.PresentationLayer.View
             throw new NotImplementedException();
         }
 
+        private bool HasAnyItems<T>(IEnumerable<T> entries)
+        {
+            return entries.Any();
+        }
+
         private void StartTimer()
         {
             IEnumerable<Activity> activities = this.GetAllActivities();
+            if (!HasAnyItems(activities))
+            {
+                _userIO.DisplayMessage("No activities found to start the timer!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivities(activities);
             _userIO.DisplayMessage($"Enter index of task to Start Timer: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
@@ -193,6 +204,12 @@ namespace TimerApplication.PresentationLayer.View
         private void StopTimer()
         {
             IEnumerable<ActivityLog> activeLogs = this._activityLogService.GetAllActiveTimerLogs();
+            if (!HasAnyItems(activeLogs))
+            {
+                _userIO.DisplayMessage("No active logs found to stop the timer!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivityLogs(activeLogs);
             _userIO.DisplayMessage($"Enter index of task to Stop Timer: ", MessageType.Info);
             if (!TryGetInputIndex(out int index))
