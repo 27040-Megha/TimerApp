@@ -1,43 +1,86 @@
 ﻿# Signup & Validation Test Plan
 
-This document outlines the unit test cases for the **Signup** service method (`CreateUser`) and the presentation layer **Email** and **Password** validation helper methods.
-
----
-
-## 1. Signup Feature (`CreateUser`)
-
-**Input Parameters:** `User name, email, password`
-
-| Scenario / Description | Test Data | Expected Result |
-| :--- | :--- | :--- |
-| Valid Username, valid email, valid password (New email ID) | `Megha`, `meghaeg@gmail.com`, `Megha@123` | `SUCCESS: Signup successful` |
-| Valid Username, valid email, valid password (Email exists already) | `Megha`, `meghaeg@gmail.com`, `Megha@123` | `ERROR: Email ID already exists` |
-
----
-
-## 2. Email Validation Helper
-
-**Input Parameter:** `email (string)`
-
-| Scenario / Description | Test Data | Expected Result |
-| :--- | :--- | :--- |
-| Valid Email | `meghaeg@gmail.com`, `megha@kec.edu` | `SUCCESS: Valid Email` |
-| Invalid email (Missing @) | `meghagmail.com` | `ERROR: Invalid Email format` |
-| Invalid email (Missing characters before @) | `@meghagmail.com` | `ERROR: Invalid Email format` |
-| Invalid email (Missing .) | `megha@gmailcom` | `ERROR: Invalid Email format` |
-| Invalid email (Missing characters between @ and .) | `megha@.com` | `ERROR: Invalid Email format` |
-| Invalid email (Missing characters after .) | `megha@gmail.` | `ERROR: Invalid Email format` |
-
----
-
-## 3. Password Validation Helper
-
-**Input Parameter:** `Password (string)`
-
-| Scenario / Description | Test Data | Expected Result |
-| :--- | :--- | :--- |
-| Valid Password | `Megha@123` | `SUCCESS: Valid Password` |
-| Invalid Password (Length less than 8) | `Meg@12` | `ERROR: Invalid Password format` |
-| Invalid Password (Missing capital letter) | `megha@123` | `ERROR: Invalid Password format` |
-| Invalid Password (Missing Special character) | `megha1234` | `ERROR: Invalid Password format` |
-| Invalid Password (Missing numbers) | `meghaa@eg` | `ERROR: Invalid Password format` |
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Scenario / Description</th>
+      <th>Input Parameters</th>
+      <th>Test Data</th>
+      <th>Expected Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="2"><strong>Signup</strong></td>
+      <td>Valid Username, valid email, valid password (New email ID)</td>
+      <td rowspan="2">User name, email, password</td>
+      <td><code>Megha</code>, <code>meghaeg@gmail.com</code>, <code>Megha@123</code></td>
+      <td>SUCCESS: Signup successful</td>
+    </tr>
+    <tr>
+      <td>Valid Username, valid email, valid password (Email exists already)</td>
+      <td><code>Megha</code>, <code>meghaeg@gmail.com</code>, <code>Megha@123</code></td>
+      <td>ERROR: Email ID already exists</td>
+    </tr>
+    <tr>
+      <td rowspan="6"><strong>Email validation</strong></td>
+      <td>Valid Email</td>
+      <td rowspan="6">email (string)</td>
+      <td><code>meghaeg@gmail.com</code>, <code>megha@kec.edu</code></td>
+      <td>SUCCESS: Valid Email</td>
+    </tr>
+    <tr>
+      <td>Invalid email (Missing @)</td>
+      <td><code>meghagmail.com</code></td>
+      <td>ERROR: Invalid Email format</td>
+    </tr>
+    <tr>
+      <td>Invalid email (Missing characters before @)</td>
+      <td><code>@meghagmail.com</code></td>
+      <td>ERROR: Invalid Email format</td>
+    </tr>
+    <tr>
+      <td>Invalid email (Missing .)</td>
+      <td><code>megha@gmailcom</code></td>
+      <td>ERROR: Invalid Email format</td>
+    </tr>
+    <tr>
+      <td>Invalid email (Missing characters between @ and .)</td>
+      <td><code>megha@.com</code></td>
+      <td>ERROR: Invalid Email format</td>
+    </tr>
+    <tr>
+      <td>Invalid email (Missing characters after .)</td>
+      <td><code>megha@gmail.</code></td>
+      <td>ERROR: Invalid Email format</td>
+    </tr>
+    <tr>
+      <td rowspan="5"><strong>Password validation</strong></td>
+      <td>Valid Password</td>
+      <td rowspan="5">Password (string)</td>
+      <td><code>Megha@123</code></td>
+      <td>SUCCESS: Valid Password</td>
+    </tr>
+    <tr>
+      <td>Invalid Password (Length less than 8)</td>
+      <td><code>Meg@12</code></td>
+      <td>ERROR: Invalid Password format</td>
+    </tr>
+    <tr>
+      <td>Invalid Password (Missing capital letter)</td>
+      <td><code>megha@123</code></td>
+      <td>ERROR: Invalid Password format</td>
+    </tr>
+    <tr>
+      <td>Invalid Password (Missing Special character)</td>
+      <td><code>megha1234</code></td>
+      <td>ERROR: Invalid Password format</td>
+    </tr>
+    <tr>
+      <td>Invalid Password (Missing numbers)</td>
+      <td><code>meghaa@eg</code></td>
+      <td>ERROR: Invalid Password format</td>
+    </tr>
+  </tbody>
+</table>
