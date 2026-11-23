@@ -46,21 +46,21 @@ public class ActivityService
         var activities = this.GetAllActivities();
         if (activities.Count == 0)
         {
-            return new Result(false, "No activities found to delete");
+            return new Result(false, ErrorCode.NoActivitiesFound);
         }
 
         if (index >= activities.Count)
         {
-            return new Result(false, "Index out of range");
+            return new Result(false, ErrorCode.IndexOutOfRange);
         }
         var activityToDelete = activities.ElementAt(index);
         if (activityToDelete.TaskStatus == TimerStatus.Running)
         {
-            return new Result(false, "Deletion failed, Task with active timer can't be deleted!");
+            return new Result(false, ErrorCode.TimerRunning);
         }
 
         this._activityRepository.DeleteActivity(activityToDelete.ActivityId);
-        return new Result(true, "Deletion successful!");
+        return new Result(true, ErrorCode.None);
     }
 
     public void RemoveLogDuration(Guid taskId, TimeSpan duration)

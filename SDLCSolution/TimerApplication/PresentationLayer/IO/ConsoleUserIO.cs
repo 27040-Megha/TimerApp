@@ -47,6 +47,15 @@ public class ConsoleUserIO : IUserIO
         }
     }
 
+    /// <summary>
+    /// Displays message at specified position in the Console using SetCursorPosition
+    /// </summary>
+    /// <param name="left">Left-position of cursor</param>
+    /// <param name="top">Top-position of cursor</param>
+    /// <param name="message">Message to be displayed</param>
+    /// <param name="messageType">Message Type to decide the color of the text</param>
+
+
     private void DisplayMessageAt(int left, int top, string message, MessageType messageType = MessageType.Default)
     {
         lock (_consoleLock)
@@ -59,47 +68,61 @@ public class ConsoleUserIO : IUserIO
         }
     }
 
+    /// <summary>
+    /// Divides the Console into 3 parts - Main Menu, Side Bar1 (Primary Sidebar), Side Bar2 (Secondary Sidebar)
+    /// Primary bar - Displays all tasks added by the user
+    /// Secondary bar - Displays current active task logs
+    /// </summary>
+    /// <param name="region">Primary or Secondary Side bar</param>
+    /// <param name="title">Title for the Side bar</param>
+    /// <param name="items">Items to be displayed in the region</param>
     public void DisplayPanel(DisplayRegion region, string title, IReadOnlyList<string> items)
     {
-        int col2Left = Math.Max(45, (int)(WindowWidth * 0.28));
-        int col3Left = Math.Max(82, (int)(WindowWidth * 0.52));
+        // Set column starting position based on the Console Window size
+        int col2Left = Math.Max(45, (int)(WindowWidth * 0.2));
+        int col3Left = Math.Max(82, (int)(WindowWidth * 0.5));
 
         switch (region)
         {
             case DisplayRegion.PrimarySidebar:
                 {
+                    // Calculate width of Primary Side bar based on Console Window width
                     int width = Math.Min(col3Left, WindowWidth) - col2Left - 2;
                     if (width > 10)
                     {
-                        DivideColumn(col2Left, topOffset: WindowTop, width, title, items);
+                        DivideColumn(col2Left, WindowTop, width, title, items);
                     }
                     break;
                 }
             case DisplayRegion.SecondarySidebar:
                 {
+                    // Calculate width of Secondary Side bar based on Console Window width
                     int width = WindowWidth - col3Left - 1;
                     if (width > 10)
                     {
-                        DivideColumn(col3Left, topOffset: WindowTop, width, title, items);
+                        DivideColumn(col3Left, WindowTop, width, title, items);
                     }
                     break;
                 }
         }
     }
 
-    private void DivideColumn(int left, int topOffset, int width, string title, IReadOnlyList<string> items)
+    /// <summary>
+    /// Displays messages within specified boundaries
+    /// </summary>
+    private void DivideColumn(int left, int top, int width, string title, IReadOnlyList<string> items)
     {
         lock (_consoleLock)
         {
-            DisplayMessageAt(left, topOffset, title.PadRight(width), MessageType.Info);
+            DisplayMessageAt(left, top, title.PadRight(width), MessageType.Info);
 
             for (int i = 0; i < items.Count; i++)
             {
                 string text = items[i].Length > width ? items[i].Substring(0, width) : items[i];
-                DisplayMessageAt(left, topOffset + i + 1, text.PadRight(width));
+                DisplayMessageAt(left, top + i + 1, text.PadRight(width));
             }
 
-            DisplayMessageAt(left, topOffset + items.Count + 1, new string(' ', width));
+            DisplayMessageAt(left, top + items.Count + 1, new string(' ', width));
         }
     }
 

@@ -102,7 +102,13 @@ namespace TimerApplication.PresentationLayer.View
 
         private void Edit()
         {
-            _userIO.DisplayMessageAtSameLine("1. Edit Task Name\n2. Edit Task Log Name \nEnter Your Option (1/2): ");
+            if (!HasAnyItems(GetAllActivities()))
+            {
+                _userIO.DisplayMessage("No activities found to Edit", MessageType.Warning);
+                return;
+            }
+
+            _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \nEnter Your Option (1/2): ");
             if (!InputValidator.ValidateInteger(Console.ReadLine(), out int choice))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
@@ -124,7 +130,13 @@ namespace TimerApplication.PresentationLayer.View
 
         private void Delete()
         {
-            _userIO.DisplayMessageAtSameLine("1. Delete Task \n2. Delete Task Logs \nEnter Your Option (1/2): ");
+            if (!HasAnyItems(GetAllActivities()))
+            {
+                _userIO.DisplayMessage("No activities found to Delete", MessageType.Warning);
+                return;
+            }
+
+            _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \nEnter Your Option (1/2): ");
             if (!InputValidator.ValidateInteger(Console.ReadLine(), out int choice))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
@@ -163,7 +175,8 @@ namespace TimerApplication.PresentationLayer.View
             Result deletionResult = this._activityService.DeleteActivity(index - 1);
             if (!deletionResult.IsSuccess)
             {
-                _userIO.DisplayMessage(deletionResult.Message, MessageType.Error);
+                string errorMessage = this.GetErrorMessage(deletionResult.ErrorType);
+                _userIO.DisplayMessage(errorMessage, MessageType.Error);
                 return;
             }
 
@@ -171,9 +184,29 @@ namespace TimerApplication.PresentationLayer.View
             _userIO.DisplayMessage($"Task Deleted Successfully!", MessageType.Success);
         }
 
+        private string GetErrorMessage(ErrorCode errorCode)
+        {
+            string errorMessage = errorCode switch
+            {
+                ErrorCode.NoActivitiesFound => "No activities found to delete",
+                ErrorCode.IndexOutOfRange => "Index out of bounds, Deletion failed",
+                ErrorCode.TimerRunning => "Active timer running, Can't perform Operation",
+                ErrorCode.None => "No error, Operation Successful",
+                _ => "Deletion failed due to some unknown reasons"
+            };
+
+            return errorMessage;
+        }
+
         private void DeleteTaskLogs()
         {
             var activityLogs = this._activityLogService.GetAllActivityLogs().ToList();
+            if (!HasAnyItems(activityLogs))
+            {
+                _userIO.DisplayMessage("No activity logs found to delete!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivityLogs(activityLogs);
             if (!TryGetInputIndex("delete a task log", out int index))
             {
@@ -200,6 +233,12 @@ namespace TimerApplication.PresentationLayer.View
         private void EditTaskLog()
         {
             var activityLogs = this._activityLogService.GetAllActivityLogs().ToList();
+            if (!HasAnyItems(activityLogs))
+            {
+                _userIO.DisplayMessage("No activity logs found to edit!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivityLogs(activityLogs);
             if (!TryGetInputIndex("edit a task", out int index))
             {
@@ -296,6 +335,11 @@ namespace TimerApplication.PresentationLayer.View
         {
             List<Activity> activities = this._activityService.GetAllActivities();
             this.DisplayActivities(activities);
+            if (! HasAnyItems(activities))
+            {
+                _userIO.DisplayMessage("No activies found to view specific logs!", MessageType.Warning);
+                return;
+            }
 
             if (!TryGetInputIndex("view task details", out int index))
             {
@@ -342,10 +386,20 @@ namespace TimerApplication.PresentationLayer.View
             }
         }
 
+        private bool HasAnyItems<T>(IEnumerable<T> entries)
+        {
+            return entries.Any();
+        }
 
         private void StartTimer()
         {
             IEnumerable<Activity> activities = this.GetAllActivities();
+            if (!HasAnyItems(activities))
+            {
+                _userIO.DisplayMessage("No activities found to start the timer!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivities(activities);
             if (!TryGetInputIndex("Start timer for task", out int index))
             {
@@ -394,6 +448,12 @@ namespace TimerApplication.PresentationLayer.View
         private void StopTimer()
         {
             IEnumerable<ActivityLog> activeLogs = this._activityLogService.GetAllActiveTimerLogs();
+            if (!HasAnyItems(activeLogs))
+            {
+                _userIO.DisplayMessage("No active logs found to stop the timer!", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivityLogs(activeLogs);
             if (!TryGetInputIndex("to stop timer", out int index))
             {
@@ -436,6 +496,12 @@ namespace TimerApplication.PresentationLayer.View
         private void ImportTimeLog()
         {
             var activities = this._activityService.GetAllActivities();
+            if (!HasAnyItems(activities))
+            {
+                _userIO.DisplayMessage("No activity found to import time log", MessageType.Warning);
+                return;
+            }
+
             this.DisplayActivities(activities);
             if (!TryGetInputIndex("of task to import Task logs", out int index))
             {
@@ -476,9 +542,9 @@ namespace TimerApplication.PresentationLayer.View
         private void ExportTimeLog()
         {
             var activities = this._activityService.GetAllActivities();
-            if (!activities.Any())
+            if (!HasAnyItems(activities))
             {
-                _userIO.DisplayMessage("No tasks added to export timelogs!", MessageType.Warning);
+                _userIO.DisplayMessage("No activity found to export time log", MessageType.Warning);
                 return;
             }
 
