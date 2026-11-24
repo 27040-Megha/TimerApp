@@ -1,4 +1,6 @@
-﻿namespace TimerApplication.Domain.Model; 
+﻿using TimerApplication.Domain.Enums;
+
+namespace TimerApplication.Domain.Model; 
 
 public class Result
 {
@@ -22,7 +24,7 @@ public class Result
 
     public bool IsSuccess { get; set; }
 
-    public string Message { get; set; }
+    public string? Message { get; set; }
 
     public ErrorCode ErrorType { get; set; }
 

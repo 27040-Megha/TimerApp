@@ -19,7 +19,7 @@ public class ActivityRepository : IActivityRepository
         if (activityToEdit == null)
         {
             return;
-
+        }
 
         activityToEdit.ActivityName = activityToBeAssigned.ActivityName;
         activityToEdit.TotalDuration = activityToBeAssigned.TotalDuration;
@@ -28,22 +28,14 @@ public class ActivityRepository : IActivityRepository
 
     public void DeleteActivity(Guid activityId)
     {
-        var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
-        var activityToDelete = activities.FirstOrDefault(a => a.ActivityId == activityId);
-        activities.Remove(activityToDelete);
+        List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
+        Activity? activityToDelete = activities.FirstOrDefault(a => a.ActivityId == activityId);
+        activities.Remove(activityToDelete!);
         FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
     }
     public IEnumerable<Activity> GetAllActivitiesByUser(Guid userId)
     {
         List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
         return activities.Where(activity => activity.UserId == userId);
-    }
-       
-    public Activity GetActivityById(Guid activityId)
-    {
-        var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
-        return activities.FirstOrDefault(a => a.ActivityId == activityId);
-    }
-
     }
 }

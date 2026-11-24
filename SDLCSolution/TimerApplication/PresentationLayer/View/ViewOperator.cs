@@ -206,7 +206,7 @@ public class ViewOperator
     private static bool ValidatePassword(string? input, out string error)
     {
         Result passwordCheckResult = InputValidator.ValidatePassword(input);
-        error = passwordCheckResult.Message;
+        error = passwordCheckResult.Message!;
         return passwordCheckResult.IsSuccess;
     }
 }

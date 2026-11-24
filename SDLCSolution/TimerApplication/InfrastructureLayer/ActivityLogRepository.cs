@@ -12,6 +12,14 @@ public class ActivityLogRepository : IActivityLogRepository
         FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
     }
 
+    public void DeleteActivityLog(Guid activityLogId)
+    {
+        List<ActivityLog> activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath) ?? new List<ActivityLog>();
+        ActivityLog? logToDelete = activityLogs.FirstOrDefault(log => log.ActivityLogId == activityLogId);
+        activityLogs.Remove(logToDelete!);
+        FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
+    }
+
     public void EditActivityLog(Guid activityLogId, ActivityLog activityLogToBeAssigned)
     {
         List<ActivityLog> activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath) ?? new List<ActivityLog>();
@@ -27,7 +35,6 @@ public class ActivityLogRepository : IActivityLogRepository
         activityLogToUpdate.Duration = activityLogToBeAssigned.Duration;
         FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
     }
-
 
     public IEnumerable<ActivityLog> FetchAllActivityLogs()
     {
