@@ -1,4 +1,4 @@
-﻿namespace TimerApplication.Domain.Model; // Keep your existing namespace
+﻿namespace TimerApplication.Domain.Model; 
 
 public class Result
 {
