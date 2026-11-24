@@ -1,21 +1,16 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
-using TimerApplication.ApplicationLayer.Interface;
-using TimerApplication.Domain.Model;
+﻿using TimerApplication.ApplicationLayer.Interface;
 
-namespace TimerApplication.InfrastructureLayer
+namespace TimerApplication.InfrastructureLayer;
+
+public class ActiveUserRepository : IActiveUserRepository
 {
-    public class ActiveUserRepository : IActiveUserRepository
+    public Guid? FetchActiveUser()
     {
-        public User FetchActiveUser()
-        {
-            return FileHandlingService.ReadFile<User>(FilePathResource.LastActiveUser);
-        }
+        return FileHandlingService.ReadFile<Guid?>(FilePathResource.LastActiveUser);
+    }
 
-        public void SaveCurrentActiveUser(User user)
-        {
-            FileHandlingService.WriteFile(user, FilePathResource.LastActiveUser);
-        }
+    public void SaveCurrentActiveUser(Guid? userId)
+    {
+        FileHandlingService.WriteFile(userId, FilePathResource.LastActiveUser);
     }
 }

@@ -10,7 +10,7 @@ public class Activity
 
     }
 
-    public Activity(Guid activityId, string activityName, TimeSpan totalDuration, Guid userId)
+    public Activity(Guid activityId, string? activityName, TimeSpan totalDuration, Guid userId)
     {
         this.ActivityId = activityId;
         this.ActivityName = activityName;
@@ -18,7 +18,7 @@ public class Activity
         this.UserId = userId;
     }
 
-    public Activity(string activityName, TimeSpan totalDuration, Guid userId)
+    public Activity(string? activityName, TimeSpan totalDuration, Guid? userId)
     {
         this.ActivityId = Guid.NewGuid();
         this.ActivityName = activityName;
@@ -27,11 +27,9 @@ public class Activity
     }
     public Guid ActivityId { get; set; }
 
-    public string ActivityName { get; set; }
-
-    public TimerStatus TaskStatus { get; set; }
+    public string? ActivityName { get; set; }
 
     public TimeSpan TotalDuration { get; set; }
 
-    public Guid UserId { get; set; }
+    public Guid? UserId { get; set; }
 }
