@@ -240,27 +240,13 @@ public class TaskDashboard
         }
 
         this.DisplayActivityLogs(activityLogs);
-        _userIO.DisplayMessage($"Enter index of task log to be deleted: ", MessageType.Info);
-        if (!TryGetInputIndex(out int index))
+        if (!TrySelectIndex("Enter index of task log to be deleted: ", out int index))
         {
-            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
             return;
         }
 
-        if (index < 1)
-        {
-            _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
-            return;
-        }
-
-        Result deletionResult = this._activityLogService.DeleteActivityLogByLogId(index - 1);
-        if (!deletionResult.IsSuccess)
-        {
-            _userIO.DisplayMessage(deletionResult.Message!, MessageType.Error);
-            return;
-        }
-
-        _userIO.DisplayMessage($"Activity Log Deleted Successfully!", MessageType.Success);
+        Result deletionResult = this._activityLogService.DeleteActivityLogByLogId(index);
+        DisplayResult(deletionResult, "Activity Log Deleted Successfully!");
     }
 
     private void EditTaskLog()
@@ -273,66 +259,44 @@ public class TaskDashboard
         }
 
         this.DisplayActivityLogs(activityLogs);
-        _userIO.DisplayMessage($"Enter index of task log to be edited: ", MessageType.Info);
-        if (!TryGetInputIndex(out int index))
+        if (!TrySelectIndex("Enter index of task log to be edited: ", out int index))
         {
-            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
-            return;
-        }
-
-        if (index < 1)
-        {
-            _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
             return;
         }
 
         if (!TryGetTaskName(out string? logName))
         {
-            _userIO.DisplayMessage($"Invalid string format, Task log name should not be null or empty!", MessageType.Error);
+            _userIO.DisplayMessage("Invalid string format, Task log name should not be null or empty!", MessageType.Error);
             return;
         }
 
-        Result editResult = this._activityLogService.EditTaskLog(index - 1, logName);
-        if (!editResult.IsSuccess)
-        {
-            _userIO.DisplayMessage(editResult.Message!, MessageType.Error);
-            return;
-        }
-
-        _userIO.DisplayMessage($"Task log name edited successfully!", MessageType.Success);
+        Result editResult = this._activityLogService.EditTaskLog(index, logName!);
+        DisplayResult(editResult, "Task log name edited successfully!");
     }
 
     private void EditTask()
     {
-        List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId).ToList();
-        this.DisplayActivities(activities);
-        _userIO.DisplayMessage($"Enter index of task to be edited: ", MessageType.Info);
-        if (!TryGetInputIndex(out int index))
+        List<Activity> activities = this.GetAllActivities();
+        if (!HasAnyItems(activities))
         {
-            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+            _userIO.DisplayMessage("No activities found to edit!", MessageType.Warning);
             return;
         }
 
-        if (index < 1)
+        this.DisplayActivities(activities);
+        if (!TrySelectIndex("Enter index of task to be edited: ", out int index))
         {
-            _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
             return;
         }
 
         if (!TryGetTaskName(out string? taskName))
         {
-            _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
+            _userIO.DisplayMessage("Invalid string format, Task name should not be null or empty!", MessageType.Error);
             return;
         }
 
-        Result editResult = this._activityService.EditTaskName(index - 1, taskName!);
-        if (!editResult.IsSuccess)
-        {
-            _userIO.DisplayMessage(editResult.Message!, MessageType.Error);
-            return;
-        }
-
-        _userIO.DisplayMessage($"Task name edited successfully!", MessageType.Success);
+        Result editResult = this._activityService.EditTaskName(index, taskName!);
+        DisplayResult(editResult, "Task name edited successfully!");
     }
 
     private void Logout()
@@ -374,7 +338,11 @@ public class TaskDashboard
         }
 
         List<string> formattedActivities = _cachedActivities
-            .Select((activity, index) => $"{index + 1}. {activity.ActivityName}  Duration: {FormatDuration(activity.TotalDuration)}")
+            .Select((activity, index) =>
+            {
+                TimeSpan cumulativeDuration = this._activityLogService.GetCurrentActivityDuration(activity, _cachedActiveLogs);
+                return $"{index + 1}. {activity.ActivityName}  Duration: {FormatDuration(cumulativeDuration)}";
+            })
             .ToList();
 
         _userIO.DisplayPanel(DisplayRegion.PrimarySidebar, "Your activities:", formattedActivities);

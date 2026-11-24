@@ -33,7 +33,12 @@ public class ActivityService
     public void RemoveLogDuration(Guid taskId, TimeSpan duration)
     {
         Activity? activity = this.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId).FirstOrDefault(a => a.ActivityId == taskId);
-        activity!.TotalDuration -= duration;
+        if (activity == null)
+        {
+            return;
+        }
+
+        activity.TotalDuration -= duration;
         this._activityRepository.EditActivity(activity.ActivityId, activity);
     }
 
@@ -53,7 +58,7 @@ public class ActivityService
         Activity activityToEdit = activities.ElementAt(index);
         activityToEdit.ActivityName = input;
         this._activityRepository.EditActivity(activityToEdit.ActivityId, activityToEdit);
-        return new Result(true, "Edit Successfull!");
+        return new Result(true, "Edit Successful!");
     }
 
     public List<Activity> GetAllActivitiesByUser(Guid userId)

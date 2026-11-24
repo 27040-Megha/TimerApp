@@ -22,7 +22,7 @@ public class ActivityLogService
     public Result StartTimer(int index)
     {
         List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
-        if (index >= activities.Count())
+        if (index < 0 || index >= activities.Count)
         {
             return new Result(false, "Index out of range");
         }
@@ -34,10 +34,11 @@ public class ActivityLogService
             return new Result(false, "Can't Start, Timer is already running for this task");
         }
 
-        string logName = $"{activityToStartTimer.ActivityName}-Log{logs.Count + 1}";
+        string logName = $"{activityToStartTimer.ActivityName}-{DateTime.Now:yyyyMMdd-HHmmss}";
         this.CreateActivityLog(logName, activityToStartTimer.ActivityId);
         return new Result(true, "Timer started successfully!");
     }
+
 
     private IEnumerable<ActivityLog> GetLogsByActivityId(Guid activityId)
     {
@@ -184,5 +185,15 @@ public class ActivityLogService
         this.DeleteActivityLogsByTaskId(activityToDelete.ActivityId);
         return new Result(true, ErrorCode.None);
     }
+
+    public TimeSpan GetCurrentActivityDuration(Activity activity, IEnumerable<ActivityLog> activeLogs)
+    {
+        TimeSpan activeElapsed = activeLogs
+            .Where(log => log.ActivityId == activity.ActivityId)
+            .Aggregate(TimeSpan.Zero, (sum, log) => sum + (DateTime.UtcNow - log.StartTime));
+
+        return activity.TotalDuration + activeElapsed;
+    }
+
 }
 
