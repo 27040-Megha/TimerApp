@@ -9,6 +9,8 @@ public class ConsoleUserIO : IUserIO
 
     public int WindowWidth => Console.WindowWidth;
 
+    public int WindowHeight => Console.WindowHeight;
+
     /// <summary>
     /// Clears the currently visible screen using Console.Clear() and using \x1b[3J, erase all lines in the scrollback buffer
     /// </summary>

@@ -155,18 +155,18 @@ public class TaskDashboard
 
     private void DisplayCurrentUsersTask()
     {
-        if (_currentSessionManager.CurrentSessionUser == null)
-        {
-            return;
-        }
+        if (_currentSessionManager.CurrentSessionUser == null) return;
 
         int width = _userIO.WindowWidth - _activityPanelLeft - 1;
-        if (width <= 10) return;
+        int maxRows = _userIO.WindowHeight - 3;
+        if (width <= 10 || maxRows <= 0) return;
 
         _userIO.DisplayMessageAt(_activityPanelLeft, 0, "Your activities: ", MessageType.Info);
 
-        List<Activity> activities = this.GetAllActivities().ToList();
-        for (int i = 0; i < activities.Count; i++)
+        List<Activity> activities = _cachedActivities;
+        int visibleCount = Math.Min(activities.Count, maxRows);
+
+        for (int i = 0; i < visibleCount; i++)
         {
             TimeSpan duration = activities[i].TotalDuration;
             string formattedDuration = $"{(int)duration.TotalHours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
@@ -174,7 +174,8 @@ public class TaskDashboard
             _userIO.DisplayMessageAt(_activityPanelLeft, i + 1, text.PadRight(width));
         }
 
-        _userIO.DisplayMessageAt(_activityPanelLeft, activities.Count + 1, new string(' ', width));
+        string footer = activities.Count > maxRows ? $"... and {activities.Count - maxRows} more" : string.Empty;
+        _userIO.DisplayMessageAt(_activityPanelLeft, visibleCount + 1, footer.PadRight(width));
     }
 
 
