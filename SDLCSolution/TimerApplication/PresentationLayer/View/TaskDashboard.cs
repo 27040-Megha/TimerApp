@@ -23,6 +23,8 @@ public class TaskDashboard
 
     private List<Activity> _cachedActivities = [];
 
+    private List<ActivityLog> _cachedActiveLogs = [];
+
     public TaskDashboard(UserService userService, ActivityService activityService, IUserIO userIO, ActivityLogService activityLogService, ISessionManager currentSessionManager)
     {
         this._userService = userService;
@@ -36,6 +38,7 @@ public class TaskDashboard
     {
         _userIO.ClearOutput();
         _cachedActivities = this.GetAllActivities();
+        _cachedActiveLogs = this._activityLogService.GetAllActiveTimerLogs().ToList();
         DisplayCurrentUsersTask();
         _userIO.DisplayMessage($"Welcome {_currentSessionManager.CurrentSessionUser?.UserName}", MessageType.Info);
         using System.Timers.Timer dashboardTimer = new(1000);
@@ -65,6 +68,7 @@ public class TaskDashboard
                 }
                 this.HandleMenu(choice);
                 _cachedActivities = this.GetAllActivities();
+                _cachedActiveLogs = this._activityLogService.GetAllActiveTimerLogs().ToList();
                 DisplayCurrentUsersTask();
             }
             while (choice != 9);
@@ -178,21 +182,17 @@ public class TaskDashboard
 
     private void DisplayActiveTimers()
     {
-        if (_currentSessionManager.CurrentSessionUser != null)
-        {
-            List<string> lines = this._activityLogService.GetAllActivityLogs()
-                .Where(a => a.LogStatus == TimerStatus.Running &&
-                            a.UserId == _currentSessionManager.CurrentSessionUser.UserId)
-                .Select((log, i) =>
-                {
-                    string duration = (DateTime.Now - log.StartTime).ToString(@"hh\:mm\:ss");
-                    return $"{i + 1}. {log.LogName} Start: {log.StartTime} Duration: {duration}";
-                })
-                .ToList();
+        List<string> lines = _cachedActiveLogs
+            .Select((log, i) =>
+            {
+                string duration = (DateTime.UtcNow - log.StartTime).ToString(@"hh\:mm\:ss");
+                return $"{i + 1}. {log.LogName} Start: {log.StartTime.ToLocalTime()} Duration: {duration}";
+            })
+            .ToList();
 
-            _userIO.DisplayPanel(DisplayRegion.SecondarySidebar, "Active Timers: ", lines);
-        }
+        _userIO.DisplayPanel(DisplayRegion.SecondarySidebar, "Active Timers: ", lines);
     }
+
 
     private List<Activity> GetAllActivities()
     {
