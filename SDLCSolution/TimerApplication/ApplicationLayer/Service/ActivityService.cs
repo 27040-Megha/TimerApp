@@ -9,11 +9,14 @@ namespace TimerApplication.ApplicationLayer.Service;
 
 public class ActivityService
 {
-    private IActivityRepository _activityRepository;
+    private readonly IActivityRepository _activityRepository;
 
-    public ActivityService(IActivityRepository activityRepository)
+    private readonly ISessionManager _currentSessionManager;
+
+    public ActivityService(IActivityRepository activityRepository, ISessionManager currentSessionManager)
     {
         this._activityRepository = activityRepository;
+        this._currentSessionManager = currentSessionManager;
     }
 
     public void CreateNewTask(Activity activity)
@@ -21,10 +24,7 @@ public class ActivityService
         this._activityRepository.CreateActivity(activity);
     }
 
-        public List<Activity> GetAllActivities()
-        {
-            return this._activityRepository.GetAllActivities().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId).ToList();
-        }
+
 
         public void EditTaskDuration(ActivityLog activityLog)
         {
@@ -41,3 +41,8 @@ public class ActivityService
             this._activityRepository.EditActivity(taskId, activity);
         }
     }
+    public List<Activity> GetAllActivitiesByUser(Guid userId)
+    {
+        return this._activityRepository.GetAllActivitiesByUser(userId).ToList();
+    }
+}

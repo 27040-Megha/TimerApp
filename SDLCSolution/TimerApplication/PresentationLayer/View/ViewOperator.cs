@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using TimerApplication.ApplicationLayer.Domain.Enums;
-using TimerApplication.ApplicationLayer.Interface;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
@@ -17,28 +12,38 @@ public class ViewOperator
 
     private readonly UserService _userService;
 
+    private readonly ISessionManager _currentSessionManager;
+
     private readonly IUserIO _userIO;
 
     private readonly TaskDashboard _taskDashboard;
 
-    private delegate bool ValidateInput(string input, out string errorMessage);
+    private delegate bool ValidateInput(string? input, out string errorMessage);
 
     private readonly ActivityService _activityService;
 
     private readonly ActivityLogService _activityLogService;
 
-    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ActivityService activityService, ActivityLogService activityLogService)
+    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ActivityService activityService, ActivityLogService activityLogService, ISessionManager currentSessionManager)
     {
         this._userService = userService;
-        this._activityService = activityService;
         this._userIO = userIO;
         this._taskDashboard = taskDashboard;
         this._activityLogService = activityLogService;
+        this._currentSessionManager = currentSessionManager;
     }
 
     public void Run()
     {
-        LoadPreviousUserSession();
+        try
+        {
+            LoadPreviousUserSession();
+        }
+        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
+        {
+            _userService.ClearSession();       
+        }
+
         _userIO.DisplayMessage("Welcome to Time Logger", MessageType.Info);
         int choice;
         do
@@ -70,9 +75,10 @@ public class ViewOperator
         this._userService.SaveCurrentActiveUser();
     }
 
-    public void DisplayCurrentUsersTask()
+    private void LoadPreviousUserSession()
     {
-        if (CurrentSessionManager.CurrentSessionUser != null)
+        Guid? activeUserId = _userService.FetchActiveUser();
+        if (activeUserId == null)
         {
             var activeTimeByActivity = this._activityLogService.GetAllActivityLogs()
                 .Where(a => a.LogStatus == TimerStatus.Running &&
@@ -157,46 +163,41 @@ public class ViewOperator
 
     private void LoginUser()
     {
-        if (!TryGetInput("Email", _userIO.ReadInput, ValidateEmail, out string email) ||
-            !TryGetInput("Password", _userIO.ReadMaskedPassword, ValidatePassword, out string password))
+        if (!TryGetInput("Email", _userIO.ReadInput, ValidateEmail, out string? email) ||
+            !TryGetInput("Password", _userIO.ReadMaskedPassword, ValidatePassword, out string? password))
         {
             _userIO.DisplayMessage("Login failed: Due to many failed attempts", MessageType.Warning);
             return;
         }
 
-        Result authenticationStatus = this._userService.LoginUser(email, password);
-        if (authenticationStatus.IsSuccess)
+        AuthenticationStatus authenticationStatus = this._userService.LoginUser(email, password);
+        switch(authenticationStatus)
         {
-            _userIO.DisplayMessage("Login Successful", MessageType.Success);
-            _taskDashboard.RunDashboard();
-        }
-        else
-        {
-            if (authenticationStatus.LoginStatus == AuthenticationStatus.AccountNotExists)
-            {
-                _userIO.DisplayMessage("Account doesn't exist, Signup first", MessageType.Warning);
-                SignupUser();
-            }
-            else
-            {
+            case AuthenticationStatus.AccountNotExists:
+                _userIO.DisplayMessage("Account doesn't exist, Signup first", MessageType.Error);
+                break;
+            case AuthenticationStatus.InvalidPassword:
                 _userIO.DisplayMessage("Invalid credentials, Try logging in again", MessageType.Error);
-                return;
-            }
+                break;
+            case AuthenticationStatus.Successful:
+                _userIO.DisplayMessage("Login Successful", MessageType.Success);
+                _taskDashboard.RunDashboard();
+                break;
         }
     }
 
     private void SignupUser()
     {
-        if (!TryGetInput("User name",_userIO.ReadInput, ValidateName, out string userName) ||
-            !TryGetInput("Email", _userIO.ReadInput, ValidateEmail, out string email) ||
-            !TryGetInput("Password", _userIO.ReadMaskedPassword, ValidatePassword, out string password))
+        if (!TryGetInput("User name",_userIO.ReadInput, ValidateName, out string? userName) ||
+            !TryGetInput("Email", _userIO.ReadInput, ValidateEmail, out string? email) ||
+            !TryGetInput("Password", _userIO.ReadMaskedPassword, ValidatePassword, out string? password))
         {
             _userIO.DisplayMessage("Signup failed: Due to many failed attempts", MessageType.Warning);
             return;
         }
 
-        string hashedPassword = PasswordHasher.HashPassword(password);
-        User newUser = new User(userName, email, hashedPassword);
+        string? hashedPassword = PasswordHasher.HashPassword(password);
+        User? newUser = new User(userName, email, hashedPassword);
         if (!_userService.CreateUser(newUser))
         {
             _userIO.DisplayMessage("Signup failed: Account already registered with same email ID", MessageType.Error);
@@ -206,13 +207,13 @@ public class ViewOperator
         _userIO.DisplayMessage("Signup Successful!", MessageType.Success);
     }
 
-    private bool TryGetInput(string fieldName, Func<string> readInput, ValidateInput validateInput, out string result)
+    private bool TryGetInput(string fieldName, Func<string?> readInput, ValidateInput validateInput, out string? result)
     {
         result = null;
         _userIO.DisplayMessage($"Enter {fieldName}: ");
         for (int attempt = 1; attempt <= MaxInputAttempts; attempt++)
         {
-            string input = readInput();
+            string? input = readInput()?.Trim();
             if (validateInput(input, out string error))
             {
                 result = input;
@@ -229,21 +230,22 @@ public class ViewOperator
         return false;
     }
 
-    private static bool ValidateName(string input, out string error)
+    private static bool ValidateName(string? input, out string error)
     {
         error = "User name cannot be empty!";
         return InputValidator.ValidateString(input);
     }
 
-    private static bool ValidateEmail(string input, out string error)
+    private static bool ValidateEmail(string? input, out string error)
     {
         error = "Invalid email format!";
         return InputValidator.ValidateEmail(input);
     }
 
-    private static bool ValidatePassword(string input, out string error)
+
+    private static bool ValidatePassword(string? input, out string error)
     {
-        var passwordCheckResult = InputValidator.ValidatePassword(input);
+        Result passwordCheckResult = InputValidator.ValidatePassword(input);
         error = passwordCheckResult.Message;
         return passwordCheckResult.IsSuccess;
     }

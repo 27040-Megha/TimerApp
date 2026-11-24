@@ -1,8 +1,7 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using TimerApplication;
-using TimerApplication.ApplicationLayer.Domain.Enums;
 using TimerApplication.ApplicationLayer.Interface;
+using TimerApplication.Domain.Enums;
 using TimerApplication.PresentationLayer.View;
 
 namespace SDLC;

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using TimerApplication.ApplicationLayer.Interface;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
 
@@ -13,10 +10,13 @@ public class UserService
 
     private readonly IActiveUserRepository _activeUserRepository;
 
-    public UserService(IUserRepository userRepository, IActiveUserRepository activeUserRepository)
+    private readonly ISessionManager _currentSessionManager;
+
+    public UserService(IUserRepository userRepository, IActiveUserRepository activeUserRepository, ISessionManager currentSessionManager)
     {
         this._userRepository = userRepository;
         this._activeUserRepository = activeUserRepository;
+        this._currentSessionManager = currentSessionManager;
     }
 
     public bool CreateUser(User newUser)
@@ -30,9 +30,9 @@ public class UserService
         return true;
     }
 
-    private bool DoesEmailExists(string email)
+    private bool DoesEmailExists(string? email)
     {
-        var existingEmails = this.FetchAllUsers().Select(user => user.Email).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        HashSet<string?> existingEmails = this.FetchAllUsers().Select(user => user.Email).ToHashSet(StringComparer.OrdinalIgnoreCase);
         return existingEmails.Contains(email);
     }
 
@@ -41,39 +41,56 @@ public class UserService
         return this._userRepository.FetchAllUsers();
     }
 
-    public Result LoginUser(string email, string password)
+
+    public AuthenticationStatus LoginUser(string? email, string? password)
     {
-        var users = this.FetchAllUsers();
-        var matchingUser = users.FirstOrDefault(u => string.Equals(u.Email, email));
+        User? matchingUser = this._userRepository.FindByEmail(email);
         if (matchingUser == null)
         {
-            return new Result(false, AuthenticationStatus.AccountNotExists);
+            return AuthenticationStatus.AccountNotExists;
         }
 
         if (CheckPassword(password, matchingUser.Password))
         {
-            CurrentSessionManager.CurrentSessionUser = matchingUser;
-            return new Result(true, AuthenticationStatus.Successful);
+            this.SaveCurrentSessionUser(matchingUser);
+            return AuthenticationStatus.Successful;
         }
         else
         {
-            return new Result(false, AuthenticationStatus.InvalidPassword);
+            return AuthenticationStatus.InvalidPassword;
         }
     }
 
-    private bool CheckPassword(string password, string hash)
+    public void SaveCurrentSessionUser(User? user)
+    {
+        _currentSessionManager.CurrentSessionUser = user;
+        SaveCurrentActiveUser();
+    }
+
+    private bool CheckPassword(string? password, string? hash)
     {
         return BCrypt.Net.BCrypt.Verify(password, hash);
     }
 
     public void SaveCurrentActiveUser()
     {
-        this._activeUserRepository.SaveCurrentActiveUser(CurrentSessionManager.CurrentSessionUser);
+        this._activeUserRepository.SaveCurrentActiveUser(_currentSessionManager.CurrentSessionUser?.UserId);
     }
 
-    public User FetchActiveUser()
+    public Guid? FetchActiveUser()
     {
         return this._activeUserRepository.FetchActiveUser();
+    }
+
+    public User? FindUserById(Guid? userId)
+    {
+        return this._userRepository.FindById(userId);
+    }
+
+    public void ClearSession()
+    {
+        _currentSessionManager.CurrentSessionUser = null;
+        this.SaveCurrentActiveUser();
     }
 }
 

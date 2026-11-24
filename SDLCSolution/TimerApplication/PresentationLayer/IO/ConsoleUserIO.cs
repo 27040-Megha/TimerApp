@@ -12,6 +12,8 @@ public class ConsoleUserIO : IUserIO
 
     private int WindowWidth => Console.WindowWidth;
 
+    public int WindowHeight => Console.WindowHeight;
+
     private int WindowTop => Console.WindowTop;
 
     /// <summary>
@@ -126,7 +128,7 @@ public class ConsoleUserIO : IUserIO
         };
     }
 
-    public string ReadInput()
+    public string? ReadInput()
     {
         return Console.ReadLine();
     }
@@ -147,7 +149,7 @@ public class ConsoleUserIO : IUserIO
                 password = password.Substring(0, password.Length - 1);
                 lock (_consoleLock)
                 {
-                    Console.Write("\b\b");
+                    Console.Write("\b \b");
                 }
             }
             else if(!char.IsControl(key.KeyChar))

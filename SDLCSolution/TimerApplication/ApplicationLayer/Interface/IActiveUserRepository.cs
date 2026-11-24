@@ -4,7 +4,7 @@ namespace TimerApplication.ApplicationLayer.Interface;
 
 public interface IActiveUserRepository
 {
-    public void SaveCurrentActiveUser(User user);
+    public void SaveCurrentActiveUser(Guid? userId);
 
-    public User FetchActiveUser();
+    public Guid? FetchActiveUser();
 }

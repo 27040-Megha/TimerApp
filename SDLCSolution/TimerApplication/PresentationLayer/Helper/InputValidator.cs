@@ -6,12 +6,12 @@ namespace TimerApplication.PresentationLayer.Helper;
 
 public static class InputValidator
 {
-    public static bool ValidateInteger(string input, out int number)
+    public static bool ValidateInteger(string? input, out int number)
     {
         return int.TryParse(input, out number);
     }
 
-    public static bool ValidateEmail(string email)
+    public static bool ValidateEmail(string? email)
     {
         if (string.IsNullOrEmpty(email))
         {
@@ -22,7 +22,7 @@ public static class InputValidator
         return Regex.IsMatch(email.Trim(), pattern);
     }
 
-    public static Result ValidatePassword(string password)
+    public static Result ValidatePassword(string? password)
     {
         if (string.IsNullOrEmpty(password) || password.Length < 8)
         {
@@ -40,8 +40,8 @@ public static class InputValidator
         return new Result(true, $"Valid Password");
     }
 
-    public static bool ValidateString(string input)
+    public static bool ValidateString(string? input)
     {
-        return !string.IsNullOrEmpty(input);
+        return !string.IsNullOrWhiteSpace(input);
     }
 }
