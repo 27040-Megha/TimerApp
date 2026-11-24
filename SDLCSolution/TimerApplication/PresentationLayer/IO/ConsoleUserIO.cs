@@ -5,6 +5,12 @@ namespace TimerApplication.PresentationLayer.IO;
 
 public class ConsoleUserIO : IUserIO
 {
+    private const int MinPrimarySidebarLeft = 45;
+    private const double PrimarySidebarLeftRatio = 0.2;
+    private const int MinSecondarySidebarLeft = 82;
+    private const double SecondarySidebarLeftRatio = 0.5;
+    private const int MinSidebarWidth = 10;
+
     private readonly object _consoleLock = new();
 
     public int WindowWidth => Console.WindowWidth;
@@ -39,10 +45,6 @@ public class ConsoleUserIO : IUserIO
     /// <summary>
     /// Displays message at specified position in the Console using SetCursorPosition
     /// </summary>
-    /// <param name="left">Left-position of cursor</param>
-    /// <param name="top">Top-position of cursor</param>
-    /// <param name="message">Message to be displayed</param>
-    /// <param name="messageType">Message Type to decide the color of the text</param>
     private void DisplayMessageAt(int left, int top, string message, MessageType messageType = MessageType.Default)
     {
         lock (_consoleLock)
@@ -56,38 +58,30 @@ public class ConsoleUserIO : IUserIO
     }
 
     /// <summary>
-    /// Divides the Console into 3 parts - Main Menu, Side Bar1 (Primary Sidebar), Side Bar2 (Secondary Sidebar)
-    /// Primary bar - Displays all tasks added by the user
-    /// Secondary bar - Displays current active task logs
+    /// Divides the Console into 3 parts - Main Menu, Primary Sidebar (all tasks), and Secondary Sidebar (active task logs)
     /// </summary>
-    /// <param name="region">Primary or Secondary Side bar</param>
-    /// <param name="title">Title for the Side bar</param>
-    /// <param name="items">Items to be displayed in the region</param>
     public void DisplayPanel(DisplayRegion region, string title, IReadOnlyList<string> items)
     {
-        // Set column starting position based on the Console Window size
-        int col2Left = Math.Max(45, (int)(WindowWidth * 0.2));
-        int col3Left = Math.Max(82, (int)(WindowWidth * 0.5));
+        int primarySidebarLeft = Math.Max(MinPrimarySidebarLeft, (int)(WindowWidth * PrimarySidebarLeftRatio));
+        int secondarySidebarLeft = Math.Max(MinSecondarySidebarLeft, (int)(WindowWidth * SecondarySidebarLeftRatio));
 
         switch (region)
         {
             case DisplayRegion.PrimarySidebar:
                 {
-                    // Calculate width of Primary Side bar based on Console Window width
-                    int width = Math.Min(col3Left, WindowWidth) - col2Left - 2;
-                    if (width > 10)
+                    int width = Math.Min(secondarySidebarLeft, WindowWidth) - primarySidebarLeft - 2;
+                    if (width > MinSidebarWidth)
                     {
-                        DivideColumn(col2Left, WindowTop, width, title, items);
+                        RenderColumn(primarySidebarLeft, WindowTop, width, title, items);
                     }
                     break;
                 }
             case DisplayRegion.SecondarySidebar:
                 {
-                    // Calculate width of Secondary Side bar based on Console Window width
-                    int width = WindowWidth - col3Left - 1;
-                    if (width > 10)
+                    int width = WindowWidth - secondarySidebarLeft - 1;
+                    if (width > MinSidebarWidth)
                     {
-                        DivideColumn(col3Left, WindowTop, width, title, items);
+                        RenderColumn(secondarySidebarLeft, WindowTop, width, title, items);
                     }
                     break;
                 }
@@ -95,9 +89,9 @@ public class ConsoleUserIO : IUserIO
     }
 
     /// <summary>
-    /// Displays messages within specified boundaries
+    /// Renders a sidebar column within the specified boundaries
     /// </summary>
-    private void DivideColumn(int left, int top, int width, string title, IReadOnlyList<string> items)
+    private void RenderColumn(int left, int top, int width, string title, IReadOnlyList<string> items)
     {
         lock (_consoleLock)
         {
@@ -105,7 +99,7 @@ public class ConsoleUserIO : IUserIO
 
             for (int i = 0; i < items.Count; i++)
             {
-                string text = items[i].Length > width ? items[i].Substring(0, width) : items[i];
+                string text = items[i].Length > width ? items[i][..width] : items[i];
                 DisplayMessageAt(left, top + i + 1, text.PadRight(width));
             }
 
@@ -135,7 +129,7 @@ public class ConsoleUserIO : IUserIO
         string password = "";
         while (true)
         {
-            var key = Console.ReadKey(true);
+            ConsoleKeyInfo key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
                 break;
@@ -143,13 +137,13 @@ public class ConsoleUserIO : IUserIO
 
             if (key.Key == ConsoleKey.Backspace && password.Length > 0)
             {
-                password = password.Substring(0, password.Length - 1);
+                password = password[..^1];
                 lock (_consoleLock)
                 {
                     Console.Write("\b \b");
                 }
             }
-            else if(!char.IsControl(key.KeyChar))
+            else if (!char.IsControl(key.KeyChar))
             {
                 password += key.KeyChar;
                 lock (_consoleLock)

@@ -29,8 +29,6 @@ public class Activity
 
     public string? ActivityName { get; set; }
 
-    public TimerStatus TaskStatus { get; set; }
-
     public TimeSpan TotalDuration { get; set; }
 
     public Guid? UserId { get; set; }

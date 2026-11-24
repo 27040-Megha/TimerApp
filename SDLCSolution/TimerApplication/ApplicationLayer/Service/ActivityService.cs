@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using TimerApplication.ApplicationLayer.Interface;
-using TimerApplication.Domain.Enums;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.ApplicationLayer.Service;
@@ -26,25 +22,11 @@ public class ActivityService
 
     public void EditTaskDuration(ActivityLog activityLog)
     {
-        Activity? activity = this.GetAllActivitiesByUser(activityLog.UserId).FirstOrDefault(activity => activity.ActivityId == activityLog.ActivityId);
-        if (activity == null)
-        {
-            return;
-        }
+        Activity activity = this.GetAllActivitiesByUser(activityLog.UserId)
+            .FirstOrDefault(a => a.ActivityId == activityLog.ActivityId)
+            ?? throw new KeyNotFoundException($"Activity with ID '{activityLog.ActivityId}' was not found.");
         activity.TotalDuration += activityLog.Duration;
-        activity.TaskStatus = TimerStatus.Stopped;
         this._activityRepository.EditActivity(activityLog.ActivityId, activity);
-    }
-
-    public void EditTaskStatus(Guid taskId, TimerStatus timerStatus)
-    {
-        Activity? activity = this.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId).FirstOrDefault(activity => activity.ActivityId == taskId);
-        if (activity == null)
-        {
-            return;
-        }
-        activity.TaskStatus = timerStatus;
-        this._activityRepository.EditActivity(taskId, activity);
     }
 
     public List<Activity> GetAllActivitiesByUser(Guid userId)

@@ -7,14 +7,14 @@ public class ActivityRepository : IActivityRepository
 {
     public void CreateActivity(Activity activity)
     {
-        List<Activity>? activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath);
+        List<Activity>? activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
         activities?.Add(activity);
         FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
     }
 
     public void EditActivity(Guid activityIdToEdit, Activity activityToBeAssigned)
     {
-        List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? [];
+        List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
         Activity? activityToEdit = activities.FirstOrDefault(activity => activity.ActivityId.Equals(activityIdToEdit));
         if (activityToEdit == null)
         {
@@ -22,14 +22,13 @@ public class ActivityRepository : IActivityRepository
         }
 
         activityToEdit.ActivityName = activityToBeAssigned.ActivityName;
-        activityToEdit.TaskStatus = activityToBeAssigned.TaskStatus;
         activityToEdit.TotalDuration = activityToBeAssigned.TotalDuration;
         FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
     }
 
     public IEnumerable<Activity> GetAllActivitiesByUser(Guid userId)
     {
-        List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? [];
+        List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
         return activities.Where(activity => activity.UserId == userId);
     }
 }
