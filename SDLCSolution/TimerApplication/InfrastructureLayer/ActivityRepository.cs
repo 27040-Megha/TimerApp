@@ -10,8 +10,8 @@ namespace TimerApplication.InfrastructureLayer
     {
         public void CreateActivity(Activity activity)
         {
-            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
-            activities.Add(activity);
+            List<Activity>? activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath);
+            activities?.Add(activity);
             FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
         }
 
@@ -30,10 +30,10 @@ namespace TimerApplication.InfrastructureLayer
             throw new NotImplementedException();
         }
 
-        public IEnumerable<Activity> GetAllActivities()
+        public IEnumerable<Activity> GetAllActivitiesByUser(Guid userId)
         {
-            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
-            return activities.Select(activity => new Activity(activity.ActivityId, activity.ActivityName, activity.TotalDuration, activity.UserId));
+            List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? [];
+            return activities.Where(activity => activity.UserId == userId);
         }
     }
 }

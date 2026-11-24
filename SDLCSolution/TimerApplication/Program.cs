@@ -15,15 +15,6 @@ public class Program
         using ServiceProvider serviceProvider = services.BuildServiceProvider();        
         ViewOperator viewOperator = serviceProvider.GetRequiredService<ViewOperator>();
         IUserIO userIO = serviceProvider.GetRequiredService<IUserIO>();
-        System.Timers.Timer timer = new System.Timers.Timer();
-        timer.Interval = 1000;
-        timer.Elapsed += (sender, e) =>
-        {
-            viewOperator.DisplayCurrentUsersTask();
-        };
-        timer.Start();
-
-
         while (true)
         {
             try
@@ -37,7 +28,5 @@ public class Program
                 userIO.DisplayMessage("Returnting to Main menu", MessageType.Warning);
             }
         }
-
-        timer.Stop();
     }
 }

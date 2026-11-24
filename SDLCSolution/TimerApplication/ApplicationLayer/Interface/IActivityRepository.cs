@@ -12,7 +12,7 @@ namespace TimerApplication.ApplicationLayer.Interface
 
         public void DeleteActivity(Guid ActivityId);
 
-        public IEnumerable<Activity> GetAllActivities();
+        public IEnumerable<Activity> GetAllActivitiesByUser(Guid userId);
 
         public Activity GetActivityById(Guid activityId);
     }
