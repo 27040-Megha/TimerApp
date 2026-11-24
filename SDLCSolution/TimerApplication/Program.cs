@@ -1,8 +1,7 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using TimerApplication;
-using TimerApplication.ApplicationLayer.Domain.Enums;
 using TimerApplication.ApplicationLayer.Interface;
+using TimerApplication.Domain.Enums;
 using TimerApplication.PresentationLayer.View;
 
 namespace SDLC;
@@ -16,12 +15,6 @@ public class Program
         using ServiceProvider serviceProvider = services.BuildServiceProvider();        
         ViewOperator viewOperator = serviceProvider.GetRequiredService<ViewOperator>();
         IUserIO userIO = serviceProvider.GetRequiredService<IUserIO>();
-
-        AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
-        {
-            viewOperator.SaveCurrentActiveUser();
-        };
-
         System.Timers.Timer timer = new System.Timers.Timer();
         timer.Interval = 1000;
         timer.Elapsed += (sender, e) =>
