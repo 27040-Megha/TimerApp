@@ -1,6 +1,5 @@
-﻿using System;
-using TimerApplication.ApplicationLayer.Domain.Enums;
-using TimerApplication.ApplicationLayer.Interface;
+﻿using TimerApplication.ApplicationLayer.Interface;
+using TimerApplication.Domain.Enums;
 
 namespace TimerApplication.PresentationLayer.IO;
 
@@ -35,7 +34,7 @@ public class ConsoleUserIO : IUserIO
         };
     }
 
-    public string ReadInput()
+    public string? ReadInput()
     {
         return Console.ReadLine();
     }

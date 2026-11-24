@@ -1,12 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace TimerApplication.InfrastructureLayer;
 
 public static class FileHandlingService
 {
-    public static T ReadFile<T>(string filePath)
+    public static T? ReadFile<T>(string filePath)
     {
         try
         {
@@ -41,7 +39,7 @@ public static class FileHandlingService
     {
         try
         {
-            string directory = Path.GetDirectoryName(filePath);
+            string? directory = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);

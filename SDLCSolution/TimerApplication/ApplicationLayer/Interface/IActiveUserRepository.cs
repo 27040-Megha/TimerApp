@@ -1,11 +1,10 @@
 ﻿using TimerApplication.Domain.Model;
 
-namespace TimerApplication.ApplicationLayer.Interface
-{
-    public interface IActiveUserRepository
-    {
-        public void SaveCurrentActiveUser(User user);
+namespace TimerApplication.ApplicationLayer.Interface;
 
-        public User FetchActiveUser();
-    }
+public interface IActiveUserRepository
+{
+    public void SaveCurrentActiveUser(Guid? userId);
+
+    public Guid? FetchActiveUser();
 }
