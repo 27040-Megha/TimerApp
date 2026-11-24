@@ -166,7 +166,7 @@ public class ViewOperator
         _userIO.DisplayMessage($"Enter {fieldName}: ");
         for (int attempt = 1; attempt <= MaxInputAttempts; attempt++)
         {
-            string? input = readInput();
+            string? input = readInput()?.Trim();
             if (validateInput(input, out string error))
             {
                 result = input;

@@ -144,7 +144,7 @@ public class TaskDashboard
         private bool TryGetTaskName(out string? result)
         {
             _userIO.DisplayMessage("Enter Task Name: ");
-            result = _userIO.ReadInput();
+            result = _userIO.ReadInput()?.Trim();
             if (!InputValidator.ValidateString(result))
             {
                 return false;
