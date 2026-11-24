@@ -85,7 +85,7 @@ public class TaskDashboard
                 this.Logout();
                 break;
             default:
-                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 3", MessageType.Error);
+                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 9", MessageType.Error);
                 break;
         }
     }
