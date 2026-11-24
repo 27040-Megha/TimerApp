@@ -1,54 +1,87 @@
-﻿using System;
-using TimerApplication.ApplicationLayer.Domain.Enums;
-using TimerApplication.ApplicationLayer.Interface;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.ApplicationLayer.Service;
+using TimerApplication.Domain.Enums;
 using TimerApplication.PresentationLayer.Helper;
 using TimerApplication.Domain.Model;
-using TimerApplication.Domain.Enums;
-using System.Linq;
-using System.Collections.Generic;
 
-namespace TimerApplication.PresentationLayer.View
+namespace TimerApplication.PresentationLayer.View;
+
+public class TaskDashboard
 {
-    public class TaskDashboard
+    // Left Side (Displays menu from position 0 to 54), Right Side (Displays Current User's task from Position 55)
+    private const int _activityPanelLeft = 55;
+
+    private readonly UserService _userService;
+
+    private readonly ISessionManager _currentSessionManager;
+
+    private readonly IUserIO _userIO;
+
+    private readonly ActivityService _activityService;
+
+    private readonly ActivityLogService _activityLogService;
+
+    private List<Activity> _cachedActivities = [];
+
+    private List<ActivityLog> _cachedActiveLogs = [];
+
+    public TaskDashboard(UserService userService, ActivityService activityService, IUserIO userIO, ActivityLogService activityLogService, ISessionManager currentSessionManager)
     {
-        private readonly UserService _userService;
+        this._userService = userService;
+        this._activityService = activityService;
+        this._userIO = userIO;
+        this._activityLogService = activityLogService;
+        this._currentSessionManager = currentSessionManager;
+    }
 
-        private readonly IUserIO _userIO;
-
-        private readonly ActivityService _activityService;
-
-        private readonly ActivityLogService _activityLogService;
-
-        public TaskDashboard(UserService userService, ActivityService activityService, ActivityLogService activityLogService, IUserIO userIO)
+    public void RunDashboard()
+    {
+        _userIO.ClearOutput();
+        _cachedActivities = this.GetAllActivities();
+        _cachedActiveLogs = this._activityLogService.GetAllActiveTimerLogs().ToList();
+        DisplayCurrentUsersTask();
+        _userIO.DisplayMessage($"Welcome {_currentSessionManager.CurrentSessionUser?.UserName}", MessageType.Info);
+        using System.Timers.Timer dashboardTimer = new(1000);
+        dashboardTimer.Elapsed += (_, _) =>
         {
-            this._userService = userService;
-            this._activityService = activityService;
-            this._activityLogService = activityLogService;
-            this._userIO = userIO;
-        }
-
-        public void RunDashboard()
+            try
+            {
+                DisplayCurrentUsersTask();
+                DisplayActiveTimers();
+            }
+            catch
+            {
+                _userIO.DisplayMessage("Error in displaying current User's task", MessageType.Warning);
+            }
+        };
+        dashboardTimer.Start();
+        try
         {
-            _userIO.ClearOutput();
-            _userIO.DisplayMessage($"Welcome {CurrentSessionManager.CurrentSessionUser.UserName}", MessageType.Info);
             int choice;
             do
             {
-                this.DisplayMenu();               
+                this.DisplayMenu();
                 if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out choice))
                 {
                     _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
                     continue;
                 }
                 this.HandleMenu(choice);
+                _cachedActivities = this.GetAllActivities();
+                _cachedActiveLogs = this._activityLogService.GetAllActiveTimerLogs().ToList();
+                DisplayCurrentUsersTask();
             }
             while (choice != 9);
         }
-
-        private void DisplayMenu()
+        finally
         {
-            _userIO.DisplayMessage("1. Add new Task \n" +
+            dashboardTimer.Stop();
+        }
+    }
+
+    private void DisplayMenu()
+    {
+        _userIO.DisplayMessage("1. Add new Task \n" +
                 "2. Edit Task\n" +
                 "3. Delete Task\n" +
                 "4. View Specific Task Log\n" +
@@ -59,7 +92,7 @@ namespace TimerApplication.PresentationLayer.View
                 "9. Logout\n" +
                 "Enter your option (1 to 9): "
                 );
-        }
+    }
 
         private void HandleMenu(int choice)
         {
@@ -309,200 +342,238 @@ namespace TimerApplication.PresentationLayer.View
             _userIO.DisplayMessage("Logging out", MessageType.Info);
         }
 
-        private void AddNewTask()
+    private void AddNewTask()
+    {
+        if (!TryGetTaskName(out string? taskName))
         {
-            if (!TryGetTaskName(out string taskName))
-            {
-                _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
-                return;
-            }
-
-            this._activityService.CreateNewTask(new Activity(taskName, TimeSpan.Zero, CurrentSessionManager.CurrentSessionUser.UserId));
-            _userIO.DisplayMessage("Task Added Successfully!", MessageType.Success);
+            _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
+            return;
         }
 
-        private bool TryGetTaskName(out string result)
+        this._activityService.CreateNewTask(new Activity(taskName, TimeSpan.Zero, _currentSessionManager.CurrentSessionUser?.UserId));
+        _userIO.DisplayMessage("Task Added Successfully!", MessageType.Success);
+    }
+
+    private bool TryGetTaskName(out string? result)
+    {
+        _userIO.DisplayMessage("Enter Task Name: ");
+        result = _userIO.ReadInput()?.Trim();
+        if (!InputValidator.ValidateString(result))
         {
-            _userIO.DisplayMessage("Enter Task Name: ");
-            result = _userIO.ReadInput();
-            if (!InputValidator.ValidateString(result))
-            {
-                return false;
+            return false;
         }
 
-            return true;
-        }
+        return true;
+    }
 
-        private void ViewSpecificTaskLog()
+    private void DisplayCurrentUsersTask()
+    {
+        if (_currentSessionManager.CurrentSessionUser == null)
         {
-            List<Activity> activities = this._activityService.GetAllActivities();
-            this.DisplayActivities(activities);
-            if (! HasAnyItems(activities))
-            {
-                _userIO.DisplayMessage("No activies found to view specific logs!", MessageType.Warning);
-                return;
-            }
-
-            _userIO.DisplayMessage($"Enter index of task to view activity details: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
-            {
-                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
-                return;
-            }
-
-            if (index < 1)
-            {
-                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
-                return;
-            }
-
-            Result isLogsFetched = this._activityLogService.GetAllActivityLogsByActivityIndex(index - 1, out IEnumerable<ActivityLog> activityLogs);
-            if (!isLogsFetched.IsSuccess)
-            {
-                _userIO.DisplayMessage(isLogsFetched.Message, MessageType.Error);
-                return;
-            }
-
-            Activity activity = activities.ElementAt(index - 1);
-            _userIO.DisplayMessage($"{activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}", MessageType.Info);
-            this.DisplayLogDetails(activityLogs);
+            return;
         }
 
-        private void DisplayLogDetails(IEnumerable<ActivityLog> activityLogs)
+        List<string> formattedActivities = _cachedActivities
+            .Select((activity, index) => $"{index + 1}. {activity.ActivityName}  Duration: {FormatDuration(activity.TotalDuration)}")
+            .ToList();
+
+        _userIO.DisplayPanel(DisplayRegion.PrimarySidebar, "Your activities:", formattedActivities);
+    }
+
+
+    private void DisplayActiveTimers()
+    {
+        List<string> lines = _cachedActiveLogs
+            .Select((log, i) =>
+            {
+                string duration = (DateTime.UtcNow - log.StartTime).ToString(@"hh\:mm\:ss");
+                return $"{i + 1}. {log.LogName} Start: {log.StartTime.ToLocalTime()} Duration: {duration}";
+            })
+            .ToList();
+
+        _userIO.DisplayPanel(DisplayRegion.SecondarySidebar, "Active Timers: ", lines);
+    }
+
+
+    private List<Activity> GetAllActivities()
+    {
+        User? currentUser = _currentSessionManager.CurrentSessionUser;
+        if (currentUser == null)
         {
-            var logsList = activityLogs.ToList();
-            for (int i = 0; i < logsList.Count; i++)
-            {
-                var log = logsList[i];
-                bool isRunning = log.LogStatus == TimerStatus.Running;
-
-                TimeSpan elapsed = isRunning ? (DateTime.Now - log.StartTime) : log.Duration;
-                string duration = elapsed.ToString(@"hh\:mm\:ss");
-                string endText = isRunning ? "Running" : log.EndTime?.ToString();
-                MessageType messageType = isRunning ? MessageType.Success : MessageType.Default;
-
-                _userIO.DisplayMessage(
-                    $"{i + 1}. {log.LogName}, Duration: {duration}\n" +
-                    $"   Start: {log.StartTime},  End: {endText}",
-                    messageType);
-            }
+            return [];
         }
 
-        private bool HasAnyItems<T>(IEnumerable<T> entries)
+        return this._activityService.GetAllActivitiesByUser(currentUser.UserId); 
+    }
+
+    private void EditTask()
+    {
+        _userIO.DisplayMessage("Not available yet", MessageType.Warning);
+    }
+
+    private void DeleteTask()
+    {
+        _userIO.DisplayMessage("Not available yet", MessageType.Warning);
+    }
+
+    private void ViewSpecificTaskLog()
+    {
+        List<Activity> activities = this.GetAllActivities();
+        if (!HasAnyItems(activities))
         {
-            return entries.Any();
+            _userIO.DisplayMessage("No activities found to view specific logs!", MessageType.Warning);
+            return;
         }
 
-        private void StartTimer()
+        this.DisplayActivities(activities);
+        if (!TrySelectIndex("Enter index of task to view activity details: ", out int index))
         {
-            IEnumerable<Activity> activities = this.GetAllActivities();
-            if (!HasAnyItems(activities))
-            {
-                _userIO.DisplayMessage("No activities found to start the timer!", MessageType.Warning);
-                return;
-            }
-
-            this.DisplayActivities(activities);
-            _userIO.DisplayMessage($"Enter index of task to Start Timer: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
-            {
-                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
-                return;
-            }
-
-            if (index < 1)
-            {
-                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
-                return;
-            }
-
-            index = index - 1;
-            Result startTimerResult = this._activityLogService.StartTimer(index);
-            if (!startTimerResult.IsSuccess)
-            {
-                _userIO.DisplayMessage(startTimerResult.Message, MessageType.Error);
-                return;
-            }
-
-            _userIO.DisplayMessage($"Timer started Successfully!", MessageType.Success);
+            return;
         }
 
-        private IEnumerable<Activity> GetAllActivities()
+        Result<ActivityLog> logsResult = this._activityLogService.GetAllActivityLogsByActivityIndex(index);
+        if (!logsResult.IsSuccess)
         {
-            return this._activityService.GetAllActivities();
+            _userIO.DisplayMessage(logsResult.Message, MessageType.Error);
+            return;
         }
 
-        private void DisplayActivities(IEnumerable<Activity> activities)
+        Activity activity = activities[index];
+        _userIO.DisplayMessage($"{activity.ActivityName}  Duration: {FormatDuration(activity.TotalDuration)}", MessageType.Info);
+        this.DisplayLogDetails(logsResult.Data);
+    }
+
+
+    private void DisplayLogDetails(IEnumerable<ActivityLog> activityLogs)
+    {
+        List<ActivityLog> logsList = activityLogs.ToList();
+        for (int i = 0; i < logsList.Count; i++)
         {
-            for (int i = 0; i < activities.Count(); i++)
-            {
-                var activity = activities.ElementAt(i);
-                _userIO.DisplayMessage($"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}");
-            }
-        }
+            ActivityLog log = logsList[i];
+            bool isRunning = log.LogStatus == TimerStatus.Running;
+            string durationText = isRunning ? string.Empty : $" (Duration: {FormatDuration(log.Duration)})";
+            string? endText = isRunning ? "Running" : log.EndTime?.ToLocalTime().ToString();
+            MessageType messageType = isRunning ? MessageType.Success : MessageType.Default;
 
-        private bool TryGetInputIndex(out int index)
+            _userIO.DisplayMessage(
+                $"{i + 1}. {log.LogName}{durationText}\n" +
+                $"   Start: {log.StartTime.ToLocalTime()},  End: {endText}",
+                messageType);
+        }
+    }
+
+
+    private bool HasAnyItems<T>(IReadOnlyList<T> entries)
+    {
+        return entries.Any();
+    }
+
+    private void StartTimer()
+    {
+        IReadOnlyList<Activity> activities = this.GetAllActivities().ToList();
+        if (!HasAnyItems(activities))
         {
-            return InputValidator.ValidateInteger(_userIO.ReadInput(), out index);
+            _userIO.DisplayMessage("No activities found to start the timer!", MessageType.Warning);
+            return;
         }
 
-        private void StopTimer()
+        this.DisplayActivities(activities);
+        if (!TrySelectIndex("Enter index of task to Start Timer: ", out int index))
         {
-            IEnumerable<ActivityLog> activeLogs = this._activityLogService.GetAllActiveTimerLogs();
-            if (!HasAnyItems(activeLogs))
-            {
-                _userIO.DisplayMessage("No active logs found to stop the timer!", MessageType.Warning);
-                return;
-            }
-
-            this.DisplayActivityLogs(activeLogs);
-            _userIO.DisplayMessage($"Enter index of task to Stop Timer: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
-            {
-                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
-                return;
-            }
-
-            if (index < 1)
-            {
-                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
-                return;
-            }
-
-            index = index - 1;
-            Result stopTimerResult = this._activityLogService.StopTimer(index);
-            if (!stopTimerResult.IsSuccess)
-            {
-                _userIO.DisplayMessage(stopTimerResult.Message, MessageType.Error);
-                return;
-            }
-
-            _userIO.DisplayMessage($"Timer stopped successfully!", MessageType.Success);
+            return;
         }
 
-        private void DisplayActivityLogs(IEnumerable<ActivityLog> activityLogs)
+        Result result = this._activityLogService.StartTimer(index);
+        DisplayResult(result, "Timer started Successfully!");
+    }
+
+    private void StopTimer()
+    {
+        IReadOnlyList<ActivityLog> activeLogs = this._activityLogService.GetAllActiveTimerLogs().ToList();
+        if (!HasAnyItems(activeLogs))
         {
-
-            for (int i = 0; i < activityLogs.Count(); i++)
-            {
-                var activitylog = activityLogs.ElementAt(i);
-                _userIO.DisplayMessage($"{i + 1}. {activitylog.LogName}");
-            }
+            _userIO.DisplayMessage("No active logs found to stop the timer!", MessageType.Warning);
+            return;
         }
 
-        private IEnumerable<ActivityLog> GetAllActivityLogs()
+        this.DisplayActivityLogs(activeLogs);
+        if (!TrySelectIndex("Enter index of task to Stop Timer: ", out int index))
         {
-            return this._activityLogService.GetAllActivityLogs();
+            return;
         }
 
-        private void ImportTimeLog()
+        Result result = this._activityLogService.StopTimer(index);
+        DisplayResult(result, "Timer stopped successfully!");
+    }
+
+    private bool TrySelectIndex(string prompt, out int zeroBasedIndex)
+    {
+        zeroBasedIndex = -1;
+        _userIO.DisplayMessage(prompt, MessageType.Info);
+
+        if (!TryGetInputIndex(out int index))
         {
-            throw new NotImplementedException();
+            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+            return false;
         }
 
-        private void ExportTimeLog()
+        if (index < 1)
         {
-            throw new NotImplementedException();
+            _userIO.DisplayMessage("Index Out of Range", MessageType.Error);
+            return false;
         }
+
+        zeroBasedIndex = index - 1;
+        return true;
+    }
+
+    private void DisplayResult(Result result, string successMessage)
+    {
+        if (!result.IsSuccess)
+        {
+            _userIO.DisplayMessage(result.Message, MessageType.Error);
+            return;
+        }
+
+        _userIO.DisplayMessage(successMessage, MessageType.Success);
+    }
+
+    private void DisplayActivities(IEnumerable<Activity> activities)
+    {
+        int i = 0;
+        foreach (Activity activity in activities)
+        {
+            _userIO.DisplayMessage($"{++i}. {activity.ActivityName}  Duration: {FormatDuration(activity.TotalDuration)}");
+        }
+    }
+
+
+    private bool TryGetInputIndex(out int index)
+    {
+        return InputValidator.ValidateInteger(_userIO.ReadInput(), out index);
+    }
+
+    private void DisplayActivityLogs(IEnumerable<ActivityLog> activityLogs)
+    {
+        for (int i = 0; i < activityLogs.Count(); i++)
+        {
+            ActivityLog activitylog = activityLogs.ElementAt(i);
+            _userIO.DisplayMessage($"{i + 1}. {activitylog.LogName}");
+        }
+    }
+
+    private static string FormatDuration(TimeSpan duration)
+    {
+        return $"{(int)duration.TotalHours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
+    }
+
+    private void ImportTimeLog()
+    {
+        _userIO.DisplayMessage("Not available yet", MessageType.Warning);
+    }
+
+    private void ExportTimeLog()
+    {
+        _userIO.DisplayMessage("Not available yet", MessageType.Warning);
     }
 }

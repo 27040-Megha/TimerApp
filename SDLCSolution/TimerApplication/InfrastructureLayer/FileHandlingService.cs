@@ -1,12 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace TimerApplication.InfrastructureLayer;
 
 public static class FileHandlingService
 {
-    public static T ReadFile<T>(string filePath)
+    public static T? ReadFile<T>(string filePath)
     {
         try
         {
@@ -39,16 +37,21 @@ public static class FileHandlingService
 
     public static void WriteFile<T>(T data, string filePath)
     {
+        string? directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        string tempFilePath = Path.Combine(
+            directory ?? string.Empty,
+            $"{Path.GetFileName(filePath)}.{Guid.NewGuid():N}.tmp");
+
         try
         {
-            string directory = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
             string jsonTextToWrite = JsonSerializer.Serialize(data);
-            File.WriteAllText(filePath, jsonTextToWrite);
+            File.WriteAllText(tempFilePath, jsonTextToWrite);
+            File.Move(tempFilePath, filePath, overwrite: true);
         }
         catch (JsonException ex)
         {
@@ -62,5 +65,13 @@ public static class FileHandlingService
         {
             throw new UnauthorizedAccessException($"Access denied to write file {filePath}.", ex);
         }
+        finally
+        {
+            if (File.Exists(tempFilePath))
+            {
+                File.Delete(tempFilePath);
+            }
+        }
     }
+
 }
