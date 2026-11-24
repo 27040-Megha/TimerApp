@@ -75,11 +75,7 @@ public class ActivityLogService
 
     public void DeleteActivityLogsByTaskId(Guid activityId)
     {
-        List<ActivityLog> activityLogs = this.GetAllActivityLogs().Where(a => a.ActivityId == activityId).ToList();
-        foreach (ActivityLog log in activityLogs)
-        {
-            this._activityLogRepository.DeleteActivityLog(log.ActivityLogId);
-        }
+        this._activityLogRepository.DeleteActivityLogsByActivityId(activityId);
     }
 
     public Result DeleteActivityLogByLogId(int index)

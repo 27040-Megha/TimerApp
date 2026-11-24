@@ -10,6 +10,8 @@ public interface IActivityLogRepository
 
     public void DeleteActivityLog(Guid activityLogId);
 
+    void DeleteActivityLogsByActivityId(Guid activityId);
+
     public void EditActivityLog(Guid activityLogId, ActivityLog activityLog);
 
     public IEnumerable<ActivityLog> FetchAllActivityLogs();

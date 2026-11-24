@@ -20,6 +20,16 @@ public class ActivityLogRepository : IActivityLogRepository
         FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
     }
 
+    public void DeleteActivityLogsByActivityId(Guid activityId)
+    {
+        List<ActivityLog> activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath) ?? new List<ActivityLog>();
+        int removedCount = activityLogs.RemoveAll(log => log.ActivityId == activityId);
+        if (removedCount > 0)
+        {
+            FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
+        }
+    }
+
     public void EditActivityLog(Guid activityLogId, ActivityLog activityLogToBeAssigned)
     {
         List<ActivityLog> activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath) ?? new List<ActivityLog>();
