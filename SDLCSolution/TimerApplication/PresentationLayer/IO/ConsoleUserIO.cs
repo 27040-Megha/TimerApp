@@ -32,7 +32,7 @@ public class ConsoleUserIO : IUserIO
         }
     }
 
-    public void DisplayMessageAt(int left, int top, string message, MessageType messageType)
+    public void DisplayMessageAt(int left, int top, string message, MessageType messageType = MessageType.Default)
     {
         lock (_consoleLock)
         {
@@ -77,7 +77,7 @@ public class ConsoleUserIO : IUserIO
                 password = password.Substring(0, password.Length - 1);
                 lock (_consoleLock)
                 {
-                    Console.Write("\b\b");
+                    Console.Write("\b \b");
                 }
             }
             else if(!char.IsControl(key.KeyChar))

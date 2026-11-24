@@ -19,7 +19,7 @@ public class TaskDashboard
 
     private readonly ActivityService _activityService;
 
-    private List<Activity> _cachedActivities;
+    private List<Activity> _cachedActivities = [];
 
     public TaskDashboard(UserService userService, ActivityService activityService, IUserIO userIO, ISessionManager currentSessionManager)
     {
@@ -133,7 +133,7 @@ public class TaskDashboard
         {
             if (!TryGetTaskName(out string? taskName))
             {
-                _userIO.DisplayMessage($"Invalid strig format, Task name should not be null or empty!", MessageType.Error);
+                _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
             }
 
