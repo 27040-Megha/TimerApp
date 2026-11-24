@@ -8,7 +8,7 @@ public class User
     {
     }
 
-    public User(string userName, string email, string password)
+    public User(string? userName, string? email, string? password)
     {
         this.UserId = Guid.NewGuid();
         this.UserName = userName;
@@ -16,7 +16,7 @@ public class User
         this.Password = password;
     }
 
-    public User(Guid userId, string userName, string email, string password)
+    public User(Guid userId, string? userName, string? email, string? password)
     {
         this.UserId = userId;
         this.UserName = userName;

@@ -40,7 +40,7 @@ public static class InputValidator
         return new Result(true, $"Valid Password");
     }
 
-    public static bool ValidateString(string input)
+    public static bool ValidateString(string? input)
     {
         return !string.IsNullOrEmpty(input);
     }

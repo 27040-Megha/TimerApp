@@ -18,7 +18,7 @@ public class ViewOperator
 
     private readonly TaskDashboard _taskDashboard;
 
-    private delegate bool ValidateInput(string input, out string errorMessage);
+    private delegate bool ValidateInput(string? input, out string errorMessage);
 
     public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ISessionManager currentSessionManager)
     {
@@ -189,14 +189,14 @@ public class ViewOperator
         return InputValidator.ValidateString(input);
     }
 
-    private static bool ValidateEmail(string input, out string error)
+    private static bool ValidateEmail(string? input, out string error)
     {
         error = "Invalid email format!";
         return InputValidator.ValidateEmail(input);
     }
 
 
-    private static bool ValidatePassword(string input, out string error)
+    private static bool ValidatePassword(string? input, out string error)
     {
         Result passwordCheckResult = InputValidator.ValidatePassword(input);
         error = passwordCheckResult.Message;
