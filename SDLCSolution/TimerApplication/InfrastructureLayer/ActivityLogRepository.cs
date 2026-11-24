@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using TimerApplication.ApplicationLayer.Interface;
-using TimerApplication.ApplicationLayer.Service;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.InfrastructureLayer
@@ -11,16 +7,16 @@ namespace TimerApplication.InfrastructureLayer
     {
         public void CreateActivityLog(ActivityLog activityLog)
         {
-            var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
-            activityLogs.Add(activityLog);
+            List<ActivityLog>? activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
+            activityLogs?.Add(activityLog);
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
         }
 
         public void EditActivityLog(Guid activityLogId, ActivityLog activityLogToBeAssigned)
         {
-            var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
-            var activityLogToUpdate = activityLogs.FirstOrDefault(a => a.ActivityLogId == activityLogId);
-            activityLogToUpdate.LogStatus = activityLogToBeAssigned.LogStatus;
+            List<ActivityLog>? activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
+            ActivityLog? activityLogToUpdate = activityLogs!.FirstOrDefault(a => a.ActivityLogId == activityLogId);
+            activityLogToUpdate!.LogStatus = activityLogToBeAssigned.LogStatus;
             activityLogToUpdate.EndTime = activityLogToBeAssigned.EndTime;
             activityLogToUpdate.Duration = activityLogToBeAssigned.Duration;
             FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
@@ -28,8 +24,8 @@ namespace TimerApplication.InfrastructureLayer
 
         public IEnumerable<ActivityLog> FetchAllActivityLogs()
         {
-            var activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath);
-            return activityLogs.Select(activity => new ActivityLog(activity.ActivityLogId, activity.LogName, activity.StartTime, activity.EndTime, activity.Duration, activity.LogStatus, activity.ActivityId, activity.UserId)).ToList();
+            List<ActivityLog> activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath) ?? [];
+            return activityLogs;
         }
     }
 }

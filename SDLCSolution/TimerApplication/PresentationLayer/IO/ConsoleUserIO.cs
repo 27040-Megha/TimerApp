@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using TimerApplication.ApplicationLayer.Domain.Enums;
-using TimerApplication.ApplicationLayer.Interface;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Enums;
 
 namespace TimerApplication.PresentationLayer.IO;
@@ -10,7 +7,7 @@ public class ConsoleUserIO : IUserIO
 {
     private readonly object _consoleLock = new();
 
-    private int WindowWidth => Console.WindowWidth;
+    public int WindowWidth => Console.WindowWidth;
 
     public int WindowHeight => Console.WindowHeight;
 

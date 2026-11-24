@@ -12,6 +12,21 @@ public class ActivityRepository : IActivityRepository
         FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
     }
 
+    public void EditActivity(Guid activityIdToEdit, Activity activityToBeAssigned)
+    {
+        List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? [];
+        Activity? activityToEdit = activities.FirstOrDefault(activity => activity.ActivityId.Equals(activityIdToEdit));
+        if (activityToEdit == null)
+        {
+            return;
+        }
+
+        activityToEdit.ActivityName = activityToBeAssigned.ActivityName;
+        activityToEdit.TaskStatus = activityToBeAssigned.TaskStatus;
+        activityToEdit.TotalDuration = activityToBeAssigned.TotalDuration;
+        FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
+    }
+
     public IEnumerable<Activity> GetAllActivitiesByUser(Guid userId)
     {
         List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? [];

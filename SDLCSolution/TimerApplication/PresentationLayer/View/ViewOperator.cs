@@ -28,6 +28,7 @@ public class ViewOperator
     {
         this._userService = userService;
         this._userIO = userIO;
+        this._activityService = activityService;
         this._taskDashboard = taskDashboard;
         this._activityLogService = activityLogService;
         this._currentSessionManager = currentSessionManager;
@@ -80,60 +81,19 @@ public class ViewOperator
         Guid? activeUserId = _userService.FetchActiveUser();
         if (activeUserId == null)
         {
-            var activeTimeByActivity = this._activityLogService.GetAllActivityLogs()
-                .Where(a => a.LogStatus == TimerStatus.Running &&
-                            a.UserId == CurrentSessionManager.CurrentSessionUser.UserId)
-                .GroupBy(a => a.ActivityId)
-                .ToDictionary(
-                    group => group.Key,
-                    group => TimeSpan.FromTicks(group.Sum(log => (DateTime.Now - log.StartTime).Ticks))
-                );
-
-            var lines = this.GetAllActivities()
-                .Select((activity, i) =>
-                {
-                    TimeSpan cumulativeDuration = activity.TotalDuration +
-                        activeTimeByActivity.GetValueOrDefault(activity.ActivityId);
-
-                    return $"{i + 1}. {activity.ActivityName}  Duration: {cumulativeDuration:hh\\:mm\\:ss}";
-                })
-                .ToList();
-
-            _userIO.DisplayPanel(DisplayRegion.PrimarySidebar, "Your activities: ", lines);
+            return;
         }
-    }
 
-    public void DisplayActiveTimers()
-    {
-        if (CurrentSessionManager.CurrentSessionUser != null)
-        {
-            var lines = this._activityLogService.GetAllActivityLogs()
-                .Where(a => a.LogStatus == TimerStatus.Running &&
-                            a.UserId == CurrentSessionManager.CurrentSessionUser.UserId)
-                .Select((log, i) =>
-                {
-                    string duration = (DateTime.Now - log.StartTime).ToString(@"hh\:mm\:ss");
-                    return $"{i + 1}. {log.LogName} Start: {log.StartTime} Duration: {duration}";
-                })
-                .ToList();
-
-            _userIO.DisplayPanel(DisplayRegion.SecondarySidebar, "Active Timers: ", lines);
-        }
-    }
-
-    private HashSet<Activity> GetAllActivities()
-    {
-        return this._activityService.GetAllActivities().ToHashSet();
-    }
-
-    private void LoadPreviousUserSession()
-    {
-        User activeUser = _userService.FetchActiveUser();
+        User? activeUser = _userService.FindUserById(activeUserId);
         if (activeUser != null)
         {
-            CurrentSessionManager.CurrentSessionUser = activeUser;
-            _userIO.DisplayMessage($"Welcome back {CurrentSessionManager.CurrentSessionUser.UserName}!", MessageType.Info);
+            _currentSessionManager.CurrentSessionUser = activeUser;
+            _userIO.DisplayMessage($"Welcome back {activeUser.UserName}!", MessageType.Info);
             _taskDashboard.RunDashboard();
+        }
+        else
+        {
+            _userService.ClearSession();
         }
     }
 

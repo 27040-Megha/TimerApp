@@ -35,7 +35,7 @@ public class ActivityLog
 
     public Guid ActivityLogId { get; set; }
 
-    public string LogName { get; set; }
+    public string? LogName { get; set; }
 
     public DateTime StartTime { get; set; }
 

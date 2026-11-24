@@ -19,21 +19,7 @@ public class Program
         {
             try
             {
-                AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
-                {
-                    viewOperator.SaveCurrentActiveUser();
-                };
-
-                System.Timers.Timer timer = new System.Timers.Timer();
-                timer.Interval = 1000;
-                timer.Elapsed += (sender, e) =>
-                {
-                    viewOperator.DisplayCurrentUsersTask();
-                    viewOperator.DisplayActiveTimers();
-                };
-                timer.Start();
                 viewOperator.Run();
-                timer.Stop();
                 break;
             }
             catch (Exception ex)

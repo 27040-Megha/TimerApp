@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using TimerApplication.ApplicationLayer.Interface;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
 
@@ -14,15 +10,18 @@ public class ActivityLogService
 
     private readonly ActivityService _activityService;
 
-    public ActivityLogService(IActivityLogRepository activityLogRepository, ActivityService activityService)
+    private readonly ISessionManager _currentSessionManager;
+
+    public ActivityLogService(IActivityLogRepository activityLogRepository, ActivityService activityService, ISessionManager currentSessionManager)
     {
         this._activityLogRepository = activityLogRepository;
         this._activityService = activityService;
+        this._currentSessionManager = currentSessionManager;
     }
 
     public Result StartTimer(int index)
     {
-        IEnumerable<Activity> activities = this._activityService.GetAllActivities();
+        IEnumerable<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
         if (index >= activities.Count())
         {
             return new Result(false, "Index out of range");
@@ -35,7 +34,7 @@ public class ActivityLogService
         }
 
         IEnumerable<ActivityLog> logs = this.GetLogsByActivityId(activityToStartTimer.ActivityId);
-        string taskName = activityToStartTimer.ActivityName;
+        string? taskName = activityToStartTimer.ActivityName;
         string logName = $"{taskName}-Log{logs.Count() + 1}";
         this.CreateActivityLog(logName, activityToStartTimer.ActivityId);
         this._activityService.EditTaskStatus(activityToStartTimer.ActivityId, TimerStatus.Running);
@@ -44,7 +43,7 @@ public class ActivityLogService
 
     public void CreateActivityLog(string logName, Guid activityId)
     {
-        ActivityLog activityLog = new ActivityLog(logName, DateTime.Now, null, TimeSpan.Zero, TimerStatus.Running, activityId, CurrentSessionManager.CurrentSessionUser.UserId);
+        ActivityLog activityLog = new ActivityLog(logName, DateTime.Now, null, TimeSpan.Zero, TimerStatus.Running, activityId, _currentSessionManager.CurrentSessionUser!.UserId);
         this._activityLogRepository.CreateActivityLog(activityLog);
     }
 
@@ -77,6 +76,6 @@ public class ActivityLogService
 
     public IEnumerable<ActivityLog> GetAllActivityLogs()
     {
-        return this._activityLogRepository.FetchAllActivityLogs().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId);
+        return this._activityLogRepository.FetchAllActivityLogs().Where(log => log.UserId == _currentSessionManager.CurrentSessionUser?.UserId);
     }
 }

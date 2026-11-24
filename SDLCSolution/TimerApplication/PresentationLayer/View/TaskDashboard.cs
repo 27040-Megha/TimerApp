@@ -3,9 +3,6 @@ using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.Domain.Enums;
 using TimerApplication.PresentationLayer.Helper;
 using TimerApplication.Domain.Model;
-using TimerApplication.Domain.Enums;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace TimerApplication.PresentationLayer.View;
 
@@ -21,6 +18,8 @@ public class TaskDashboard
     private readonly IUserIO _userIO;
 
     private readonly ActivityService _activityService;
+
+    private readonly ActivityLogService _activityLogService;
 
     private List<Activity> _cachedActivities = [];
 
@@ -45,6 +44,7 @@ public class TaskDashboard
             try
             {
                 DisplayCurrentUsersTask();
+                DisplayActiveTimers();
             }
             catch
             {
@@ -159,29 +159,40 @@ public class TaskDashboard
 
     private void DisplayCurrentUsersTask()
     {
-        if (_currentSessionManager.CurrentSessionUser == null) return;
-
-        int width = _userIO.WindowWidth - _activityPanelLeft - 1;
-        int maxRows = _userIO.WindowHeight - 3;
-        if (width <= 10 || maxRows <= 0) return;
-
-        _userIO.DisplayMessageAt(_activityPanelLeft, 0, "Your activities: ", MessageType.Info);
-
-        List<Activity> activities = _cachedActivities;
-        int visibleCount = Math.Min(activities.Count, maxRows);
-
-        for (int i = 0; i < visibleCount; i++)
+        if (_currentSessionManager.CurrentSessionUser == null)
         {
-            TimeSpan duration = activities[i].TotalDuration;
-            string formattedDuration = $"{(int)duration.TotalHours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
-            string text = $"{i + 1}. {activities[i].ActivityName}  Duration: {formattedDuration}";
-            _userIO.DisplayMessageAt(_activityPanelLeft, i + 1, text.PadRight(width));
+            return;
         }
 
-        string footer = activities.Count > maxRows ? $"... and {activities.Count - maxRows} more" : string.Empty;
-        _userIO.DisplayMessageAt(_activityPanelLeft, visibleCount + 1, footer.PadRight(width));
+        List<string> formattedActivities = _cachedActivities
+            .Select((activity, index) =>
+            {
+                TimeSpan duration = activity.TotalDuration;
+                string formattedDuration = $"{(int)duration.TotalHours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
+                return $"{index + 1}. {activity.ActivityName}  Duration: {formattedDuration}";
+            })
+            .ToList();
+
+        _userIO.DisplayPanel(DisplayRegion.PrimarySidebar, "Your activities:", formattedActivities);
     }
 
+    private void DisplayActiveTimers()
+    {
+        if (_currentSessionManager.CurrentSessionUser != null)
+        {
+            var lines = this._activityLogService.GetAllActivityLogs()
+                .Where(a => a.LogStatus == TimerStatus.Running &&
+                            a.UserId == _currentSessionManager.CurrentSessionUser.UserId)
+                .Select((log, i) =>
+                {
+                    string duration = (DateTime.Now - log.StartTime).ToString(@"hh\:mm\:ss");
+                    return $"{i + 1}. {log.LogName} Start: {log.StartTime} Duration: {duration}";
+                })
+                .ToList();
+
+            _userIO.DisplayPanel(DisplayRegion.SecondarySidebar, "Active Timers: ", lines);
+        }
+    }
 
     private List<Activity> GetAllActivities()
     {
@@ -209,10 +220,10 @@ public class TaskDashboard
         _userIO.DisplayMessage("Not available yet", MessageType.Warning);
     }
 
-        private bool HasAnyItems<T>(IEnumerable<T> entries)
-        {
-            return entries.Any();
-        }
+    private bool HasAnyItems<T>(IEnumerable<T> entries)
+    {
+        return entries.Any();
+    }
 
         private void StartTimer()
         {
@@ -246,11 +257,6 @@ public class TaskDashboard
             }
 
             _userIO.DisplayMessage($"Timer started Successfully!", MessageType.Success);
-        }
-
-        private IEnumerable<Activity> GetAllActivities()
-        {
-            return this._activityService.GetAllActivities();
         }
 
         private void DisplayActivities(IEnumerable<Activity> activities)

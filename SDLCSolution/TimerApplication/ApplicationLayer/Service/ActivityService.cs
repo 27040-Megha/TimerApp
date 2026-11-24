@@ -24,23 +24,29 @@ public class ActivityService
         this._activityRepository.CreateActivity(activity);
     }
 
-
-
-        public void EditTaskDuration(ActivityLog activityLog)
+    public void EditTaskDuration(ActivityLog activityLog)
+    {
+        Activity? activity = this.GetAllActivitiesByUser(activityLog.UserId).FirstOrDefault(activity => activity.ActivityId == activityLog.ActivityId);
+        if (activity == null)
         {
-            Activity activity = this.GetAllActivities().FirstOrDefault(activity => activity.ActivityId == activityLog.ActivityId);
-            activity.TotalDuration += activityLog.Duration;
-            activity.TaskStatus = TimerStatus.Stopped;
-            this._activityRepository.EditActivity(activityLog.ActivityId, activity);
+            return;
         }
-
-        public void EditTaskStatus(Guid taskId, TimerStatus timerStatus)
-        {
-            Activity activity = this.GetAllActivities().FirstOrDefault(activity => activity.ActivityId == taskId);
-            activity.TaskStatus = timerStatus;
-            this._activityRepository.EditActivity(taskId, activity);
-        }
+        activity.TotalDuration += activityLog.Duration;
+        activity.TaskStatus = TimerStatus.Stopped;
+        this._activityRepository.EditActivity(activityLog.ActivityId, activity);
     }
+
+    public void EditTaskStatus(Guid taskId, TimerStatus timerStatus)
+    {
+        Activity? activity = this.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId).FirstOrDefault(activity => activity.ActivityId == taskId);
+        if (activity == null)
+        {
+            return;
+        }
+        activity.TaskStatus = timerStatus;
+        this._activityRepository.EditActivity(taskId, activity);
+    }
+
     public List<Activity> GetAllActivitiesByUser(Guid userId)
     {
         return this._activityRepository.GetAllActivitiesByUser(userId).ToList();
