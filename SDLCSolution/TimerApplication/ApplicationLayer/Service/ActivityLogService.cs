@@ -81,7 +81,7 @@ public class ActivityLogService
 
     public Result GetAllActivityLogsByActivityIndex(int index, out IEnumerable<ActivityLog> activityLogs)
     {
-        var activities = this._activityService.GetAllActivities();
+        List<Activity> activities = this._activityService.GetAllActivities();
         activityLogs = new List<ActivityLog>();
         if (index >= activities.Count())
         {
@@ -90,11 +90,11 @@ public class ActivityLogService
 
         Guid activityId = activities.ElementAt(index).ActivityId;
         activityLogs = this.GetLogsByActivityId(activityId).OrderBy(a => a.StartTime);
-        if (activityLogs.Count() == 0)
+        if (!activityLogs.Any())
         {
             return new Result(false, "No activity logs recorded for the activity!");
         }
 
-        return new Result(true, "Logs fetched successfull!");
+        return new Result(true, "Logs fetched successfully!");
     }
 }
