@@ -241,20 +241,22 @@ public class TaskDashboard
 
     private void DisplayLogDetails(IEnumerable<ActivityLog> activityLogs)
     {
-            List<ActivityLog> logsList = activityLogs.ToList();
-            for (int i = 0; i < logsList.Count; i++)
-            {
-                ActivityLog log = logsList[i];
-                bool isRunning = log.LogStatus == TimerStatus.Running;
-                string duration = isRunning ? string.Empty : $", Duration: {log.Duration:hh\\:mm\\:ss}";
-                string? endText = isRunning ? "Running" : log.EndTime?.ToString();
-                MessageType messageType = isRunning ? MessageType.Success : MessageType.Default;
-                _userIO.DisplayMessage(
-                    $"{i + 1}. {log.LogName} {duration}\n" +
-                    $"   Start: {log.StartTime},  End: {endText}",
-                    messageType);
-            }
+        List<ActivityLog> logsList = activityLogs.ToList();
+        for (int i = 0; i < logsList.Count; i++)
+        {
+            ActivityLog log = logsList[i];
+            bool isRunning = log.LogStatus == TimerStatus.Running;
+            string durationText = isRunning ? string.Empty : $" (Duration: {FormatDuration(log.Duration)})";
+            string? endText = isRunning ? "Running" : log.EndTime?.ToLocalTime().ToString();
+            MessageType messageType = isRunning ? MessageType.Success : MessageType.Default;
+
+            _userIO.DisplayMessage(
+                $"{i + 1}. {log.LogName}{durationText}\n" +
+                $"   Start: {log.StartTime.ToLocalTime()},  End: {endText}",
+                messageType);
+        }
     }
+
 
     private bool HasAnyItems<T>(IReadOnlyList<T> entries)
     {

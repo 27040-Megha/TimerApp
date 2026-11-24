@@ -21,7 +21,6 @@ public class Program
             {
                 viewOperator.Run();
                 break;
-                timer.Stop();
             }
             catch (Exception ex)
             {
