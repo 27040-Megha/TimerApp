@@ -42,12 +42,6 @@ public class ActivityLogService
         return new Result(true, "Timer started successfully!");
     }
 
-    public void CreateActivityLog(string logName, Guid activityId)
-    {
-        ActivityLog activityLog = new ActivityLog(logName, DateTime.Now, null, TimeSpan.Zero, TimerStatus.Running, activityId, CurrentSessionManager.CurrentSessionUser.UserId);
-        this._activityLogRepository.CreateActivityLog(activityLog);
-    }
-
     private IEnumerable<ActivityLog> GetLogsByActivityId(Guid activityId)
     {
         return this.GetAllActivityLogs().Where(log => log.ActivityId == activityId);
@@ -77,11 +71,6 @@ public class ActivityLogService
         this._activityLogRepository.CreateActivityLog(activityLog);
     }
 
-    private IEnumerable<ActivityLog> GetLogsByActivityId(Guid activityId)
-    {
-        return this.GetAllActivityLogs().Where(activity => activity.ActivityId == activityId);
-    }
-
     public IEnumerable<ActivityLog> GetAllActiveTimerLogs()
     {
         return this.GetAllActivityLogs().Where(log => log.LogStatus == TimerStatus.Running);
@@ -92,22 +81,25 @@ public class ActivityLogService
         return this._activityLogRepository.FetchAllActivityLogs().Where(log => log.UserId == _currentSessionManager.CurrentSessionUser?.UserId);
     }
 
-    public Result GetAllActivityLogsByActivityIndex(int index, out IEnumerable<ActivityLog> activityLogs)
+    public Result<ActivityLog> GetAllActivityLogsByActivityIndex(int index)
     {
-        List<Activity> activities = this._activityService.GetAllActivities();
-        activityLogs = new List<ActivityLog>();
-        if (index >= activities.Count())
+        List<Activity>? activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
+        if (index < 0 || index >= activities.Count)
         {
-            return new Result(false, "Index out of range");
+            return new Result<ActivityLog>(false, "Index out of range");
         }
 
-        Guid activityId = activities.ElementAt(index).ActivityId;
-        activityLogs = this.GetLogsByActivityId(activityId).OrderBy(a => a.StartTime);
+        Guid activityId = activities[index].ActivityId;
+        List<ActivityLog> activityLogs = this.GetLogsByActivityId(activityId)
+            .OrderBy(a => a.StartTime)
+            .ToList();
+
         if (!activityLogs.Any())
         {
-            return new Result(false, "No activity logs recorded for the activity!");
+            return new Result<ActivityLog>(false, "No activity logs recorded for the activity!");
         }
 
-        return new Result(true, "Logs fetched successfully!");
+        return new Result<ActivityLog>(true, "Logs fetched successfully!", activityLogs);
     }
+
 }

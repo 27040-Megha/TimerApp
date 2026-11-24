@@ -169,16 +169,12 @@ public class TaskDashboard
         }
 
         List<string> formattedActivities = _cachedActivities
-            .Select((activity, index) =>
-            {
-                TimeSpan duration = activity.TotalDuration;
-                string formattedDuration = $"{(int)duration.TotalHours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
-                return $"{index + 1}. {activity.ActivityName}  Duration: {formattedDuration}";
-            })
+            .Select((activity, index) => $"{index + 1}. {activity.ActivityName}  Duration: {FormatDuration(activity.TotalDuration)}")
             .ToList();
 
         _userIO.DisplayPanel(DisplayRegion.PrimarySidebar, "Your activities:", formattedActivities);
     }
+
 
     private void DisplayActiveTimers()
     {
@@ -215,57 +211,50 @@ public class TaskDashboard
         _userIO.DisplayMessage("Not available yet", MessageType.Warning);
     }
 
-        private void ViewSpecificTaskLog()
+    private void ViewSpecificTaskLog()
+    {
+        List<Activity> activities = this.GetAllActivities();
+        if (!HasAnyItems(activities))
         {
-            List<Activity> activities = this._activityService.GetAllActivities();
-            this.DisplayActivities(activities);
-            if (! HasAnyItems(activities))
-            {
-                _userIO.DisplayMessage("No activies found to view specific logs!", MessageType.Warning);
-                return;
-            }
-
-            _userIO.DisplayMessage($"Enter index of task to view activity details: ", MessageType.Info);
-            if (!TryGetInputIndex(out int index))
-            {
-                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
-                return;
-            }
-
-            if (index < 1)
-            {
-                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
-                return;
-            }
-
-            Result isLogsFetched = this._activityLogService.GetAllActivityLogsByActivityIndex(index - 1, out IEnumerable<ActivityLog> activityLogs);
-            if (!isLogsFetched.IsSuccess)
-            {
-                _userIO.DisplayMessage(isLogsFetched.Message, MessageType.Error);
-                return;
-            }
-
-            Activity activity = activities.ElementAt(index - 1);
-            _userIO.DisplayMessage($"{activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}", MessageType.Info);
-            this.DisplayLogDetails(activityLogs);
+            _userIO.DisplayMessage("No activities found to view specific logs!", MessageType.Warning);
+            return;
         }
 
-        private void DisplayLogDetails(IEnumerable<ActivityLog> activityLogs)
+        this.DisplayActivities(activities);
+        if (!TrySelectIndex("Enter index of task to view activity details: ", out int index))
         {
-            var logsList = activityLogs.ToList();
+            return;
+        }
+
+        Result<ActivityLog> logsResult = this._activityLogService.GetAllActivityLogsByActivityIndex(index);
+        if (!logsResult.IsSuccess)
+        {
+            _userIO.DisplayMessage(logsResult.Message, MessageType.Error);
+            return;
+        }
+
+        Activity activity = activities[index];
+        _userIO.DisplayMessage($"{activity.ActivityName}  Duration: {FormatDuration(activity.TotalDuration)}", MessageType.Info);
+        this.DisplayLogDetails(logsResult.Data);
+    }
+
+
+    private void DisplayLogDetails(IEnumerable<ActivityLog> activityLogs)
+    {
+            List<ActivityLog> logsList = activityLogs.ToList();
             for (int i = 0; i < logsList.Count; i++)
             {
-                var log = logsList[i];
+                ActivityLog log = logsList[i];
                 bool isRunning = log.LogStatus == TimerStatus.Running;
                 string duration = isRunning ? string.Empty : $", Duration: {log.Duration:hh\\:mm\\:ss}";
-                string endText = isRunning ? "Running" : log.EndTime?.ToString();
+                string? endText = isRunning ? "Running" : log.EndTime?.ToString();
                 MessageType messageType = isRunning ? MessageType.Success : MessageType.Default;
                 _userIO.DisplayMessage(
                     $"{i + 1}. {log.LogName} {duration}\n" +
                     $"   Start: {log.StartTime},  End: {endText}",
                     messageType);
             }
-        }
+    }
 
     private bool HasAnyItems<T>(IReadOnlyList<T> entries)
     {
@@ -342,15 +331,15 @@ public class TaskDashboard
         _userIO.DisplayMessage(successMessage, MessageType.Success);
     }
 
-
     private void DisplayActivities(IEnumerable<Activity> activities)
     {
-        for (int i = 0; i < activities.Count(); i++)
+        int i = 0;
+        foreach (Activity activity in activities)
         {
-            Activity activity = activities.ElementAt(i);
-            _userIO.DisplayMessage($"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}");
+            _userIO.DisplayMessage($"{++i}. {activity.ActivityName}  Duration: {FormatDuration(activity.TotalDuration)}");
         }
     }
+
 
     private bool TryGetInputIndex(out int index)
     {
@@ -364,6 +353,11 @@ public class TaskDashboard
             ActivityLog activitylog = activityLogs.ElementAt(i);
             _userIO.DisplayMessage($"{i + 1}. {activitylog.LogName}");
         }
+    }
+
+    private static string FormatDuration(TimeSpan duration)
+    {
+        return $"{(int)duration.TotalHours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
     }
 
     private void ImportTimeLog()
