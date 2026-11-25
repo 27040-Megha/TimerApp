@@ -50,7 +50,7 @@ public class ActivityLogService
         logToStopTimer.EndTime = stoppedAt;
         logToStopTimer.Duration = stoppedAt - logToStopTimer.StartTime;
         this._activityLogRepository.EditActivityLog(logToStopTimer.ActivityLogId, logToStopTimer);
-        this._activityService.EditTaskDuration(logToStopTimer);
+        this._activityService.AddToTaskDuration(logToStopTimer.ActivityId, logToStopTimer.Duration);
         return new Result(true, "Timer stopped successfully!");
     }
 
@@ -141,23 +141,13 @@ public class ActivityLogService
         return new Result(true, ErrorCode.None);
     }
 
-    public Result ImportLogs(string filePath, int index)
+    public Result ImportLogs(string filePath, Guid activityId)
     {
         try
         {
             Guid userId = _currentSessionManager.CurrentSessionUser!.UserId;
             List<Activity> activities = this._activityService.GetAllActivitiesByUser(userId);
-            if (!activities.Any())
-            {
-                return new Result(false, "No tasks found to import logs");
-            }
-
-            if (index < 0 || index >= activities.Count)
-            {
-                return new Result(false, "Index Out Of Range");
-            }
-
-            Activity activitySelected = activities[index];
+            Activity activitySelected = activities.FirstOrDefault(activity => activity.ActivityId == activityId)!;
             string csvContent = FileHandlingService.ReadTextFile(filePath);
             List<ActivityLog> importedLogs = CsvService.DeserializeLogs(csvContent, activitySelected.ActivityId, userId);
 
@@ -229,18 +219,13 @@ public class ActivityLogService
         return activity.TotalDuration + activeElapsed;
     }
 
-    public Result ExportLogs(int indexOfActivity)
+    public Result ExportLogs(Guid activityId)
     {
         try
         {
             Guid userId = _currentSessionManager.CurrentSessionUser!.UserId;
             List<Activity> activities = this._activityService.GetAllActivitiesByUser(userId);
-            if (indexOfActivity < 0 || indexOfActivity >= activities.Count)
-            {
-                return new Result(false, "Index Out Of Range");
-            }
-
-            Activity selectedActivity = activities[indexOfActivity];
+            Activity selectedActivity = activities.FirstOrDefault(activity => activity.ActivityId == activityId)!;
             List<ActivityLog> logsToExport = this.GetAllActivityLogs()
                 .Where(log => log.ActivityId == selectedActivity.ActivityId &&
                               log.LogStatus == TimerStatus.Stopped &&

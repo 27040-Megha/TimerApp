@@ -549,7 +549,7 @@ public class TaskDashboard
             return;
         }
 
-        if (index < 1)
+        if (index < 1 || index > activities.Count)
         { 
             _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
             return;
@@ -571,7 +571,7 @@ public class TaskDashboard
             return;
         }
 
-        Result importResult = this._activityLogService.ImportLogs(filePath!, index-1);
+        Result importResult = this._activityLogService.ImportLogs(filePath!,activities[index-1].ActivityId);
         if (!importResult.IsSuccess)
         {
             _userIO.DisplayMessage(importResult.Message!, MessageType.Error);
@@ -603,7 +603,7 @@ public class TaskDashboard
             return;
         }
 
-        Result exportResult = this._activityLogService.ExportLogs(index-1);
+        Result exportResult = this._activityLogService.ExportLogs(activities[index-1].ActivityId);
         if (!exportResult.IsSuccess)
         {
             _userIO.DisplayMessage($"{exportResult.Message}", MessageType.Error);
