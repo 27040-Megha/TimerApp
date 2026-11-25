@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using TimerApplication.ApplicationLayer.Interface;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
 
@@ -9,11 +6,14 @@ namespace TimerApplication.ApplicationLayer.Service;
 
 public class ActivityService
 {
-    private IActivityRepository _activityRepository;
+    private readonly IActivityRepository _activityRepository;
 
-    public ActivityService(IActivityRepository activityRepository)
+    private readonly ISessionManager _currentSessionManager;
+
+    public ActivityService(IActivityRepository activityRepository, ISessionManager currentSessionManager)
     {
         this._activityRepository = activityRepository;
+        this._currentSessionManager = currentSessionManager;
     }
 
     public void CreateNewTask(Activity activity)
@@ -21,58 +21,39 @@ public class ActivityService
         this._activityRepository.CreateActivity(activity);
     }
 
-        public List<Activity> GetAllActivities()
-        {
-            return this._activityRepository.GetAllActivities().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId).ToList();
-        }
-
-        public void EditTaskDuration(ActivityLog activityLog)
-        {
-            Activity activity = this.GetAllActivities().FirstOrDefault(activity => activity.ActivityId == activityLog.ActivityId);
-            activity.TotalDuration += activityLog.Duration;
-            activity.TaskStatus = TimerStatus.Stopped;
-            this._activityRepository.EditActivity(activityLog.ActivityId, activity);
-        }
-
-        public void EditTaskStatus(Guid taskId, TimerStatus timerStatus)
-        {
-            Activity activity = this.GetAllActivities().FirstOrDefault(activity => activity.ActivityId == taskId);
-            activity.TaskStatus = timerStatus;
-            this._activityRepository.EditActivity(taskId, activity);
-        }
-
-    public Result DeleteActivity(int index)
+    public void AddToTaskDuration(Guid activityId, TimeSpan durationToAdd)
     {
-        var activities = this.GetAllActivities();
-        if (activities.Count == 0)
+        if (durationToAdd < TimeSpan.Zero)
         {
-            return new Result(false, ErrorCode.NoActivitiesFound);
+            throw new ArgumentOutOfRangeException(nameof(durationToAdd), "Duration to add cannot be negative.");
+        }
+    
+        Activity? activity = this._activityRepository.GetActivityById(activityId);
+        if (activity == null)
+        {
+            throw new KeyNotFoundException($"Activity with ID '{activityId}' was not found.");
         }
 
-        if (index >= activities.Count)
-        {
-            return new Result(false, ErrorCode.IndexOutOfRange);
-        }
-        var activityToDelete = activities.ElementAt(index);
-        if (activityToDelete.TaskStatus == TimerStatus.Running)
-        {
-            return new Result(false, ErrorCode.TimerRunning);
-        }
-
-        this._activityRepository.DeleteActivity(activityToDelete.ActivityId);
-        return new Result(true, ErrorCode.None);
+        activity.TotalDuration += durationToAdd;
+        this._activityRepository.EditActivity(activityId, activity);
     }
+
 
     public void RemoveLogDuration(Guid taskId, TimeSpan duration)
     {
-        var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == taskId);
+        Activity? activity = this.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId).FirstOrDefault(a => a.ActivityId == taskId);
+        if (activity == null)
+        {
+            return;
+        }
+
         activity.TotalDuration -= duration;
         this._activityRepository.EditActivity(activity.ActivityId, activity);
     }
 
     public Result EditTaskName(int index, string input)
     {
-        var activities = this.GetAllActivities();
+        List<Activity> activities = this.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
         if (activities.Count == 0)
         {
             return new Result(false, "No activities found to edit");
@@ -83,15 +64,25 @@ public class ActivityService
             return new Result(false, "Index out of range");
         }
 
-        var activityToEdit = activities.ElementAt(index);
+        Activity activityToEdit = activities.ElementAt(index);
         activityToEdit.ActivityName = input;
         this._activityRepository.EditActivity(activityToEdit.ActivityId, activityToEdit);
-        return new Result(true, "Edit Successfull!");
+        return new Result(true, "Edit Successful!");
+    }
+
+    public List<Activity> GetAllActivitiesByUser(Guid userId)
+    {
+        return this._activityRepository.GetAllActivitiesByUser(userId).ToList();
+    }
+
+    public void DeleteActivityById(Guid activityId)
+    {
+        this._activityRepository.DeleteActivity(activityId);
     }
     public void UpdateTaskTotalDuration(Activity activitySelected, TimeSpan totalTaskDuration)
     {
-        var activity = this.GetAllActivities().FirstOrDefault(a => a.ActivityId == activitySelected.ActivityId);
-        activity.TotalDuration += totalTaskDuration;
+        Activity? activity = this.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId).FirstOrDefault(a => a.ActivityId == activitySelected.ActivityId);
+        activity!.TotalDuration += totalTaskDuration;
         this._activityRepository.EditActivity(activity.ActivityId, activity);
     }
 }

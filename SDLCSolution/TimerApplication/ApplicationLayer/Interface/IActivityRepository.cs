@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using TimerApplication.Domain.Model;
+﻿using TimerApplication.Domain.Model;
 
 namespace TimerApplication.ApplicationLayer.Interface;
 
@@ -8,11 +6,11 @@ public interface IActivityRepository
 {
     public void CreateActivity(Activity activity);
 
-    public void EditActivity(Guid activityIdToEdit, Activity activity);
+    public void DeleteActivity(Guid activityId);
 
-    public void DeleteActivity(Guid ActivityId);
+    public void EditActivity(Guid activityId, Activity activity);
 
-    public IEnumerable<Activity> GetAllActivities();
+    public IEnumerable<Activity> GetAllActivitiesByUser(Guid userId);
 
-    public Activity GetActivityById(Guid activityId);
+    public Activity? GetActivityById(Guid activityId);
 }

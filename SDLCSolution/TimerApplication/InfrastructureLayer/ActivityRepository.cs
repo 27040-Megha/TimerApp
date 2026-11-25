@@ -1,47 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using TimerApplication.ApplicationLayer.Interface;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Model;
 
-namespace TimerApplication.InfrastructureLayer
+namespace TimerApplication.InfrastructureLayer;
+
+public class ActivityRepository : IActivityRepository
 {
-    public class ActivityRepository : IActivityRepository
+    public void CreateActivity(Activity activity)
     {
-        public void CreateActivity(Activity activity)
+        List<Activity>? activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
+        activities?.Add(activity);
+        FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
+    }
+
+    public void EditActivity(Guid activityIdToEdit, Activity activityToBeAssigned)
+    {
+        List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
+        Activity? activityToEdit = activities.FirstOrDefault(activity => activity.ActivityId.Equals(activityIdToEdit));
+        if (activityToEdit == null)
         {
-            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
-            activities.Add(activity);
-            FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
+            return;
         }
 
-        public void DeleteActivity(Guid activityId)
-        {
-            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
-            var activityToDelete = activities.FirstOrDefault(a => a.ActivityId == activityId);
-            activities.Remove(activityToDelete);
-            FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
-        }
+        activityToEdit.ActivityName = activityToBeAssigned.ActivityName;
+        activityToEdit.TotalDuration = activityToBeAssigned.TotalDuration;
+        FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
+    }
 
-        public void EditActivity(Guid activityIdToEdit, Activity activityToBeAssigned)
-        {
-            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
-            var activityToEdit = activities.FirstOrDefault(activity => activity.ActivityId.Equals(activityIdToEdit));
-            activityToEdit.ActivityName = activityToBeAssigned.ActivityName;
-            activityToEdit.TaskStatus = activityToBeAssigned.TaskStatus;
-            activityToEdit.TotalDuration = activityToBeAssigned.TotalDuration;
-            FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
-        }
+    public void DeleteActivity(Guid activityId)
+    {
+        List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
+        Activity? activityToDelete = activities.FirstOrDefault(a => a.ActivityId == activityId);
+        activities.Remove(activityToDelete!);
+        FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
+    }
+    public IEnumerable<Activity> GetAllActivitiesByUser(Guid userId)
+    {
+        List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
+        return activities.Where(activity => activity.UserId == userId);
+    }
 
-        public Activity GetActivityById(Guid activityId)
-        {
-            var activities = FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);
-            return activities.FirstOrDefault(a => a.ActivityId == activityId);
-        }
+    public Activity? GetActivityById(Guid activityId)
+    {
+        List<Activity>? activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
+       if (activities == null)
+       {
+            return null;
+       }
 
-        public IEnumerable<Activity> GetAllActivities()
-        {
-            return FileHandlingService.ReadFile<HashSet<Activity>>(FilePathResource.ActivityRepoFilePath);            
-        }
+        return activities.FirstOrDefault(activity => activity.ActivityId == activityId);
     }
 }

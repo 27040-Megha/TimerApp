@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using TimerApplication.ApplicationLayer.Interface;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
+using TimerApplication.InfrastructureLayer;
 
 namespace TimerApplication.ApplicationLayer.Service;
 
@@ -14,39 +11,35 @@ public class ActivityLogService
 
     private readonly ActivityService _activityService;
 
-    public ActivityLogService(IActivityLogRepository activityLogRepository, ActivityService activityService)
+    private readonly ISessionManager _currentSessionManager;
+
+    public ActivityLogService(IActivityLogRepository activityLogRepository, ActivityService activityService, ISessionManager currentSessionManager)
     {
         this._activityLogRepository = activityLogRepository;
         this._activityService = activityService;
+        this._currentSessionManager = currentSessionManager;
     }
 
     public Result StartTimer(int index)
     {
-        IEnumerable<Activity> activities = this._activityService.GetAllActivities();
-        if (index >= activities.Count())
+        List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
+        if (index < 0 || index >= activities.Count)
         {
             return new Result(false, "Index out of range");
         }
 
-        Activity activityToStartTimer = activities.ElementAt(index);
-        if (activityToStartTimer.TaskStatus == TimerStatus.Running)
+        Activity activityToStartTimer = activities[index];
+        List<ActivityLog> logs = this.GetLogsByActivityId(activityToStartTimer.ActivityId).ToList();
+        if (logs.Any(log => log.LogStatus == TimerStatus.Running))
         {
             return new Result(false, "Can't Start, Timer is already running for this task");
         }
 
-        IEnumerable<ActivityLog> logs = this.GetLogsByActivityId(activityToStartTimer.ActivityId);
-        string taskName = activityToStartTimer.ActivityName;
-        string logName = $"{taskName}-Log{logs.Count() + 1}";
+        string logName = $"{activityToStartTimer.ActivityName}-{DateTime.Now:yyyyMMdd-HHmmss}";
         this.CreateActivityLog(logName, activityToStartTimer.ActivityId);
-        this._activityService.EditTaskStatus(activityToStartTimer.ActivityId, TimerStatus.Running);
         return new Result(true, "Timer started successfully!");
     }
 
-    public void CreateActivityLog(string logName, Guid activityId)
-    {
-        ActivityLog activityLog = new ActivityLog(logName, DateTime.Now, null, TimeSpan.Zero, TimerStatus.Running, activityId, CurrentSessionManager.CurrentSessionUser.UserId);
-        this._activityLogRepository.CreateActivityLog(activityLog);
-    }
 
     private IEnumerable<ActivityLog> GetLogsByActivityId(Guid activityId)
     {
@@ -55,19 +48,38 @@ public class ActivityLogService
 
     public Result StopTimer(int index)
     {
-        IEnumerable<ActivityLog> activeLogs = this.GetAllActiveTimerLogs();
-        if (index >= activeLogs.Count())
+        List<ActivityLog> activeLogs = this.GetAllActiveTimerLogs().ToList();
+        if (index < 0 || index >= activeLogs.Count)
         {
             return new Result(false, "Index out of range!");
         }
 
-        ActivityLog logToStopTimer = activeLogs.ElementAt(index);
-        logToStopTimer.LogStatus = TimerStatus.Stopped;
-        logToStopTimer.EndTime = DateTime.Now;
-        logToStopTimer.Duration = (TimeSpan)(logToStopTimer.EndTime - logToStopTimer.StartTime);
-        this._activityLogRepository.EditActivityLog(logToStopTimer.ActivityLogId, logToStopTimer);
-        this._activityService.EditTaskDuration(logToStopTimer);
-        return new Result(true, "Timer stoppped successfully!");
+        try
+        {
+            ActivityLog logToStopTimer = activeLogs[index];
+            DateTime stoppedAt = DateTime.UtcNow;
+            TimeSpan elapsedDuration = stoppedAt - logToStopTimer.StartTime;
+
+            logToStopTimer.LogStatus = TimerStatus.Stopped;
+            logToStopTimer.EndTime = stoppedAt;
+            logToStopTimer.Duration = elapsedDuration;
+
+            this._activityLogRepository.EditActivityLog(logToStopTimer.ActivityLogId, logToStopTimer);
+            this._activityService.AddToTaskDuration(logToStopTimer.ActivityId, elapsedDuration);
+
+            return new Result(true, "Timer stopped successfully!");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return new Result(false, ex.Message);
+        }
+    }
+
+
+    public void CreateActivityLog(string logName, Guid activityId)
+    {
+        ActivityLog activityLog = new ActivityLog(logName, DateTime.UtcNow, null, TimeSpan.Zero, TimerStatus.Running, activityId, _currentSessionManager.CurrentSessionUser!.UserId);
+        this._activityLogRepository.CreateActivityLog(activityLog);
     }
 
     public IEnumerable<ActivityLog> GetAllActiveTimerLogs()
@@ -77,17 +89,13 @@ public class ActivityLogService
 
     public void DeleteActivityLogsByTaskId(Guid activityId)
     {
-        var activityLogs = this.GetAllActivityLogs().Where(a => a.ActivityId == activityId).ToList();
-        foreach (var log in activityLogs)
-        {
-            this._activityLogRepository.DeleteActivityLog(log.ActivityLogId);
-        }
+        this._activityLogRepository.DeleteActivityLogsByActivityId(activityId);
     }
 
     public Result DeleteActivityLogByLogId(int index)
     {
-        var activityLogs = this.GetAllActivityLogs().ToList();
-        if (activityLogs.Count == 0)
+        List<ActivityLog> activityLogs = this.GetAllActivityLogs().ToList();
+        if (!activityLogs.Any())
         {
             return new Result(false, "No activity logs found to delete");
         }
@@ -97,7 +105,7 @@ public class ActivityLogService
             return new Result(false, "Index out of range");
         }
 
-        var activityLogToDelete = activityLogs.ElementAt(index);
+        ActivityLog activityLogToDelete = activityLogs.ElementAt(index);
         if (activityLogToDelete.LogStatus == TimerStatus.Running)
         {
             return new Result(false, "Cannot delete a log while running timer! Stop the timer first");
@@ -109,10 +117,10 @@ public class ActivityLogService
     }
 
 
-    public Result EditTaskLog(int index, string input)
+    public Result EditTaskLog(int index, string? input)
     {
-        var activityLogs = this.GetAllActivityLogs().ToList();
-        if (activityLogs.Count == 0)
+        List<ActivityLog> activityLogs = this.GetAllActivityLogs().ToList();
+        if (!activityLogs.Any())
         {
             return new Result(false, "No activity logs found to edit");
         }
@@ -122,7 +130,7 @@ public class ActivityLogService
             return new Result(false, "Index out of range");
         }
 
-        var activityLogToBeEdited = activityLogs.ElementAt(index);
+        ActivityLog activityLogToBeEdited = activityLogs.ElementAt(index);
         bool isDuplicate = activityLogs.Any(log =>
             log.ActivityLogId != activityLogToBeEdited.ActivityLogId &&
             log.ActivityId == activityLogToBeEdited.ActivityId &&
@@ -140,69 +148,80 @@ public class ActivityLogService
 
     public IEnumerable<ActivityLog> GetAllActivityLogs()
     {
-        return this._activityLogRepository.FetchAllActivityLogs().Where(a => a.UserId == CurrentSessionManager.CurrentSessionUser.UserId);
+        return this._activityLogRepository.FetchAllActivityLogs().Where(log => log.UserId == _currentSessionManager.CurrentSessionUser?.UserId);
     }
 
-    public Result GetAllActivityLogsByActivityIndex(int index, out IEnumerable<ActivityLog> activityLogs)
+    public Result<ActivityLog> GetAllActivityLogsByActivityIndex(int index)
     {
-        var activities = this._activityService.GetAllActivities();
-        activityLogs = new List<ActivityLog>();
-        if (index >= activities.Count())
+        List<Activity>? activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
+        if (index < 0 || index >= activities.Count)
         {
-            return new Result(false, "Index out of range");
+            return new Result<ActivityLog>(false, "Index out of range");
         }
 
-        Guid activityId = activities.ElementAt(index).ActivityId;
-        activityLogs = this.GetLogsByActivityId(activityId).OrderBy(a => a.StartTime);
-        if (activityLogs.Count() == 0)
+        Guid activityId = activities[index].ActivityId;
+        List<ActivityLog> activityLogs = this.GetLogsByActivityId(activityId)
+            .OrderBy(a => a.StartTime)
+            .ToList();
+
+        if (!activityLogs.Any())
         {
-            return new Result(false, "No activity logs recorded for the activity!");
+            return new Result<ActivityLog>(false, "No activity logs recorded for the activity!");
         }
 
-        return new Result(true, "Logs fetched successfull!");
+        return new Result<ActivityLog>(true, "Logs fetched successfully!", activityLogs);
     }
 
-    public Result ExportLogs(int indexOfActivity)
+    public Result DeleteActivity(int index)
     {
-        var activities = this._activityService.GetAllActivities();
-        if (indexOfActivity >= activities.Count)
+        List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
+        if (activities.Count == 0)
         {
-            return new Result(false, "Index Out Of Range");
+            return new Result(false, ErrorCode.NoActivitiesFound);
         }
 
-        var selectedActivity = activities[indexOfActivity];
-        var logsToExport = this.GetAllActivityLogs().Where(log => log.ActivityId == selectedActivity.ActivityId)
-             .OrderBy(log => log.StartTime)
-             .ToList();
-        if (!logsToExport.Any())
+        if (index < 0 || index >= activities.Count)
         {
-            return new Result(false, "No logs recorded for the activity to export");
+            return new Result(false, ErrorCode.IndexOutOfRange);
         }
 
-        this._activityLogRepository.ExportActivityLogsToCsv($"{selectedActivity.ActivityName}-{DateTime.Now:dd-MM-yyyy_HH-mm-ss}.csv", logsToExport);
-        return new Result(true, $"Logs exported Successfully");
+        Activity activityToDelete = activities[index];
+        bool isTimerRunning = this.GetLogsByActivityId(activityToDelete.ActivityId)
+            .Any(log => log.LogStatus == TimerStatus.Running);
+
+        if (isTimerRunning)
+        {
+            return new Result(false, ErrorCode.TimerRunning);
+        }
+
+        this._activityService.DeleteActivityById(activityToDelete.ActivityId);
+        this.DeleteActivityLogsByTaskId(activityToDelete.ActivityId);
+        return new Result(true, ErrorCode.None);
     }
 
     public Result ImportLogs(string filePath, int index)
     {
         try
         {
-            var activities = this._activityService.GetAllActivities();
+            Guid userId = _currentSessionManager.CurrentSessionUser!.UserId;
+            List<Activity> activities = this._activityService.GetAllActivitiesByUser(userId);
             if (!activities.Any())
             {
                 return new Result(false, "No tasks found to import logs");
             }
-                
-            if (index >= activities.Count)
+
+            if (index < 0 || index >= activities.Count)
             {
                 return new Result(false, "Index Out Of Range");
             }
 
-            var activitySelected = activities[index];
-            var importedLogs = this._activityLogRepository.ImportActivityLogsFromCsv(filePath, activitySelected.ActivityId);
+            Activity activitySelected = activities[index];
+            string csvContent = FileHandlingService.ReadTextFile(filePath);
+            List<ActivityLog> importedLogs = CsvService.DeserializeLogs(csvContent, activitySelected.ActivityId, userId);
+
             return ProcessAndSaveLogs(activitySelected, importedLogs);
         }
-        catch (Exception ex) when (ex is FormatException || ex is FileNotFoundException)
+        catch (Exception ex) when (ex is FormatException or FileNotFoundException or IOException or UnauthorizedAccessException or ArgumentException)
         {
             return new Result(false, ex.Message);
         }
@@ -210,14 +229,13 @@ public class ActivityLogService
 
     private Result ProcessAndSaveLogs(Activity activity, List<ActivityLog> importedLogs)
     {
-        var existingLogs = this.GetAllActivityLogs()
+        List<ActivityLog> existingLogs = this.GetAllActivityLogs()
             .Where(a => a.ActivityId == activity.ActivityId)
             .ToList();
-
         TimeSpan totalDuration = TimeSpan.Zero;
         int importedCount = 0;
-        var skippedEntries = new List<ActivityLog>();
-        foreach (var log in importedLogs)
+        List<ActivityLog> skippedEntries = new List<ActivityLog>();
+        foreach (ActivityLog log in importedLogs)
         {
             if (!IsValidAndNonOverlapping(log, existingLogs))
             {
@@ -247,7 +265,6 @@ public class ActivityLogService
 
         return new Result(true, $"{importedCount} logs imported. Overlapping or invalid log entries were skipped:\n{skippedDetails}");
     }
-
     private static bool IsValidAndNonOverlapping(ActivityLog log, List<ActivityLog> existingLogs)
     {
         if (!log.EndTime.HasValue || log.EndTime <= log.StartTime)
@@ -259,6 +276,50 @@ public class ActivityLogService
             existing.EndTime.HasValue &&
             log.StartTime < existing.EndTime &&
             log.EndTime > existing.StartTime);
+    }
+
+    public TimeSpan GetCurrentActivityDuration(Activity activity, IEnumerable<ActivityLog> activeLogs)
+    {
+        TimeSpan activeElapsed = activeLogs
+            .Where(log => log.ActivityId == activity.ActivityId)
+            .Aggregate(TimeSpan.Zero, (sum, log) => sum + (DateTime.UtcNow - log.StartTime));
+
+        return activity.TotalDuration + activeElapsed;
+    }
+
+    public Result ExportLogs(int indexOfActivity)
+    {
+        try
+        {
+            Guid userId = _currentSessionManager.CurrentSessionUser!.UserId;
+            List<Activity> activities = this._activityService.GetAllActivitiesByUser(userId);
+            if (indexOfActivity < 0 || indexOfActivity >= activities.Count)
+            {
+                return new Result(false, "Index Out Of Range");
+            }
+
+            Activity selectedActivity = activities[indexOfActivity];
+            List<ActivityLog> logsToExport = this.GetAllActivityLogs()
+                .Where(log => log.ActivityId == selectedActivity.ActivityId &&
+                              log.LogStatus == TimerStatus.Stopped &&
+                              log.EndTime.HasValue)
+                .OrderBy(log => log.StartTime)
+                .ToList();
+
+            if (!logsToExport.Any())
+            {
+                return new Result(false, "No completed logs recorded for the activity to export");
+            }
+
+            string csvContent = CsvService.SerializeLogs(logsToExport);
+            string fileName = $"{selectedActivity.ActivityName}-{DateTime.Now:dd-MM-yyyy_HH-mm-ss}.csv";
+            string savedPath = FileHandlingService.WriteCsvToDownloads(fileName, csvContent);
+            return new Result(true, $"Logs exported successfully to {savedPath}");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            return new Result(false, ex.Message);
+        }
     }
 }
 

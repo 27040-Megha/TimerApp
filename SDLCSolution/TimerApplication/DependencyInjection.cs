@@ -15,6 +15,7 @@ public static class DependencyInjection
         services.AddSingleton<IActiveUserRepository, ActiveUserRepository>();
         services.AddSingleton<IActivityRepository, ActivityRepository>();
         services.AddSingleton<IActivityLogRepository, ActivityLogRepository>();
+        services.AddSingleton<ISessionManager, CurrentSessionManager>();
         services.AddTransient<UserService>();
         services.AddTransient<ActivityService>();
         services.AddTransient<ActivityLogService>();
