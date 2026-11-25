@@ -51,20 +51,10 @@ public class ActivityService
         this._activityRepository.EditActivity(activity.ActivityId, activity);
     }
 
-    public Result EditTaskName(int index, string input)
+    public Result EditTaskName(Guid activityId, string input)
     {
         List<Activity> activities = this.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
-        if (activities.Count == 0)
-        {
-            return new Result(false, "No activities found to edit");
-        }
-
-        if (index >= activities.Count)
-        {
-            return new Result(false, "Index out of range");
-        }
-
-        Activity activityToEdit = activities.ElementAt(index);
+        Activity activityToEdit = activities.FirstOrDefault(activity => activity.ActivityId == activityId)!;
         activityToEdit.ActivityName = input;
         this._activityRepository.EditActivity(activityToEdit.ActivityId, activityToEdit);
         return new Result(true, "Edit Successful!");

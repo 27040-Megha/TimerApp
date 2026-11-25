@@ -20,15 +20,10 @@ public class ActivityLogService
         this._currentSessionManager = currentSessionManager;
     }
 
-    public Result StartTimer(int index)
+    public Result StartTimer(Guid activityIdToStartTimer)
     {
         List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
-        if (index < 0 || index >= activities.Count)
-        {
-            return new Result(false, "Index out of range");
-        }
-
-        Activity activityToStartTimer = activities[index];
+        Activity activityToStartTimer = activities.FirstOrDefault(activity => activity.ActivityId == activityIdToStartTimer)!;
         List<ActivityLog> logs = this.GetLogsByActivityId(activityToStartTimer.ActivityId).ToList();
         if (logs.Any(log => log.LogStatus == TimerStatus.Running))
         {
@@ -46,33 +41,17 @@ public class ActivityLogService
         return this.GetAllActivityLogs().Where(log => log.ActivityId == activityId);
     }
 
-    public Result StopTimer(int index)
+    public Result StopTimer(Guid logIdToStopTimer)
     {
         List<ActivityLog> activeLogs = this.GetAllActiveTimerLogs().ToList();
-        if (index < 0 || index >= activeLogs.Count)
-        {
-            return new Result(false, "Index out of range!");
-        }
-
-        try
-        {
-            ActivityLog logToStopTimer = activeLogs[index];
-            DateTime stoppedAt = DateTime.UtcNow;
-            TimeSpan elapsedDuration = stoppedAt - logToStopTimer.StartTime;
-
-            logToStopTimer.LogStatus = TimerStatus.Stopped;
-            logToStopTimer.EndTime = stoppedAt;
-            logToStopTimer.Duration = elapsedDuration;
-
-            this._activityLogRepository.EditActivityLog(logToStopTimer.ActivityLogId, logToStopTimer);
-            this._activityService.AddToTaskDuration(logToStopTimer.ActivityId, elapsedDuration);
-
-            return new Result(true, "Timer stopped successfully!");
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return new Result(false, ex.Message);
-        }
+        ActivityLog logToStopTimer = activeLogs.FirstOrDefault(log => log.ActivityLogId == logIdToStopTimer)!;
+        DateTime stoppedAt = DateTime.UtcNow;
+        logToStopTimer.LogStatus = TimerStatus.Stopped;
+        logToStopTimer.EndTime = stoppedAt;
+        logToStopTimer.Duration = stoppedAt - logToStopTimer.StartTime;
+        this._activityLogRepository.EditActivityLog(logToStopTimer.ActivityLogId, logToStopTimer);
+        this._activityService.EditTaskDuration(logToStopTimer);
+        return new Result(true, "Timer stopped successfully!");
     }
 
 
@@ -92,20 +71,10 @@ public class ActivityLogService
         this._activityLogRepository.DeleteActivityLogsByActivityId(activityId);
     }
 
-    public Result DeleteActivityLogByLogId(int index)
+    public Result DeleteActivityLogByLogId(Guid logIdToDelete)
     {
         List<ActivityLog> activityLogs = this.GetAllActivityLogs().ToList();
-        if (!activityLogs.Any())
-        {
-            return new Result(false, "No activity logs found to delete");
-        }
-
-        if (index >= activityLogs.Count)
-        {
-            return new Result(false, "Index out of range");
-        }
-
-        ActivityLog activityLogToDelete = activityLogs.ElementAt(index);
+        ActivityLog activityLogToDelete = activityLogs.FirstOrDefault(log => log.ActivityLogId == logIdToDelete)!;
         if (activityLogToDelete.LogStatus == TimerStatus.Running)
         {
             return new Result(false, "Cannot delete a log while running timer! Stop the timer first");
@@ -117,20 +86,10 @@ public class ActivityLogService
     }
 
 
-    public Result EditTaskLog(int index, string? input)
+    public Result EditTaskLog(Guid logIdToEdit, string? input)
     {
         List<ActivityLog> activityLogs = this.GetAllActivityLogs().ToList();
-        if (!activityLogs.Any())
-        {
-            return new Result(false, "No activity logs found to edit");
-        }
-
-        if (index >= activityLogs.Count)
-        {
-            return new Result(false, "Index out of range");
-        }
-
-        ActivityLog activityLogToBeEdited = activityLogs.ElementAt(index);
+        ActivityLog activityLogToBeEdited = activityLogs.FirstOrDefault(log => log.ActivityLogId == logIdToEdit)!;
         bool isDuplicate = activityLogs.Any(log =>
             log.ActivityLogId != activityLogToBeEdited.ActivityLogId &&
             log.ActivityId == activityLogToBeEdited.ActivityId &&
@@ -151,15 +110,8 @@ public class ActivityLogService
         return this._activityLogRepository.FetchAllActivityLogs().Where(log => log.UserId == _currentSessionManager.CurrentSessionUser?.UserId);
     }
 
-    public Result<ActivityLog> GetAllActivityLogsByActivityIndex(int index)
+    public Result<ActivityLog> GetAllActivityLogsByActivityIndex(Guid activityId)
     {
-        List<Activity>? activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
-        if (index < 0 || index >= activities.Count)
-        {
-            return new Result<ActivityLog>(false, "Index out of range");
-        }
-
-        Guid activityId = activities[index].ActivityId;
         List<ActivityLog> activityLogs = this.GetLogsByActivityId(activityId)
             .OrderBy(a => a.StartTime)
             .ToList();
@@ -172,20 +124,10 @@ public class ActivityLogService
         return new Result<ActivityLog>(true, "Logs fetched successfully!", activityLogs);
     }
 
-    public Result DeleteActivity(int index)
+    public Result DeleteActivity(Guid activityId)
     {
         List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
-        if (activities.Count == 0)
-        {
-            return new Result(false, ErrorCode.NoActivitiesFound);
-        }
-
-        if (index < 0 || index >= activities.Count)
-        {
-            return new Result(false, ErrorCode.IndexOutOfRange);
-        }
-
-        Activity activityToDelete = activities[index];
+        Activity activityToDelete = activities.FirstOrDefault(activity => activity.ActivityId == activityId)!;
         bool isTimerRunning = this.GetLogsByActivityId(activityToDelete.ActivityId)
             .Any(log => log.LogStatus == TimerStatus.Running);
 
