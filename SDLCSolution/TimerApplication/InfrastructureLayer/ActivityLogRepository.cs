@@ -51,9 +51,9 @@ public class ActivityLogRepository : IActivityLogRepository
         FileHandlingService.ExportToCSV(fileName, logsToExport);
     }
 
-    public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid taskId)
+    public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid taskId, Guid userId)
     {
-        return FileHandlingService.DeserializeActivityLogsFromCsv(filePath, taskId);
+        return FileHandlingService.DeserializeActivityLogsFromCsv(filePath, taskId, userId);
     }
 
     public IEnumerable<ActivityLog> FetchAllActivityLogs()

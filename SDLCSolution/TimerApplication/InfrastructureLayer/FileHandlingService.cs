@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
-using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
 
@@ -82,20 +78,20 @@ public static class FileHandlingService
     }
     private static string SerializeCsvContent(List<ActivityLog> logsToExport)
     {
-        var csvBuilder = new StringBuilder();
+        StringBuilder csvBuilder = new StringBuilder();
         csvBuilder.AppendLine("Log Name, Status, Start Time, End Time, Duration");
-        foreach (var log in logsToExport)
+        foreach (ActivityLog log in logsToExport)
         {
-            var startTime = log.StartTime.ToString("yyyy-MM-dd HH:mm:ss");
-            var endTime = log.EndTime.HasValue ? log.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : TimerStatus.Running.ToString();
-            var duration = log.Duration.ToString(@"hh\:mm\:ss");
+            string startTime = log.StartTime.ToString("yyyy-MM-dd HH:mm:ss");
+            string endTime = log.EndTime.HasValue ? log.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : TimerStatus.Running.ToString();
+            string duration = log.Duration.ToString(@"hh\:mm\:ss");
             csvBuilder.AppendLine($"{log.LogName}, {log.LogStatus}, {startTime}, {endTime}, {duration}");
         }
 
         return csvBuilder.ToString();
     }
 
-    public static List<ActivityLog> DeserializeActivityLogsFromCsv(string filePath, Guid taskId)
+    public static List<ActivityLog> DeserializeActivityLogsFromCsv(string filePath, Guid taskId, Guid userId)
     {
         if (!File.Exists(filePath))
         {
@@ -107,8 +103,7 @@ public static class FileHandlingService
             string[] lines = File.ReadAllLines(filePath);
             ValidateHeader(lines);
 
-            var logs = new List<ActivityLog>();
-            Guid userId = CurrentSessionManager.CurrentSessionUser.UserId;
+            List<ActivityLog> logs = new List<ActivityLog>();
 
             for (int i = 1; i < lines.Length; i++)
             {

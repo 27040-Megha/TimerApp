@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using TimerApplication.Domain.Model;
+﻿using TimerApplication.Domain.Model;
 
 namespace TimerApplication.ApplicationLayer.Interface;
 
@@ -18,5 +16,5 @@ public interface IActivityLogRepository
 
     public void ExportActivityLogsToCsv(string fileName, List<ActivityLog> logsToExport);
 
-    public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid taskId);
+    public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid taskId, Guid userId);
 }

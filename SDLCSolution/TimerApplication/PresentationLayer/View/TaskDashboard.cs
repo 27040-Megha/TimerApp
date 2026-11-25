@@ -3,10 +3,6 @@ using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.Domain.Enums;
 using TimerApplication.PresentationLayer.Helper;
 using TimerApplication.Domain.Model;
-using TimerApplication.Domain.Enums;
-using System.Linq;
-using System.Collections.Generic;
-using System.IO;
 
 namespace TimerApplication.PresentationLayer.View;
 
@@ -504,7 +500,6 @@ public class TaskDashboard
 
         _userIO.DisplayMessage(successMessage, MessageType.Success);
     }
-            }
 
     private void DisplayActivities(IEnumerable<Activity> activities)
     {
@@ -534,83 +529,82 @@ public class TaskDashboard
     {
         return $"{(int)duration.TotalHours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
     }
-        private void ImportTimeLog()
+    private void ImportTimeLog()
+    {
+        List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
+        if (!HasAnyItems(activities))
         {
-            var activities = this._activityService.GetAllActivities();
-            if (!HasAnyItems(activities))
-            {
-                _userIO.DisplayMessage("No activity found to import time log", MessageType.Warning);
-                return;
-            }
-
-            this.DisplayActivities(activities);
-            if (!TryGetInputIndex("of task to import Task logs", out int index))
-            {
-                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
-                return;
-            }
-
-            if (index < 1)
-            {
-                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
-                return;
-            }
-
-            _userIO.DisplayMessage("Enter (.csv) file path to import logs: ", MessageType.Info);
-            var filePath = Console.ReadLine();
-            if (!InputValidator.ValidateString(filePath))
-            {
-                _userIO.DisplayMessage("File path should not be null or empty", MessageType.Error);
-                return;
-            }
-
-            if (!Path.GetExtension(filePath).Equals(".csv",  StringComparison.OrdinalIgnoreCase))
-            {
-                _userIO.DisplayMessage("Invalid file path, give a valid .csv file path", MessageType.Error);
-                return;
-            }
-
-            var importResult = this._activityLogService.ImportLogs(filePath, index-1);
-            if (!importResult.IsSuccess)
-            {
-                _userIO.DisplayMessage(importResult.Message, MessageType.Error);
-                return;
-            }
-
-            _userIO.DisplayMessage(importResult.Message, MessageType.Success);
+            _userIO.DisplayMessage("No activity found to import time log", MessageType.Warning);
+            return;
         }
-        }
-        private void ExportTimeLog()
+
+        this.DisplayActivities(activities);
+        if (!TryGetInputIndex("of task to import Task logs", out int index))
         {
-            var activities = this._activityService.GetAllActivities();
-            if (!HasAnyItems(activities))
-            {
-                _userIO.DisplayMessage("No activity found to export time log", MessageType.Warning);
-                return;
-            }
-
-            this.DisplayActivities(activities);
-            if (!TryGetInputIndex("of task to export its Logs", out int index))
-            {
-                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
-                return;
-            }
-
-            if (index < 1 || index > activities.Count)
-            {
-                _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
-                return;
-            }
-
-            var exportResult = this._activityLogService.ExportLogs(index-1);
-            if (!exportResult.IsSuccess)
-            {
-                _userIO.DisplayMessage($"{exportResult.Message}", MessageType.Error);
-                return;
-            }
-
-            _userIO.DisplayMessage($"Task logs exported successfully, check in your Downloads", MessageType.Success);
+            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+            return;
         }
+
+        if (index < 1)
+        { 
+            _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
+            return;
         }
+
+        _userIO.DisplayMessage("Enter (.csv) file path to import logs: ", MessageType.Info);
+        string? filePath = Console.ReadLine();
+        if (!InputValidator.ValidateString(filePath))
+        {
+            _userIO.DisplayMessage("File path should not be null or empty", MessageType.Error);
+            return;
+        }
+
+        string? pathExtension = Path.GetExtension(filePath!);
+        if (!string.Equals(pathExtension, ".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            _userIO.DisplayMessage("Invalid file path, give a valid .csv file path", MessageType.Error);
+            return;
+        }
+
+
+        Result importResult = this._activityLogService.ImportLogs(filePath!, index-1);
+        if (!importResult.IsSuccess)
+        {
+            _userIO.DisplayMessage(importResult.Message!, MessageType.Error);
+            return;
+        }
+
+        _userIO.DisplayMessage(importResult.Message!, MessageType.Success);
+    }
+    private void ExportTimeLog()
+    {
+        List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
+        if (!HasAnyItems(activities))
+        {
+            _userIO.DisplayMessage("No activity found to export time log", MessageType.Warning);
+            return;
+        }
+
+        this.DisplayActivities(activities);
+        if (!TryGetInputIndex("of task to export its Logs", out int index))
+        {
+            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+            return;
+        }
+
+        if (index < 1 || index > activities.Count)
+        {
+            _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
+            return;
+        }
+
+        Result exportResult = this._activityLogService.ExportLogs(index-1);
+        if (!exportResult.IsSuccess)
+        {
+            _userIO.DisplayMessage($"{exportResult.Message}", MessageType.Error);
+            return;
+        }
+
+        _userIO.DisplayMessage($"Task logs exported successfully, check in your Downloads", MessageType.Success);
     }
 }
