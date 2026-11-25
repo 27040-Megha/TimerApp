@@ -19,15 +19,10 @@ public class ActivityLogService
         this._currentSessionManager = currentSessionManager;
     }
 
-    public Result StartTimer(int index)
+    public Result StartTimer(Guid activityIdToStartTimer)
     {
         List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
-        if (index < 0 || index >= activities.Count)
-        {
-            return new Result(false, "Index out of range");
-        }
-
-        Activity activityToStartTimer = activities[index];
+        Activity activityToStartTimer = activities.FirstOrDefault(activity => activity.ActivityId == activityIdToStartTimer)!;
         List<ActivityLog> logs = this.GetLogsByActivityId(activityToStartTimer.ActivityId).ToList();
         if (logs.Any(log => log.LogStatus == TimerStatus.Running))
         {
@@ -45,15 +40,10 @@ public class ActivityLogService
         return this.GetAllActivityLogs().Where(log => log.ActivityId == activityId);
     }
 
-    public Result StopTimer(int index)
+    public Result StopTimer(Guid logIdToStopTimer)
     {
         List<ActivityLog> activeLogs = this.GetAllActiveTimerLogs().ToList();
-        if (index >= activeLogs.Count)
-        {
-            return new Result(false, "Index out of range!");
-        }
-
-        ActivityLog logToStopTimer = activeLogs[index];
+        ActivityLog logToStopTimer = activeLogs.FirstOrDefault(log => log.ActivityLogId == logIdToStopTimer)!;
         DateTime stoppedAt = DateTime.UtcNow;
         logToStopTimer.LogStatus = TimerStatus.Stopped;
         logToStopTimer.EndTime = stoppedAt;
@@ -138,15 +128,8 @@ public class ActivityLogService
         return this._activityLogRepository.FetchAllActivityLogs().Where(log => log.UserId == _currentSessionManager.CurrentSessionUser?.UserId);
     }
 
-    public Result<ActivityLog> GetAllActivityLogsByActivityIndex(int index)
+    public Result<ActivityLog> GetAllActivityLogsByActivityIndex(Guid activityId)
     {
-        List<Activity>? activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
-        if (index < 0 || index >= activities.Count)
-        {
-            return new Result<ActivityLog>(false, "Index out of range");
-        }
-
-        Guid activityId = activities[index].ActivityId;
         List<ActivityLog> activityLogs = this.GetLogsByActivityId(activityId)
             .OrderBy(a => a.StartTime)
             .ToList();

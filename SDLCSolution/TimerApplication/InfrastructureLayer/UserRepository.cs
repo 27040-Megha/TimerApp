@@ -7,7 +7,7 @@ public class UserRepository : IUserRepository
 {
     public void CreateUser(User user)
     {
-        HashSet<User>? userRepo = FileHandlingService.ReadFile<HashSet<User>>(FilePathResource.UserRepoFilePath);
+        HashSet<User>? userRepo = FileHandlingService.ReadFile<HashSet<User>>(FilePathResource.UserRepoFilePath) ?? new HashSet<User>(); 
         userRepo?.Add(user);
         FileHandlingService.WriteFile(userRepo, FilePathResource.UserRepoFilePath);
     }
