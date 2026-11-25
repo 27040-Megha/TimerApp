@@ -273,12 +273,12 @@ public class TaskDashboard
         }
 
         this.DisplayActivities(activities);
-        if (!TrySelectIndex("Enter index of task to Start Timer: ", out int index))
+        if (!TrySelectIndex("Enter index of task to Start Timer: ", activities, out int index))
         {
             return;
         }
 
-        Result result = this._activityLogService.StartTimer(index);
+        Result result = this._activityLogService.StartTimer(activities[index].ActivityId);
         DisplayResult(result, "Timer started Successfully!");
     }
 
@@ -292,16 +292,16 @@ public class TaskDashboard
         }
 
         this.DisplayActivityLogs(activeLogs);
-        if (!TrySelectIndex("Enter index of task to Stop Timer: ", out int index))
+        if (!TrySelectIndex("Enter index of task to Stop Timer: ", activeLogs, out int index))
         {
             return;
         }
 
-        Result result = this._activityLogService.StopTimer(index);
+        Result result = this._activityLogService.StopTimer(activeLogs[index].ActivityLogId);
         DisplayResult(result, "Timer stopped successfully!");
     }
 
-    private bool TrySelectIndex(string prompt, out int zeroBasedIndex)
+    private bool TrySelectIndex<T>(string prompt, IEnumerable<T> collection, out int zeroBasedIndex)
     {
         zeroBasedIndex = -1;
         _userIO.DisplayMessage(prompt, MessageType.Info);
@@ -312,7 +312,7 @@ public class TaskDashboard
             return false;
         }
 
-        if (index < 1)
+        if (index < 1 || index > collection.Count())
         {
             _userIO.DisplayMessage("Index Out of Range", MessageType.Error);
             return false;
