@@ -68,15 +68,8 @@ public class ActivityLogService
         return this._activityLogRepository.FetchAllActivityLogs().Where(log => log.UserId == _currentSessionManager.CurrentSessionUser?.UserId);
     }
 
-    public Result<ActivityLog> GetAllActivityLogsByActivityIndex(int index)
+    public Result<ActivityLog> GetAllActivityLogsByActivityIndex(Guid activityId)
     {
-        List<Activity>? activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
-        if (index < 0 || index >= activities.Count)
-        {
-            return new Result<ActivityLog>(false, "Index out of range");
-        }
-
-        Guid activityId = activities[index].ActivityId;
         List<ActivityLog> activityLogs = this.GetLogsByActivityId(activityId)
             .OrderBy(a => a.StartTime)
             .ToList();

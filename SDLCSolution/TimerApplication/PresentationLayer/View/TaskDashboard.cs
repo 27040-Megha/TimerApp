@@ -221,12 +221,12 @@ public class TaskDashboard
         }
 
         this.DisplayActivities(activities);
-        if (!TrySelectIndex("Enter index of task to view activity details: ", out int index))
+        if (!TrySelectIndex("Enter index of task to view activity details: ",activities, out int index))
         {
             return;
         }
 
-        Result<ActivityLog> logsResult = this._activityLogService.GetAllActivityLogsByActivityIndex(index);
+        Result<ActivityLog> logsResult = this._activityLogService.GetAllActivityLogsByActivityIndex(activities[index].ActivityId);
         if (!logsResult.IsSuccess)
         {
             _userIO.DisplayMessage(logsResult.Message, MessageType.Error);
