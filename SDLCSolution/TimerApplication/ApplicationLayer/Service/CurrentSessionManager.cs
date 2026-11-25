@@ -1,9 +1,9 @@
-﻿using System;
+﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.ApplicationLayer.Service;
 
-public static class CurrentSessionManager
+public class CurrentSessionManager : ISessionManager
 {
-    public static User CurrentSessionUser{ get; set; }
+    public  User? CurrentSessionUser{ get; set; }
 }
