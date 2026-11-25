@@ -19,7 +19,7 @@ public class ActivityServiceTests
 
     private Activity AddSampleActivity(TimerStatus logStatus = TimerStatus.Stopped)
     {
-        Activity activity = new Activity("Coding", default, _userId);
+        Activity activity = new Activity("Coding", TimeSpan.Zero, _userId);
         _mockActivityRepository.GetAllActivitiesByUser(_userId).Returns(new List<Activity> { activity });
         ActivityLog activityLog = new ActivityLog
         {
@@ -49,47 +49,85 @@ public class ActivityServiceTests
     }
 
     [Test]
-    public void DeleteActivity_ShallReturnFailure_WhenNoActivitiesExist()
+    public void DeleteActivity_ShouldReturnFailure_WhenNoActivitiesExist()
     {
         Result actualResult = _activityLogService.DeleteActivity(2);
-        Assert.That(actualResult.IsSuccess, Is.EqualTo(false));
-        Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.NoActivitiesFound));
+        Assert.Multiple(() =>
+        {
+            Assert.That(actualResult.IsSuccess, Is.False);
+            Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.NoActivitiesFound));
+        });
     }
 
     [Test]
-    public void DeleteActivity_ShallReturnFailure_WhenIndexIsNegative()
+    public void DeleteActivity_ShouldReturnFailure_WhenIndexIsNegative()
     {
         AddSampleActivity();
         Result actualResult = _activityLogService.DeleteActivity(-1);
-        Assert.That(actualResult.IsSuccess, Is.False);
-        Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.IndexOutOfRange));
+        Assert.Multiple(() =>
+        {
+            Assert.That(actualResult.IsSuccess, Is.False);
+            Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.IndexOutOfRange));
+        });
     }
 
     [Test]
-    public void DeleteActivity_ShallReturnFailure_WhenIndexIsOutOfBoundsOfActivityList()
+    public void DeleteActivity_ShouldReturnFailure_WhenIndexIsOutOfBoundsOfActivityList()
     {
         AddSampleActivity();
         Result actualResult = _activityLogService.DeleteActivity(5);
-        Assert.That(actualResult.IsSuccess, Is.False);
-        Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.IndexOutOfRange));
+        Assert.Multiple(() =>
+        {
+            Assert.That(actualResult.IsSuccess, Is.False);
+            Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.IndexOutOfRange));
+        });
     }
 
     [Test]
-    public void DeleteActivity_ShallReturnFailure_WhenTimerIsRunning()
+    public void DeleteActivity_ShouldReturnFailure_WhenTimerIsRunning()
     {
         AddSampleActivity(TimerStatus.Running);
         Result actualResult = _activityLogService.DeleteActivity(0);
-        Assert.That(actualResult.IsSuccess, Is.EqualTo(false));
-        Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.TimerRunning));
+        Assert.Multiple(() =>
+        {
+            Assert.That(actualResult.IsSuccess, Is.False);
+            Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.TimerRunning));
+        });
     }
 
     [Test]
-    public void DeleteActivity_ShallReturnSuccess_WhenTimerIsStopped()
+    public void DeleteActivity_ShouldReturnSuccess_WhenTimerIsStopped()
     {
         Activity sampleActivity = AddSampleActivity();
         Result actualResult = _activityLogService.DeleteActivity(0);
-        Assert.That(actualResult.IsSuccess, Is.EqualTo(true));
-        Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.None));
-        _mockActivityRepository.Received(1).DeleteActivity(sampleActivity.ActivityId);
+        Assert.Multiple(() =>
+        {
+            Assert.That(actualResult.IsSuccess, Is.True);
+            Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.None));
+            _mockActivityRepository.Received(1).DeleteActivity(sampleActivity.ActivityId);
+        });
+    }
+
+    [Test]
+    public void DeleteActivity_ShouldDeleteOnlyTargetedActivity_WhenMultipleActivitiesExist()
+    {
+        Activity firstActivity = new Activity("Coding", TimeSpan.Zero, _userId);
+        Activity secondActivity = new Activity("Reading", TimeSpan.Zero, _userId);
+        Activity thirdActivity = new Activity("Exercise", TimeSpan.Zero, _userId);
+        _mockActivityRepository.GetAllActivitiesByUser(_userId).Returns(new List<Activity>
+        {
+            firstActivity,
+            secondActivity,
+            thirdActivity
+        });
+        Result actualResult = _activityLogService.DeleteActivity(1);
+        Assert.Multiple(() =>
+        {
+            Assert.That(actualResult.IsSuccess, Is.True);
+            Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.None));
+            _mockActivityRepository.Received(1).DeleteActivity(secondActivity.ActivityId);
+            _mockActivityRepository.DidNotReceive().DeleteActivity(firstActivity.ActivityId);
+            _mockActivityRepository.DidNotReceive().DeleteActivity(thirdActivity.ActivityId);
+        });
     }
 }
