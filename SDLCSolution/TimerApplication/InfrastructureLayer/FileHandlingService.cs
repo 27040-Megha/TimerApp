@@ -76,134 +76,66 @@ public static class FileHandlingService
             }
         }
     }
-    private static string SerializeCsvContent(List<ActivityLog> logsToExport)
+
+    public static string ReadTextFile(string filePath)
     {
-        StringBuilder csvBuilder = new StringBuilder();
-        csvBuilder.AppendLine("Log Name, Status, Start Time, End Time, Duration");
-        foreach (ActivityLog log in logsToExport)
+        if (string.IsNullOrWhiteSpace(filePath))
         {
-            string startTime = log.StartTime.ToString("yyyy-MM-dd HH:mm:ss");
-            string endTime = log.EndTime.HasValue ? log.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : TimerStatus.Running.ToString();
-            string duration = log.Duration.ToString(@"hh\:mm\:ss");
-            csvBuilder.AppendLine($"{log.LogName}, {log.LogStatus}, {startTime}, {endTime}, {duration}");
+            throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
         }
 
-        return csvBuilder.ToString();
-    }
-
-    public static List<ActivityLog> DeserializeActivityLogsFromCsv(string filePath, Guid taskId, Guid userId)
-    {
         if (!File.Exists(filePath))
         {
-            throw new FileNotFoundException($"The specified CSV file is not present in {filePath}");
+            throw new FileNotFoundException($"The specified file was not found at {filePath}");
         }
 
         try
         {
-            string[] lines = File.ReadAllLines(filePath);
-            ValidateHeader(lines);
-
-            List<ActivityLog> logs = new List<ActivityLog>();
-
-            for (int i = 1; i < lines.Length; i++)
-            {
-                if (string.IsNullOrWhiteSpace(lines[i])) continue;
-                logs.Add(ParseLogLine(lines[i], i + 1, taskId, userId));
-            }
-
-            return logs;
+            return File.ReadAllText(filePath);
         }
-        catch (FormatException)
+        catch (IOException ex)
         {
-            throw;
+            throw new IOException($"Unable to read file {filePath}, the file may be locked or inaccessible.", ex);
         }
-        catch (Exception ex)
+        catch (UnauthorizedAccessException ex)
         {
-            throw new FormatException($"Failed to deserialize CSV file: {ex.Message}", ex);
+            throw new UnauthorizedAccessException($"Access denied to read file {filePath}.", ex);
         }
     }
 
-    private static void ValidateHeader(string[] lines)
+    public static string WriteCsvToDownloads(string rawFileName, string csvContent)
     {
-        if (lines.Length < 2)
+        if (string.IsNullOrWhiteSpace(rawFileName))
         {
-            throw new FormatException("The CSV file is empty or missing log entries.");
+            throw new ArgumentException("File name cannot be null or empty.", nameof(rawFileName));
         }
 
-        const string expectedHeader = "Log Name, Status, Start Time, End Time, Duration";
-        if (!lines[0].Trim().Equals(expectedHeader, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new FormatException("Invalid CSV format: Header does not match the expected format.");
-        }
-    }
-
-    private static ActivityLog ParseLogLine(string line, int lineNumber, Guid taskId, Guid userId)
-    {
-        string[] columns = line.Split(',');
-        if (columns.Length != 5)
-        {
-            throw new FormatException($"Invalid CSV format at line {lineNumber}!");
-        }
-
-        string logName = columns[0].Trim();
-        if (string.IsNullOrWhiteSpace(logName))
-        {
-            throw new FormatException($"Invalid data format at line {lineNumber}: Log Name cannot be null or empty.");
-        }
-
-        if (!Enum.TryParse(columns[1].Trim(), true, out TimerStatus logStatus))
-        {
-            throw new FormatException($"Invalid data format at line {lineNumber}: '{columns[1].Trim()}' is invalid.");
-        }
-
-        if (!DateTime.TryParse(columns[2].Trim(), out DateTime startTime))
-        {
-            throw new FormatException($"Invalid data format at line {lineNumber}: '{columns[2].Trim()}' is invalid.");
-        }
-
-        if (!DateTime.TryParse(columns[3].Trim(), out DateTime endTime))
-        {
-            throw new FormatException($"Invalid data format at line {lineNumber}: '{columns[3].Trim()}' is invalid.");
-        }
-
-        if (!TimeSpan.TryParse(columns[4].Trim(), out TimeSpan duration))
-        {
-            throw new FormatException($"Invalid data format at line {lineNumber}: '{columns[4].Trim()}' is invalid.");
-        }
-
-        return new ActivityLog(Guid.NewGuid(), logName, startTime, endTime, duration, logStatus, taskId, userId);
-    }
-
-
-    public static void ExportToCSV(string fileName, List<ActivityLog> logsToExport)
-    {
-        if (string.IsNullOrWhiteSpace(fileName))
-        {
-            throw new ArgumentException("File path cannot be null or empty.", nameof(fileName));
-        }
-
-        if (logsToExport == null)
-        {
-            throw new ArgumentNullException(nameof(logsToExport), "Logs to export cannot be null.");
-        }
-
+        string safeFileName = SanitizeFileName(rawFileName);
         try
         {
             string downloadsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
             string targetFolder = Directory.Exists(downloadsFolder)
                 ? downloadsFolder
                 : Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string fullPath = Path.Combine(targetFolder, fileName);
-            string csvContent = SerializeCsvContent(logsToExport);
+
+            string fullPath = Path.Combine(targetFolder, safeFileName);
             File.WriteAllText(fullPath, csvContent);
+            return fullPath;
         }
         catch (IOException ex)
         {
-            throw new IOException($"Unable to write to CSV file {fileName}, the file may be locked or inaccessible.", ex);
+            throw new IOException($"Unable to write to CSV file {safeFileName}, the file may be locked or inaccessible.", ex);
         }
         catch (UnauthorizedAccessException ex)
         {
-            throw new UnauthorizedAccessException($"Access denied to write CSV file {fileName}.", ex);
+            throw new UnauthorizedAccessException($"Access denied to write CSV file {safeFileName}.", ex);
         }
+    }
+
+    private static string SanitizeFileName(string fileName)
+    {
+        char[] invalidChars = Path.GetInvalidFileNameChars();
+        string cleaned = string.Concat(fileName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries)).Trim();
+        return string.IsNullOrWhiteSpace(cleaned) ? "export.csv" : cleaned;
     }
 }

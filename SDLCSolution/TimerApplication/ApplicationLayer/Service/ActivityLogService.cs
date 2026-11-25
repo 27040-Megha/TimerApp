@@ -1,6 +1,7 @@
 ﻿using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
+using TimerApplication.InfrastructureLayer;
 
 namespace TimerApplication.ApplicationLayer.Service;
 
@@ -190,22 +191,25 @@ public class ActivityLogService
     {
         try
         {
-            List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
+            Guid userId = _currentSessionManager.CurrentSessionUser!.UserId;
+            List<Activity> activities = this._activityService.GetAllActivitiesByUser(userId);
             if (!activities.Any())
             {
                 return new Result(false, "No tasks found to import logs");
             }
 
-            if (index >= activities.Count)
+            if (index < 0 || index >= activities.Count)
             {
                 return new Result(false, "Index Out Of Range");
             }
 
             Activity activitySelected = activities[index];
-            List<ActivityLog> importedLogs = this._activityLogRepository.ImportActivityLogsFromCsv(filePath, activitySelected.ActivityId, _currentSessionManager.CurrentSessionUser.UserId);
+            string csvContent = FileHandlingService.ReadTextFile(filePath);
+            List<ActivityLog> importedLogs = CsvService.DeserializeLogs(csvContent, activitySelected.ActivityId, userId);
+
             return ProcessAndSaveLogs(activitySelected, importedLogs);
         }
-        catch (Exception ex) when (ex is FormatException || ex is FileNotFoundException)
+        catch (Exception ex) when (ex is FormatException or FileNotFoundException or IOException or UnauthorizedAccessException or ArgumentException)
         {
             return new Result(false, ex.Message);
         }
@@ -216,7 +220,6 @@ public class ActivityLogService
         List<ActivityLog> existingLogs = this.GetAllActivityLogs()
             .Where(a => a.ActivityId == activity.ActivityId)
             .ToList();
-
         TimeSpan totalDuration = TimeSpan.Zero;
         int importedCount = 0;
         List<ActivityLog> skippedEntries = new List<ActivityLog>();
@@ -250,7 +253,6 @@ public class ActivityLogService
 
         return new Result(true, $"{importedCount} logs imported. Overlapping or invalid log entries were skipped:\n{skippedDetails}");
     }
-
     private static bool IsValidAndNonOverlapping(ActivityLog log, List<ActivityLog> existingLogs)
     {
         if (!log.EndTime.HasValue || log.EndTime <= log.StartTime)
@@ -275,23 +277,37 @@ public class ActivityLogService
 
     public Result ExportLogs(int indexOfActivity)
     {
-        var activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
-        if (indexOfActivity >= activities.Count)
+        try
         {
-            return new Result(false, "Index Out Of Range");
-        }
+            Guid userId = _currentSessionManager.CurrentSessionUser!.UserId;
+            List<Activity> activities = this._activityService.GetAllActivitiesByUser(userId);
+            if (indexOfActivity < 0 || indexOfActivity >= activities.Count)
+            {
+                return new Result(false, "Index Out Of Range");
+            }
 
-        var selectedActivity = activities[indexOfActivity];
-        var logsToExport = this.GetAllActivityLogs().Where(log => log.ActivityId == selectedActivity.ActivityId)
-             .OrderBy(log => log.StartTime)
-             .ToList();
-        if (!logsToExport.Any())
+            Activity selectedActivity = activities[indexOfActivity];
+            List<ActivityLog> logsToExport = this.GetAllActivityLogs()
+                .Where(log => log.ActivityId == selectedActivity.ActivityId &&
+                              log.LogStatus == TimerStatus.Stopped &&
+                              log.EndTime.HasValue)
+                .OrderBy(log => log.StartTime)
+                .ToList();
+
+            if (!logsToExport.Any())
+            {
+                return new Result(false, "No completed logs recorded for the activity to export");
+            }
+
+            string csvContent = CsvService.SerializeLogs(logsToExport);
+            string fileName = $"{selectedActivity.ActivityName}-{DateTime.Now:dd-MM-yyyy_HH-mm-ss}.csv";
+            string savedPath = FileHandlingService.WriteCsvToDownloads(fileName, csvContent);
+            return new Result(true, $"Logs exported successfully to {savedPath}");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
         {
-            return new Result(false, "No logs recorded for the activity to export");
+            return new Result(false, ex.Message);
         }
-
-        this._activityLogRepository.ExportActivityLogsToCsv($"{selectedActivity.ActivityName}-{DateTime.Now:dd-MM-yyyy_HH-mm-ss}.csv", logsToExport);
-        return new Result(true, $"Logs exported Successfully");
     }
 }
 

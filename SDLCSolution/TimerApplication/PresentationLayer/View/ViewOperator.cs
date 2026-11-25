@@ -166,8 +166,6 @@ public class ViewOperator
         }
 
         _userIO.DisplayMessage("Signup Successful!", MessageType.Success);
-        this._userService.LoginUser(email, password);
-        this._taskDashboard.RunDashboard();
     }
 
     private bool TryGetInput(string fieldName, Func<string?> readInput, ValidateInput validateInput, out string? result)

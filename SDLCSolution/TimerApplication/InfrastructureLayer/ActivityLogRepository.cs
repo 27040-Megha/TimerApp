@@ -46,16 +46,6 @@ public class ActivityLogRepository : IActivityLogRepository
         FileHandlingService.WriteFile(activityLogs, FilePathResource.ActivityLogFilePath);
     }
 
-    public void ExportActivityLogsToCsv(string fileName, List<ActivityLog> logsToExport)
-    {
-        FileHandlingService.ExportToCSV(fileName, logsToExport);
-    }
-
-    public List<ActivityLog> ImportActivityLogsFromCsv(string filePath, Guid taskId, Guid userId)
-    {
-        return FileHandlingService.DeserializeActivityLogsFromCsv(filePath, taskId, userId);
-    }
-
     public IEnumerable<ActivityLog> FetchAllActivityLogs()
     {
         List<ActivityLog> activityLogs = FileHandlingService.ReadFile<List<ActivityLog>>(FilePathResource.ActivityLogFilePath) ?? new List<ActivityLog>();
