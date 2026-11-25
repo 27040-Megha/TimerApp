@@ -42,7 +42,7 @@ public class ConsoleUserIO : IUserIO
         }
     }
 
-    public void DisplayMessageAtSameLine(string message, MessageType messageType = MessageType.Default)
+    public void DisplayPrompt(string message, MessageType messageType = MessageType.Default)
     {
         lock (_consoleLock)
         {

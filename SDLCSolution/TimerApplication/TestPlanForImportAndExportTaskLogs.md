@@ -58,12 +58,12 @@
       <td>ERROR: File does not exist</td>
     </tr>
     <tr>
-      <td>Valid index, Valid file path (File exist but invalid JSON format)</td>
+      <td>Valid index, Valid file path (File exist but invalid CSV format)</td>
       <td><code>1, ChessActivity.csv</code></td>
-      <td>ERROR: Invalid JSON format</td>
+      <td>ERROR: Invalid CSV format</td>
     </tr>
     <tr>
-      <td>Valid index, Valid file path (Valid JSON data but overlapping existing entries)</td>
+      <td>Valid index, Valid file path (Valid CSV data but overlapping existing entries)</td>
       <td><code>1, ChessActivity.csv</code></td>
       <td>ERROR: Log entries overlap with the existing entries</td>
     </tr>

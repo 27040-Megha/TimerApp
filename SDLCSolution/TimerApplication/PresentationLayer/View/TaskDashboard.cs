@@ -79,10 +79,10 @@ public class TaskDashboard
         }
     }
 
-        private void DisplayMenu()
-        {
-            _userIO.DisplayMessage("\nMENU OPTIONS", MessageType.Info);
-            _userIO.DisplayMessageAtSameLine("1. Add new Task \n" +
+    private void DisplayMenu()
+    {
+        _userIO.DisplayMessage("\nMENU OPTIONS", MessageType.Info);
+        _userIO.DisplayPrompt("1. Add new Task \n" +
                 "2. Edit Task\n" +
                 "3. Delete Task\n" +
                 "4. View Specific Task Log\n" +
@@ -92,45 +92,45 @@ public class TaskDashboard
                 "8. Export Time logs\n" +
                 "9. Logout\n" +
                 "Enter your option (1 to 9): "
-                );
+        );
     }
 
-        private void HandleMenu(int choice)
+    private void HandleMenu(int choice)
+    {
+        switch (choice)
         {
-                switch (choice)
-                {
-                    case 1:
-                        this.AddNewTask();
-                        break;
-                    case 2:
-                        this.Edit();
-                        break;
-                    case 3:
-                        this.Delete();
-                        break;
-                    case 4:
-                        this.ViewSpecificTaskLog();
-                        break;
-                    case 5:
-                        this.StartTimer();
-                        break;
-                    case 6:
-                        this.StopTimer();
-                        break;
-                    case 7:
-                        this.ImportTimeLog();
-                        break;
-                    case 8:
-                        this.ExportTimeLog();
-                        break;
-                    case 9:
-                        this.Logout();
-                        break;
-                    default:
-                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 9", MessageType.Error);
-                        break;
-                }
+            case 1:
+                this.AddNewTask();
+                break;
+            case 2:
+                this.Edit();
+                break;
+            case 3:
+                this.Delete();
+                break;
+            case 4:
+                this.ViewSpecificTaskLog();
+                break;
+            case 5:
+                this.StartTimer();
+                break;
+            case 6:
+                this.StopTimer();
+                break;
+            case 7:
+                this.ImportTimeLog();
+                break;
+            case 8:
+                this.ExportTimeLog();
+                break;
+            case 9:
+                this.Logout();
+                break;
+            default:
+                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 to 9", MessageType.Error);
+                break;
         }
+    }
 
     private void Edit()
     {
@@ -140,8 +140,8 @@ public class TaskDashboard
             return;
         }
 
-            _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \nEnter Your Option (1/2): ");
-            if (!InputValidator.ValidateInteger(Console.ReadLine(), out int choice))
+            _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \n3. Back \nEnter Your Option (1/2): ");
+            if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out int choice))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
                 return;
@@ -153,6 +153,8 @@ public class TaskDashboard
                     break;
                 case 2:
                     this.EditTaskLog();
+                    break;
+                case 3:
                     break;
                 default:
                     _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 or 2", MessageType.Error);
@@ -168,25 +170,27 @@ public class TaskDashboard
             return;
         }
 
-            _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \nEnter Your Option (1/2): ");
-            if (!InputValidator.ValidateInteger(Console.ReadLine(), out int choice))
-            {
-                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
-                return;
-            }
-            switch (choice)
-            {
-                case 1:
-                    this.DeleteTask();
-                    break;
-                case 2:
-                    this.DeleteTaskLogs();
-                    break;
-                default:
-                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice 1 or 2", MessageType.Error);
-                        break;
-                }
+        _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \n3. Back \nEnter Your Option (1/2): ");
+        if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out int choice))
+        {
+            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+            return;
         }
+        switch (choice)
+        {
+            case 1:
+                this.DeleteTask();
+                break;
+            case 2:
+                this.DeleteTaskLogs();
+                break;
+            case 3:
+                break;
+            default:
+                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice 1 or 2", MessageType.Error);
+                break;
+        }
+    }
 
 
     private void DeleteTask()
@@ -419,7 +423,6 @@ public class TaskDashboard
         }
     }
 
-
     private bool HasAnyItems<T>(IReadOnlyList<T> entries)
     {
         return entries.Any();
@@ -483,12 +486,13 @@ public class TaskDashboard
         zeroBasedIndex = index - 1;
         return true;
     }
-        private bool TryGetInputIndex(string fieldName, out int index)
-        {
-            _userIO.DisplayMessageAtSameLine($"Enter index to {fieldName}: ", MessageType.Info);
-            bool isValidIndex =  InputValidator.ValidateInteger(_userIO.ReadInput(), out index);
-            return isValidIndex;
-        }
+    
+    private bool TryGetInputIndex(string fieldName, out int index)
+    {
+        _userIO.DisplayPrompt($"Enter index to {fieldName}: ", MessageType.Info);
+        bool isValidIndex =  InputValidator.ValidateInteger(_userIO.ReadInput(), out index);
+        return isValidIndex;
+    }
 
     private void DisplayResult(Result result, string successMessage)
     {
@@ -510,7 +514,6 @@ public class TaskDashboard
         }
     }
 
-
     private bool TryGetInputIndex(out int index)
     {
         return InputValidator.ValidateInteger(_userIO.ReadInput(), out index);
@@ -529,6 +532,7 @@ public class TaskDashboard
     {
         return $"{(int)duration.TotalHours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
     }
+
     private void ImportTimeLog()
     {
         List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
@@ -552,20 +556,20 @@ public class TaskDashboard
         }
 
         _userIO.DisplayMessage("Enter (.csv) file path to import logs: ", MessageType.Info);
-        string? filePath = Console.ReadLine();
+        string? rawInput = _userIO.ReadInput();
+        string? filePath = rawInput?.Trim().Trim('"').Trim();
         if (!InputValidator.ValidateString(filePath))
         {
             _userIO.DisplayMessage("File path should not be null or empty", MessageType.Error);
             return;
         }
 
-        string? pathExtension = Path.GetExtension(filePath!);
+        string? pathExtension = Path.GetExtension(filePath);
         if (!string.Equals(pathExtension, ".csv", StringComparison.OrdinalIgnoreCase))
         {
             _userIO.DisplayMessage("Invalid file path, give a valid .csv file path", MessageType.Error);
             return;
         }
-
 
         Result importResult = this._activityLogService.ImportLogs(filePath!, index-1);
         if (!importResult.IsSuccess)
@@ -576,6 +580,7 @@ public class TaskDashboard
 
         _userIO.DisplayMessage(importResult.Message!, MessageType.Success);
     }
+
     private void ExportTimeLog()
     {
         List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
@@ -605,6 +610,6 @@ public class TaskDashboard
             return;
         }
 
-        _userIO.DisplayMessage($"Task logs exported successfully, check in your Downloads", MessageType.Success);
+        _userIO.DisplayMessage($"Task logs exported successfully, check in your Downloads/Desktop", MessageType.Success);
     }
 }

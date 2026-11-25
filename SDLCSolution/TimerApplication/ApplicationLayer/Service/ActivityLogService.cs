@@ -49,20 +49,32 @@ public class ActivityLogService
     public Result StopTimer(int index)
     {
         List<ActivityLog> activeLogs = this.GetAllActiveTimerLogs().ToList();
-        if (index >= activeLogs.Count)
+        if (index < 0 || index >= activeLogs.Count)
         {
             return new Result(false, "Index out of range!");
         }
 
-        ActivityLog logToStopTimer = activeLogs[index];
-        DateTime stoppedAt = DateTime.UtcNow;
-        logToStopTimer.LogStatus = TimerStatus.Stopped;
-        logToStopTimer.EndTime = stoppedAt;
-        logToStopTimer.Duration = stoppedAt - logToStopTimer.StartTime;
-        this._activityLogRepository.EditActivityLog(logToStopTimer.ActivityLogId, logToStopTimer);
-        this._activityService.EditTaskDuration(logToStopTimer);
-        return new Result(true, "Timer stopped successfully!");
+        try
+        {
+            ActivityLog logToStopTimer = activeLogs[index];
+            DateTime stoppedAt = DateTime.UtcNow;
+            TimeSpan elapsedDuration = stoppedAt - logToStopTimer.StartTime;
+
+            logToStopTimer.LogStatus = TimerStatus.Stopped;
+            logToStopTimer.EndTime = stoppedAt;
+            logToStopTimer.Duration = elapsedDuration;
+
+            this._activityLogRepository.EditActivityLog(logToStopTimer.ActivityLogId, logToStopTimer);
+            this._activityService.AddToTaskDuration(logToStopTimer.ActivityId, elapsedDuration);
+
+            return new Result(true, "Timer stopped successfully!");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return new Result(false, ex.Message);
+        }
     }
+
 
     public void CreateActivityLog(string logName, Guid activityId)
     {

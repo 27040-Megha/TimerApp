@@ -10,7 +10,7 @@ public interface IUserIO
 
     public void DisplayMessage(string message, MessageType messageType = MessageType.Default);
 
-    public void DisplayMessageAtSameLine(string message, MessageType messageType = MessageType.Default);
+    public void DisplayPrompt(string message, MessageType messageType = MessageType.Default);
 
     void DisplayPanel(DisplayRegion region, string title, IReadOnlyList<string> items);
 
