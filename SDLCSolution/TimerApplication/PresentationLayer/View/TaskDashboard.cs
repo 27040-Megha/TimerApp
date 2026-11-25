@@ -610,6 +610,6 @@ public class TaskDashboard
             return;
         }
 
-        _userIO.DisplayMessage($"Task logs exported successfully, check in your Downloads/Desktop", MessageType.Success);
+        _userIO.DisplayMessage($"{exportResult.Message}", MessageType.Success);
     }
 }
