@@ -200,12 +200,12 @@ public class TaskDashboard
         }
 
         this.DisplayActivities(activities);
-        if (!TrySelectIndex("Enter index of task to be deleted: ", out int index))
+        if (!TrySelectIndex("Enter index of task to be deleted: ",activities, out int index))
         {
             return;
         }
 
-        Result deletionResult = this._activityLogService.DeleteActivity(index);
+        Result deletionResult = this._activityLogService.DeleteActivity(activities[index].ActivityId);
         if (!deletionResult.IsSuccess)
         {
             string errorMessage = this.GetErrorMessage(deletionResult.ErrorType);
@@ -240,12 +240,12 @@ public class TaskDashboard
         }
 
         this.DisplayActivityLogs(activityLogs);
-        if (!TrySelectIndex("Enter index of task log to be deleted: ", out int index))
+        if (!TrySelectIndex("Enter index of task log to be deleted: ",activityLogs, out int index))
         {
             return;
         }
 
-        Result deletionResult = this._activityLogService.DeleteActivityLogByLogId(index);
+        Result deletionResult = this._activityLogService.DeleteActivityLogByLogId(activityLogs[index].ActivityLogId);
         DisplayResult(deletionResult, "Activity Log Deleted Successfully!");
     }
 
@@ -259,7 +259,7 @@ public class TaskDashboard
         }
 
         this.DisplayActivityLogs(activityLogs);
-        if (!TrySelectIndex("Enter index of task log to be edited: ", out int index))
+        if (!TrySelectIndex("Enter index of task log to be edited: ",activityLogs, out int index))
         {
             return;
         }
@@ -270,7 +270,7 @@ public class TaskDashboard
             return;
         }
 
-        Result editResult = this._activityLogService.EditTaskLog(index, logName!);
+        Result editResult = this._activityLogService.EditTaskLog(activityLogs[index].ActivityLogId, logName!);
         DisplayResult(editResult, "Task log name edited successfully!");
     }
 
@@ -284,7 +284,7 @@ public class TaskDashboard
         }
 
         this.DisplayActivities(activities);
-        if (!TrySelectIndex("Enter index of task to be edited: ", out int index))
+        if (!TrySelectIndex("Enter index of task to be edited: ",activities, out int index))
         {
             return;
         }
@@ -295,7 +295,7 @@ public class TaskDashboard
             return;
         }
 
-        Result editResult = this._activityService.EditTaskName(index, taskName!);
+        Result editResult = this._activityService.EditTaskName(activities[index].ActivityId, taskName!);
         DisplayResult(editResult, "Task name edited successfully!");
     }
 
