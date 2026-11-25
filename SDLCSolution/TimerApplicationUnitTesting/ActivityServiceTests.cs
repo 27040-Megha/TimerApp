@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using NSubstitute;
+using NUnit.Framework;
 using TimerApplication.ApplicationLayer.Interface;
 using TimerApplication.ApplicationLayer.Service;
 using TimerApplication.Domain.Enums;
@@ -9,59 +10,67 @@ namespace TimerApplicationUnitTesting;
 [TestFixture]
 public class ActivityServiceTests
 {
-    private IActivityRepository _mockActivityRepository;
-    private ActivityService _activityService;
+    private IActivityRepository _mockActivityRepository = null!;
+    private IActivityLogRepository _mockActivityLogRepository = null!;
+    private ISessionManager _mockSessionManager = null!;
+    private ActivityLogService _activityLogService = null!;
+    private ActivityService _activityService = null!;
     private Guid _userId;
 
-    private void AddSampleActivity(TimerStatus status = TimerStatus.Stopped)
+    private Activity AddSampleActivity(TimerStatus logStatus = TimerStatus.Stopped)
     {
-        Activity activity = new Activity("Coding", default, _userId)
+        Activity activity = new Activity("Coding", default, _userId);
+        _mockActivityRepository.GetAllActivitiesByUser(_userId).Returns(new List<Activity> { activity });
+        ActivityLog activityLog = new ActivityLog
         {
-            TaskStatus = status,
+            ActivityId = activity.ActivityId,
+            UserId = _userId,
+            LogStatus = logStatus
         };
-        _mockActivityRepository.CreateActivity(activity);
+
+        _mockActivityLogRepository.FetchAllActivityLogs().Returns(new List<ActivityLog> { activityLog });
+        return activity;
     }
 
     [SetUp]
     public void SetUp()
     {
-        _mockActivityRepository = new MockActivityRepository();
-        _activityService = new ActivityService(_mockActivityRepository);
+        _mockActivityRepository = Substitute.For<IActivityRepository>();
+        _mockActivityLogRepository = Substitute.For<IActivityLogRepository>();
+        _mockSessionManager = Substitute.For<ISessionManager>();
         _userId = Guid.NewGuid();
-        CurrentSessionManager.CurrentSessionUser = new User
+        _mockSessionManager.CurrentSessionUser.Returns(new User
         {
             UserId = _userId
-        };
+        });
+
+        _activityService = new ActivityService(_mockActivityRepository, _mockSessionManager);
+        _activityLogService = new ActivityLogService(_mockActivityLogRepository, _activityService, _mockSessionManager);
     }
 
     [Test]
     public void DeleteActivity_ShallReturnFailure_WhenNoActivitiesExist()
     {
-        Result actualResult = _activityService.DeleteActivity(2);
+        Result actualResult = _activityLogService.DeleteActivity(2);
         Assert.That(actualResult.IsSuccess, Is.EqualTo(false));
         Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.NoActivitiesFound));
     }
 
     [Test]
-    public void DeleteActivity_ThrowsFormatException_WhenIndexIsInvalidInteger()
+    public void DeleteActivity_ShallReturnFailure_WhenIndexIsNegative()
     {
         AddSampleActivity();
-        Assert.Throws<FormatException>(() => _activityService.DeleteActivity(int.Parse("ab")));
+        Result actualResult = _activityLogService.DeleteActivity(-1);
+        Assert.That(actualResult.IsSuccess, Is.False);
+        Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.IndexOutOfRange));
     }
 
     [Test]
-    public void DeleteActivity_ThrowsArgumentOutOfRangeException_WhenIndexIsNegative()
+    public void DeleteActivity_ShallReturnFailure_WhenIndexIsOutOfBoundsOfActivityList()
     {
         AddSampleActivity();
-        Assert.Throws<ArgumentOutOfRangeException>(() => _activityService.DeleteActivity(-1));
-    }
-
-    [Test]
-    public void DeleteActivity_ShallReturnFailure_WhenIndexIsOutOfBoundsOfActivitylist()
-    {
-        AddSampleActivity();
-        Result actualResult = _activityService.DeleteActivity(5);
-        Assert.That(actualResult.IsSuccess, Is.EqualTo(false));
+        Result actualResult = _activityLogService.DeleteActivity(5);
+        Assert.That(actualResult.IsSuccess, Is.False);
         Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.IndexOutOfRange));
     }
 
@@ -69,7 +78,7 @@ public class ActivityServiceTests
     public void DeleteActivity_ShallReturnFailure_WhenTimerIsRunning()
     {
         AddSampleActivity(TimerStatus.Running);
-        Result actualResult = _activityService.DeleteActivity(0);
+        Result actualResult = _activityLogService.DeleteActivity(0);
         Assert.That(actualResult.IsSuccess, Is.EqualTo(false));
         Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.TimerRunning));
     }
@@ -77,10 +86,10 @@ public class ActivityServiceTests
     [Test]
     public void DeleteActivity_ShallReturnSuccess_WhenTimerIsStopped()
     {
-        AddSampleActivity();
-        Result actualResult = _activityService.DeleteActivity(0);
+        Activity sampleActivity = AddSampleActivity();
+        Result actualResult = _activityLogService.DeleteActivity(0);
         Assert.That(actualResult.IsSuccess, Is.EqualTo(true));
         Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.None));
-        Assert.That(_mockActivityRepository.GetAllActivities().Count(), Is.EqualTo(0));
+        _mockActivityRepository.Received(1).DeleteActivity(sampleActivity.ActivityId);
     }
 }
