@@ -1,12 +1,20 @@
-﻿using TimerApplication.ApplicationLayer.Domain.Enums;
+﻿using TimerApplication.Domain.Enums;
 
 namespace TimerApplication.ApplicationLayer.Interface;
 
 public interface IUserIO
 {
-    public void DisplayMessage(string message, MessageType type = MessageType.Default);
+    public int WindowWidth { get; }
 
-    public string ReadInput();
+    public int WindowHeight { get; }
+
+    public void DisplayMessage(string message, MessageType messageType = MessageType.Default);
+
+    public void DisplayPrompt(string message, MessageType messageType = MessageType.Default);
+
+    void DisplayPanel(DisplayRegion region, string title, IReadOnlyList<string> items);
+
+    public string? ReadInput();
 
     public string ReadMaskedPassword();
 
