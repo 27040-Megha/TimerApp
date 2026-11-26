@@ -71,11 +71,6 @@ public class ViewOperator
         while (choice != 3);
     }
 
-    public void SaveCurrentActiveUser()
-    {
-        this._userService.SaveCurrentActiveUser();
-    }
-
     private void LoadPreviousUserSession()
     {
         Guid? activeUserId = _userService.FetchActiveUser();

@@ -26,6 +26,6 @@ public class UserRepository : IUserRepository
     public User? FindById(Guid? userId)
     {
         HashSet<User>? userRepo = FileHandlingService.ReadFile<HashSet<User>>(FilePathResource.UserRepoFilePath);
-        return userRepo?.FirstOrDefault(user => string.Equals(user.UserId, userId));
+        return userRepo?.FirstOrDefault(user => user.UserId == userId);
     }
 }
