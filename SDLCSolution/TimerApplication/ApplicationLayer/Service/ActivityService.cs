@@ -1,5 +1,4 @@
 ﻿using TimerApplication.ApplicationLayer.Interface;
-using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.ApplicationLayer.Service;
@@ -8,9 +7,12 @@ public class ActivityService
 {
     private readonly IActivityRepository _activityRepository;
 
-    public ActivityService(IActivityRepository activityRepository)
+    private readonly ISessionManager _currentSessionManager;
+
+    public ActivityService(IActivityRepository activityRepository, ISessionManager currentSessionManager)
     {
         this._activityRepository = activityRepository;
+        this._currentSessionManager = currentSessionManager;
     }
 
     public void CreateNewTask(Activity activity)

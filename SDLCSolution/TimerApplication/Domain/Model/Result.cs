@@ -10,12 +10,6 @@ public class Result
         this.Message = message;
     }
 
-    public Result(bool isSuccess, AuthenticationStatus authenticationStatus)
-    {
-        this.IsSuccess = isSuccess;
-        this.LoginStatus = authenticationStatus;
-    }
-
     public Result(bool isSuccess, ErrorCode errorCode)
     {
         this.IsSuccess = isSuccess;
@@ -27,8 +21,6 @@ public class Result
     public string? Message { get; set; }
 
     public ErrorCode ErrorType { get; set; }
-
-    public AuthenticationStatus LoginStatus { get; set; }
 }
 public class Result<T>
 {
