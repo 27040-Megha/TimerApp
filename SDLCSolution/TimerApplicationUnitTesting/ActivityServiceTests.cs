@@ -17,21 +17,6 @@ public class ActivityServiceTests
     private ActivityService _activityService = null!;
     private Guid _userId;
 
-    private Activity AddSampleActivity(TimerStatus logStatus = TimerStatus.Stopped)
-    {
-        Activity activity = new Activity("Coding", TimeSpan.Zero, _userId);
-        _mockActivityRepository.GetAllActivitiesByUser(_userId).Returns(new List<Activity> { activity });
-        ActivityLog activityLog = new ActivityLog
-        {
-            ActivityId = activity.ActivityId,
-            UserId = _userId,
-            LogStatus = logStatus
-        };
-
-        _mockActivityLogRepository.FetchAllActivityLogs().Returns(new List<ActivityLog> { activityLog });
-        return activity;
-    }
-
     [SetUp]
     public void SetUp()
     {
@@ -129,5 +114,20 @@ public class ActivityServiceTests
             _mockActivityRepository.DidNotReceive().DeleteActivity(firstActivity.ActivityId);
             _mockActivityRepository.DidNotReceive().DeleteActivity(thirdActivity.ActivityId);
         });
+    }
+
+    private Activity AddSampleActivity(TimerStatus logStatus = TimerStatus.Stopped)
+    {
+        Activity activity = new Activity("Coding", TimeSpan.Zero, _userId);
+        _mockActivityRepository.GetAllActivitiesByUser(_userId).Returns(new List<Activity> { activity });
+        ActivityLog activityLog = new ActivityLog
+        {
+            ActivityId = activity.ActivityId,
+            UserId = _userId,
+            LogStatus = logStatus
+        };
+
+        _mockActivityLogRepository.FetchAllActivityLogs().Returns(new List<ActivityLog> { activityLog });
+        return activity;
     }
 }
