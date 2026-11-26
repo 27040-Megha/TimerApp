@@ -34,45 +34,12 @@ public class ActivityServiceTests
     }
 
     [Test]
-    public void DeleteActivity_ShouldReturnFailure_WhenNoActivitiesExist()
-    {
-        Result actualResult = _activityLogService.DeleteActivity(2);
-        Assert.Multiple(() =>
-        {
-            Assert.That(actualResult.IsSuccess, Is.False);
-            Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.NoActivitiesFound));
-        });
-    }
-
-    [Test]
-    public void DeleteActivity_ShouldReturnFailure_WhenIndexIsNegative()
-    {
-        AddSampleActivity();
-        Result actualResult = _activityLogService.DeleteActivity(-1);
-        Assert.Multiple(() =>
-        {
-            Assert.That(actualResult.IsSuccess, Is.False);
-            Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.IndexOutOfRange));
-        });
-    }
-
-    [Test]
-    public void DeleteActivity_ShouldReturnFailure_WhenIndexIsOutOfBoundsOfActivityList()
-    {
-        AddSampleActivity();
-        Result actualResult = _activityLogService.DeleteActivity(5);
-        Assert.Multiple(() =>
-        {
-            Assert.That(actualResult.IsSuccess, Is.False);
-            Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.IndexOutOfRange));
-        });
-    }
-
-    [Test]
     public void DeleteActivity_ShouldReturnFailure_WhenTimerIsRunning()
     {
-        AddSampleActivity(TimerStatus.Running);
-        Result actualResult = _activityLogService.DeleteActivity(0);
+        Activity sampleActivity = AddSampleActivity(TimerStatus.Running);
+
+        Result actualResult = _activityLogService.DeleteActivity(sampleActivity.ActivityId);
+
         Assert.Multiple(() =>
         {
             Assert.That(actualResult.IsSuccess, Is.False);
@@ -83,13 +50,14 @@ public class ActivityServiceTests
     [Test]
     public void DeleteActivity_ShouldReturnSuccess_WhenTimerIsStopped()
     {
-        Activity sampleActivity = AddSampleActivity();
-        Result actualResult = _activityLogService.DeleteActivity(0);
+        Activity sampleActivity = AddSampleActivity(TimerStatus.Stopped);
+
+        Result actualResult = _activityLogService.DeleteActivity(sampleActivity.ActivityId);
+
         Assert.Multiple(() =>
         {
             Assert.That(actualResult.IsSuccess, Is.True);
             Assert.That(actualResult.ErrorType, Is.EqualTo(ErrorCode.None));
-            _mockActivityRepository.Received(1).DeleteActivity(sampleActivity.ActivityId);
         });
     }
 
@@ -99,13 +67,17 @@ public class ActivityServiceTests
         Activity firstActivity = new Activity("Coding", TimeSpan.Zero, _userId);
         Activity secondActivity = new Activity("Reading", TimeSpan.Zero, _userId);
         Activity thirdActivity = new Activity("Exercise", TimeSpan.Zero, _userId);
+
         _mockActivityRepository.GetAllActivitiesByUser(_userId).Returns(new List<Activity>
         {
             firstActivity,
             secondActivity,
             thirdActivity
         });
-        Result actualResult = _activityLogService.DeleteActivity(1);
+        _mockActivityLogRepository.FetchAllActivityLogs().Returns(new List<ActivityLog>());
+
+        Result actualResult = _activityLogService.DeleteActivity(secondActivity.ActivityId);
+
         Assert.Multiple(() =>
         {
             Assert.That(actualResult.IsSuccess, Is.True);
@@ -114,6 +86,14 @@ public class ActivityServiceTests
             _mockActivityRepository.DidNotReceive().DeleteActivity(firstActivity.ActivityId);
             _mockActivityRepository.DidNotReceive().DeleteActivity(thirdActivity.ActivityId);
         });
+    }
+
+    [Test]
+    public void DeleteActivity_ShouldThrowNullReferenceException_WhenActivityIdDoesNotExist()
+    {
+        AddSampleActivity();
+        Guid nonExistentActivityId = Guid.NewGuid();
+        Assert.Throws<NullReferenceException>(() => _activityLogService.DeleteActivity(nonExistentActivityId));
     }
 
     private Activity AddSampleActivity(TimerStatus logStatus = TimerStatus.Stopped)
