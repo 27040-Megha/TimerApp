@@ -44,7 +44,13 @@ public class ViewOperator
         do
         {
             this.DisplayMenu();
-            if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out choice))
+            string? userChoice = _userIO.ReadInput();
+            if (userChoice == null)
+            {
+                break;
+            }
+
+            if (!InputValidator.ValidateInteger(userChoice, out choice))
             {
                 _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
                 continue;

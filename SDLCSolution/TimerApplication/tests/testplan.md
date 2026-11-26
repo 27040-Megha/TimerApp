@@ -531,7 +531,7 @@
       <td><strong>PASS</strong></td>
     </tr>
     <tr>
-      <td>Invalid Password (Missing numbers)</td>
+      <td>Invalid Password </td>
       <td></td>
       <td>meghaa@eg</td>
       <td>The password should contain atleast 1 Uppercase, 1 Lowercase and 1 Special Character</td>

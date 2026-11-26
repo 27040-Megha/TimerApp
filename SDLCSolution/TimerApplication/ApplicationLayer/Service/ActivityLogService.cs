@@ -186,7 +186,7 @@ public class ActivityLogService
             return new Result(false, "No logs were imported because time overlaps with existing activity logs or timestamps are invalid.");
         }
 
-        this._activityService.UpdateTaskTotalDuration(activity, totalDuration);
+        this._activityService.AddToTaskDuration(activity.ActivityId, totalDuration);
         if (!skippedEntries.Any())
         {
             return new Result(true, "Logs imported successfully!");

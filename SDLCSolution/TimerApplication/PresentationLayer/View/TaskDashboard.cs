@@ -61,7 +61,13 @@ public class TaskDashboard
             do
             {
                 this.DisplayMenu();
-                if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out choice))
+                string? userChoice = _userIO.ReadInput();
+                if (userChoice == null)
+                {
+                    break;
+                }
+
+                if (!InputValidator.ValidateInteger(userChoice, out choice))
                 {
                     _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
                     continue;
@@ -140,7 +146,7 @@ public class TaskDashboard
             return;
         }
 
-            _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \n3. Back \nEnter Your Option (1/2): ");
+            _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \n3. Back \nEnter Your Option (1/2/3): ");
             if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out int choice))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
@@ -157,7 +163,7 @@ public class TaskDashboard
                 case 3:
                     break;
                 default:
-                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 or 2", MessageType.Error);
+                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1/2/3", MessageType.Error);
                     break;
             }
         }
@@ -170,7 +176,7 @@ public class TaskDashboard
             return;
         }
 
-        _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \n3. Back \nEnter Your Option (1/2): ");
+        _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \n3. Back \nEnter Your Option (1/2/3): ");
         if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out int choice))
         {
             _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
@@ -187,7 +193,7 @@ public class TaskDashboard
             case 3:
                 break;
             default:
-                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice 1 or 2", MessageType.Error);
+                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice 1/2/3", MessageType.Error);
                 break;
         }
     }
@@ -308,13 +314,13 @@ public class TaskDashboard
         _userIO.DisplayMessage("Logging out", MessageType.Info);
     }
 
-        private void AddNewTask()
+    private void AddNewTask()
+    {
+        if (!TryGetTaskName(out string? taskName))
         {
-            if (!TryGetTaskName(out string? taskName))
-            {
-                _userIO.DisplayMessage("Invalid string format, Task name should not be null or empty!", MessageType.Error);
-                return;
-            }
+            _userIO.DisplayMessage("Invalid string format, Task name should not be null or empty!", MessageType.Error);
+            return;
+        }
 
         this._activityService.CreateNewTask(new Activity(taskName, TimeSpan.Zero, _currentSessionManager.CurrentSessionUser?.UserId));
         _userIO.DisplayMessage("Task Added Successfully!", MessageType.Success);

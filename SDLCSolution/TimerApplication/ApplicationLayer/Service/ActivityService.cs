@@ -68,10 +68,4 @@ public class ActivityService
     {
         this._activityRepository.DeleteActivity(activityId);
     }
-    public void UpdateTaskTotalDuration(Activity activitySelected, TimeSpan totalTaskDuration)
-    {
-        Activity? activity = this.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId).FirstOrDefault(a => a.ActivityId == activitySelected.ActivityId);
-        activity!.TotalDuration += totalTaskDuration;
-        this._activityRepository.EditActivity(activity.ActivityId, activity);
-    }
 }
