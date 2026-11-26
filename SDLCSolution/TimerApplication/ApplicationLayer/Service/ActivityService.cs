@@ -8,12 +8,9 @@ public class ActivityService
 {
     private readonly IActivityRepository _activityRepository;
 
-    private readonly ISessionManager _currentSessionManager;
-
-    public ActivityService(IActivityRepository activityRepository, ISessionManager currentSessionManager)
+    public ActivityService(IActivityRepository activityRepository)
     {
         this._activityRepository = activityRepository;
-        this._currentSessionManager = currentSessionManager;
     }
 
     public void CreateNewTask(Activity activity)

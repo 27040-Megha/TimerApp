@@ -7,8 +7,8 @@ public class ActivityRepository : IActivityRepository
 {
     public void CreateActivity(Activity activity)
     {
-        List<Activity>? activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
-        activities?.Add(activity);
+        List<Activity> activities = FileHandlingService.ReadFile<List<Activity>>(FilePathResource.ActivityRepoFilePath) ?? new List<Activity>();
+        activities.Add(activity);
         FileHandlingService.WriteFile(activities, FilePathResource.ActivityRepoFilePath);
     }
 
