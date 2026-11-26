@@ -20,17 +20,11 @@ public class ViewOperator
 
     private delegate bool ValidateInput(string? input, out string errorMessage);
 
-    private readonly ActivityService _activityService;
-
-    private readonly ActivityLogService _activityLogService;
-
-    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ActivityService activityService, ActivityLogService activityLogService, ISessionManager currentSessionManager)
+    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ISessionManager currentSessionManager)
     {
         this._userService = userService;
         this._userIO = userIO;
-        this._activityService = activityService;
         this._taskDashboard = taskDashboard;
-        this._activityLogService = activityLogService;
         this._currentSessionManager = currentSessionManager;
     }
 

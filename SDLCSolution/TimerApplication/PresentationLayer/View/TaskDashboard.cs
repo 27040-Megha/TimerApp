@@ -308,14 +308,13 @@ public class TaskDashboard
         _userIO.DisplayMessage("Logging out", MessageType.Info);
     }
 
-
-    private void AddNewTask()
-    {
-        if (!TryGetTaskName(out string? taskName))
+        private void AddNewTask()
         {
-            _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
-            return;
-        }
+            if (!TryGetTaskName(out string? taskName))
+            {
+                _userIO.DisplayMessage("Invalid string format, Task name should not be null or empty!", MessageType.Error);
+                return;
+            }
 
         this._activityService.CreateNewTask(new Activity(taskName, TimeSpan.Zero, _currentSessionManager.CurrentSessionUser?.UserId));
         _userIO.DisplayMessage("Task Added Successfully!", MessageType.Success);

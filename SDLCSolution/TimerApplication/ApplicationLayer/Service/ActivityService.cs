@@ -1,5 +1,4 @@
 ﻿using TimerApplication.ApplicationLayer.Interface;
-using TimerApplication.Domain.Enums;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.ApplicationLayer.Service;
