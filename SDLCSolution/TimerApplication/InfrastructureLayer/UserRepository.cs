@@ -7,7 +7,7 @@ public class UserRepository : IUserRepository
 {
     public void CreateUser(User user)
     {
-        HashSet<User>? userRepo = FileHandlingService.ReadFile<HashSet<User>>(FilePathResource.UserRepoFilePath);
+        HashSet<User>? userRepo = FileHandlingService.ReadFile<HashSet<User>>(FilePathResource.UserRepoFilePath) ?? new HashSet<User>();
         userRepo?.Add(user);
         FileHandlingService.WriteFile(userRepo, FilePathResource.UserRepoFilePath);
     }
@@ -26,6 +26,6 @@ public class UserRepository : IUserRepository
     public User? FindById(Guid? userId)
     {
         HashSet<User>? userRepo = FileHandlingService.ReadFile<HashSet<User>>(FilePathResource.UserRepoFilePath);
-        return userRepo?.FirstOrDefault(user => string.Equals(user.UserId, userId));
+        return userRepo?.FirstOrDefault(user => user.UserId == userId);
     }
 }
