@@ -61,7 +61,13 @@ public class TaskDashboard
             do
             {
                 this.DisplayMenu();
-                if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out choice))
+                string? userChoice = _userIO.ReadInput();
+                if (userChoice == null)
+                {
+                    break;
+                }
+
+                if (!InputValidator.ValidateInteger(userChoice, out choice))
                 {
                     _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
                     continue;
@@ -81,7 +87,8 @@ public class TaskDashboard
 
     private void DisplayMenu()
     {
-        _userIO.DisplayMessage("1. Add new Task \n" +
+        _userIO.DisplayMessage("\nMENU OPTIONS", MessageType.Info);
+        _userIO.DisplayPrompt("1. Add new Task \n" +
                 "2. Edit Task\n" +
                 "3. Delete Task\n" +
                 "4. View Specific Task Log\n" +
@@ -91,7 +98,7 @@ public class TaskDashboard
                 "8. Export Time logs\n" +
                 "9. Logout\n" +
                 "Enter your option (1 to 9): "
-                );
+        );
     }
 
     private void HandleMenu(int choice)
@@ -99,13 +106,13 @@ public class TaskDashboard
         switch (choice)
         {
             case 1:
-                this.AddNewTask();                   
+                this.AddNewTask();
                 break;
             case 2:
-                this.EditTask();
+                this.Edit();
                 break;
             case 3:
-                this.DeleteTask();
+                this.Delete();
                 break;
             case 4:
                 this.ViewSpecificTaskLog();
@@ -131,19 +138,189 @@ public class TaskDashboard
         }
     }
 
+    private void Edit()
+    {
+        if (!HasAnyItems(GetAllActivities()))
+        {
+            _userIO.DisplayMessage("No activities found to Edit", MessageType.Warning);
+            return;
+        }
+
+            _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \n3. Back \nEnter Your Option (1/2/3): ");
+            if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out int choice))
+            {
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+                return;
+            }
+            switch (choice)
+            {
+                case 1:
+                    this.EditTask();
+                    break;
+                case 2:
+                    this.EditTaskLog();
+                    break;
+                case 3:
+                    break;
+                default:
+                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1/2/3", MessageType.Error);
+                    break;
+            }
+        }
+
+    private void Delete()
+    {
+        if (!HasAnyItems(GetAllActivities()))
+        {
+            _userIO.DisplayMessage("No activities found to Delete", MessageType.Warning);
+            return;
+        }
+
+        _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \n3. Back \nEnter Your Option (1/2/3): ");
+        if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out int choice))
+        {
+            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+            return;
+        }
+        switch (choice)
+        {
+            case 1:
+                this.DeleteTask();
+                break;
+            case 2:
+                this.DeleteTaskLogs();
+                break;
+            case 3:
+                break;
+            default:
+                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice 1/2/3", MessageType.Error);
+                break;
+        }
+    }
+
+
+    private void DeleteTask()
+    {
+        List<Activity> activities = this.GetAllActivities();
+        if (!HasAnyItems(activities))
+        {
+            _userIO.DisplayMessage("No activities found to delete!", MessageType.Warning);
+            return;
+        }
+
+        this.DisplayActivities(activities);
+        if (!TrySelectIndex("Enter index of task to be deleted: ",activities, out int index))
+        {
+            return;
+        }
+
+        Result deletionResult = this._activityLogService.DeleteActivity(activities[index].ActivityId);
+        if (!deletionResult.IsSuccess)
+        {
+            string errorMessage = this.GetErrorMessage(deletionResult.ErrorType);
+            _userIO.DisplayMessage(errorMessage, MessageType.Error);
+            return;
+        }
+
+        _userIO.DisplayMessage("Task Deleted Successfully!", MessageType.Success);
+    }
+
+    private string GetErrorMessage(ErrorCode errorCode)
+    {
+        string errorMessage = errorCode switch
+        {
+            ErrorCode.NoActivitiesFound => "No activities found to delete",
+            ErrorCode.IndexOutOfRange => "Index out of bounds, Deletion failed",
+            ErrorCode.TimerRunning => "Active timer running, Can't perform Operation",
+            ErrorCode.None => "No error, Operation Successful",
+            _ => "Deletion failed due to some unknown reasons"
+        };
+
+        return errorMessage;
+    }
+
+    private void DeleteTaskLogs()
+    {
+        List<ActivityLog> activityLogs = this._activityLogService.GetAllActivityLogs().ToList();
+        if (!HasAnyItems(activityLogs))
+        {
+            _userIO.DisplayMessage("No activity logs found to delete!", MessageType.Warning);
+            return;
+        }
+
+        this.DisplayActivityLogs(activityLogs);
+        if (!TrySelectIndex("Enter index of task log to be deleted: ",activityLogs, out int index))
+        {
+            return;
+        }
+
+        Result deletionResult = this._activityLogService.DeleteActivityLogByLogId(activityLogs[index].ActivityLogId);
+        DisplayResult(deletionResult, "Activity Log Deleted Successfully!");
+    }
+
+    private void EditTaskLog()
+    {
+        List<ActivityLog> activityLogs = this._activityLogService.GetAllActivityLogs().ToList();
+        if (!HasAnyItems(activityLogs))
+        {
+            _userIO.DisplayMessage("No activity logs found to edit!", MessageType.Warning);
+            return;
+        }
+
+        this.DisplayActivityLogs(activityLogs);
+        if (!TrySelectIndex("Enter index of task log to be edited: ",activityLogs, out int index))
+        {
+            return;
+        }
+
+        if (!TryGetTaskName(out string? logName))
+        {
+            _userIO.DisplayMessage("Invalid string format, Task log name should not be null or empty!", MessageType.Error);
+            return;
+        }
+
+        Result editResult = this._activityLogService.EditTaskLog(activityLogs[index].ActivityLogId, logName!);
+        DisplayResult(editResult, "Task log name edited successfully!");
+    }
+
+    private void EditTask()
+    {
+        List<Activity> activities = this.GetAllActivities();
+        if (!HasAnyItems(activities))
+        {
+            _userIO.DisplayMessage("No activities found to edit!", MessageType.Warning);
+            return;
+        }
+
+        this.DisplayActivities(activities);
+        if (!TrySelectIndex("Enter index of task to be edited: ",activities, out int index))
+        {
+            return;
+        }
+
+        if (!TryGetTaskName(out string? taskName))
+        {
+            _userIO.DisplayMessage("Invalid string format, Task name should not be null or empty!", MessageType.Error);
+            return;
+        }
+
+        Result editResult = this._activityService.EditTaskName(activities[index].ActivityId, taskName!);
+        DisplayResult(editResult, "Task name edited successfully!");
+    }
+
     private void Logout()
     {
         _userService.ClearSession();
         _userIO.DisplayMessage("Logging out", MessageType.Info);
     }
 
-        private void AddNewTask()
+    private void AddNewTask()
+    {
+        if (!TryGetTaskName(out string? taskName))
         {
-            if (!TryGetTaskName(out string? taskName))
-            {
-                _userIO.DisplayMessage("Invalid string format, Task name should not be null or empty!", MessageType.Error);
-                return;
-            }
+            _userIO.DisplayMessage("Invalid string format, Task name should not be null or empty!", MessageType.Error);
+            return;
+        }
 
         this._activityService.CreateNewTask(new Activity(taskName, TimeSpan.Zero, _currentSessionManager.CurrentSessionUser?.UserId));
         _userIO.DisplayMessage("Task Added Successfully!", MessageType.Success);
@@ -169,7 +346,11 @@ public class TaskDashboard
         }
 
         List<string> formattedActivities = _cachedActivities
-            .Select((activity, index) => $"{index + 1}. {activity.ActivityName}  Duration: {FormatDuration(activity.TotalDuration)}")
+            .Select((activity, index) =>
+            {
+                TimeSpan cumulativeDuration = this._activityLogService.GetCurrentActivityDuration(activity, _cachedActiveLogs);
+                return $"{index + 1}. {activity.ActivityName}  Duration: {FormatDuration(cumulativeDuration)}";
+            })
             .ToList();
 
         _userIO.DisplayPanel(DisplayRegion.PrimarySidebar, "Your activities:", formattedActivities);
@@ -199,16 +380,6 @@ public class TaskDashboard
         }
 
         return this._activityService.GetAllActivitiesByUser(currentUser.UserId); 
-    }
-
-    private void EditTask()
-    {
-        _userIO.DisplayMessage("Not available yet", MessageType.Warning);
-    }
-
-    private void DeleteTask()
-    {
-        _userIO.DisplayMessage("Not available yet", MessageType.Warning);
     }
 
     private void ViewSpecificTaskLog()
@@ -256,7 +427,6 @@ public class TaskDashboard
                 messageType);
         }
     }
-
 
     private bool HasAnyItems<T>(IReadOnlyList<T> entries)
     {
@@ -321,12 +491,19 @@ public class TaskDashboard
         zeroBasedIndex = index - 1;
         return true;
     }
+    
+    private bool TryGetInputIndex(string fieldName, out int index)
+    {
+        _userIO.DisplayPrompt($"Enter index to {fieldName}: ", MessageType.Info);
+        bool isValidIndex =  InputValidator.ValidateInteger(_userIO.ReadInput(), out index);
+        return isValidIndex;
+    }
 
     private void DisplayResult(Result result, string successMessage)
     {
         if (!result.IsSuccess)
         {
-            _userIO.DisplayMessage(result.Message, MessageType.Error);
+            _userIO.DisplayMessage(result.Message!, MessageType.Error);
             return;
         }
 
@@ -341,7 +518,6 @@ public class TaskDashboard
             _userIO.DisplayMessage($"{++i}. {activity.ActivityName}  Duration: {FormatDuration(activity.TotalDuration)}");
         }
     }
-
 
     private bool TryGetInputIndex(out int index)
     {
@@ -364,11 +540,81 @@ public class TaskDashboard
 
     private void ImportTimeLog()
     {
-        _userIO.DisplayMessage("Not available yet", MessageType.Warning);
+        List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
+        if (!HasAnyItems(activities))
+        {
+            _userIO.DisplayMessage("No activity found to import time log", MessageType.Warning);
+            return;
+        }
+
+        this.DisplayActivities(activities);
+        if (!TryGetInputIndex("of task to import Task logs", out int index))
+        {
+            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+            return;
+        }
+
+        if (index < 1 || index > activities.Count)
+        { 
+            _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
+            return;
+        }
+
+        _userIO.DisplayMessage("Enter (.csv) file path to import logs: ", MessageType.Info);
+        string? rawInput = _userIO.ReadInput();
+        string? filePath = rawInput?.Trim().Trim('"').Trim();
+        if (!InputValidator.ValidateString(filePath))
+        {
+            _userIO.DisplayMessage("File path should not be null or empty", MessageType.Error);
+            return;
+        }
+
+        string? pathExtension = Path.GetExtension(filePath);
+        if (!string.Equals(pathExtension, ".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            _userIO.DisplayMessage("Invalid file path, give a valid .csv file path", MessageType.Error);
+            return;
+        }
+
+        Result importResult = this._activityLogService.ImportLogs(filePath!,activities[index-1].ActivityId);
+        if (!importResult.IsSuccess)
+        {
+            _userIO.DisplayMessage(importResult.Message!, MessageType.Error);
+            return;
+        }
+
+        _userIO.DisplayMessage(importResult.Message!, MessageType.Success);
     }
 
     private void ExportTimeLog()
     {
-        _userIO.DisplayMessage("Not available yet", MessageType.Warning);
+        List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
+        if (!HasAnyItems(activities))
+        {
+            _userIO.DisplayMessage("No activity found to export time log", MessageType.Warning);
+            return;
+        }
+
+        this.DisplayActivities(activities);
+        if (!TryGetInputIndex("of task to export its Logs", out int index))
+        {
+            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+            return;
+        }
+
+        if (index < 1 || index > activities.Count)
+        {
+            _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
+            return;
+        }
+
+        Result exportResult = this._activityLogService.ExportLogs(activities[index-1].ActivityId);
+        if (!exportResult.IsSuccess)
+        {
+            _userIO.DisplayMessage($"{exportResult.Message}", MessageType.Error);
+            return;
+        }
+
+        _userIO.DisplayMessage($"{exportResult.Message}", MessageType.Success);
     }
 }
