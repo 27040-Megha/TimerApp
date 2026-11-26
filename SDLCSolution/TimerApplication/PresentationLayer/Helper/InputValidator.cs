@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using TimerApplication.Domain.Model;
 
 namespace TimerApplication.PresentationLayer.Helper;
@@ -42,6 +41,6 @@ public static class InputValidator
 
     public static bool ValidateString(string? input)
     {
-        return !string.IsNullOrEmpty(input);
+        return !string.IsNullOrWhiteSpace(input);
     }
 }
