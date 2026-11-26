@@ -1,4 +1,5 @@
 ﻿using System;
+using TimerApplication.Domain.Enums;
 
 namespace TimerApplication.Domain.Model;
 

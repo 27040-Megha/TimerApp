@@ -20,7 +20,7 @@ public class ViewOperator
 
     private delegate bool ValidateInput(string? input, out string errorMessage);
 
-    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ActivityService activityService, ISessionManager currentSessionManager)
+    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ISessionManager currentSessionManager)
     {
         this._userService = userService;
         this._userIO = userIO;
@@ -44,7 +44,13 @@ public class ViewOperator
         do
         {
             this.DisplayMenu();
-            if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out choice))
+            string? userChoice = _userIO.ReadInput();
+            if (userChoice == null)
+            {
+                break;
+            }
+
+            if (!InputValidator.ValidateInteger(userChoice, out choice))
             {
                 _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
                 continue;
@@ -76,11 +82,12 @@ public class ViewOperator
         User? activeUser = _userService.FindUserById(activeUserId);
         if (activeUser != null)
         {
-            _currentSessionManager.CurrentSessionUser = activeUser; 
+            _currentSessionManager.CurrentSessionUser = activeUser;
+            _userIO.DisplayMessage($"Welcome back {activeUser.UserName}!", MessageType.Info);
             _taskDashboard.RunDashboard();
         }
         else
-        {         
+        {
             _userService.ClearSession();
         }
     }
@@ -106,7 +113,7 @@ public class ViewOperator
 
     private void DisplayMenu()
     {
-        _userIO.DisplayMessage("1. Signup \n2. Login \n3. Exit \nEnter Your Option (1/2/3): ");
+        _userIO.DisplayPrompt("1. Signup \n2. Login \n3. Exit \nEnter Your Option (1/2/3): ");
     }
 
     private void LoginUser()
@@ -194,7 +201,7 @@ public class ViewOperator
     private static bool ValidatePassword(string? input, out string error)
     {
         Result passwordCheckResult = InputValidator.ValidatePassword(input);
-        error = passwordCheckResult.Message;
+        error = passwordCheckResult.Message!;
         return passwordCheckResult.IsSuccess;
     }
 }
