@@ -298,11 +298,16 @@ public class TaskDashboard
 
     private void DisplayActivities(IEnumerable<Activity> activities)
     {
-        for (int i = 0; i < activities.Count(); i++)
+        int i = 0;
+        foreach (Activity activity in activities)
         {
-            Activity activity = activities.ElementAt(i);
-            _userIO.DisplayMessage($"{i + 1}. {activity.ActivityName}  Duration: {activity.TotalDuration.ToString(@"hh\:mm\:ss")}");
+            _userIO.DisplayMessage($"{++i}. {activity.ActivityName}  Duration: {FormatDuration(activity.TotalDuration)}");
         }
+    }
+
+    private static string FormatDuration(TimeSpan duration)
+    {
+        return $"{(int)duration.TotalHours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
     }
 
     private bool TryGetInputIndex(out int index)
