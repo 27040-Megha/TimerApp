@@ -133,7 +133,7 @@ public class TaskDashboard
         {
             if (!TryGetTaskName(out string? taskName))
             {
-                _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
+                _userIO.DisplayMessage("Invalid string format, Task name should not be null or empty!", MessageType.Error);
                 return;
             }
 
