@@ -42,9 +42,25 @@ public class ConsoleUserIO : IUserIO
         }
     }
 
+    public void DisplayPrompt(string message, MessageType messageType = MessageType.Default)
+    {
+        lock (_consoleLock)
+        {
+            ApplyColor(messageType);
+            Console.Write(message);
+            Console.ResetColor();
+        }
+    }
+
     /// <summary>
     /// Displays message at specified position in the Console using SetCursorPosition
     /// </summary>
+    /// <param name="left">Left-position of cursor</param>
+    /// <param name="top">Top-position of cursor</param>
+    /// <param name="message">Message to be displayed</param>
+    /// <param name="messageType">Message Type to decide the color of the text</param>
+
+
     private void DisplayMessageAt(int left, int top, string message, MessageType messageType = MessageType.Default)
     {
         lock (_consoleLock)

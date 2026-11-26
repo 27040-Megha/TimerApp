@@ -61,7 +61,13 @@ public class TaskDashboard
             do
             {
                 this.DisplayMenu();
-                if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out choice))
+                string? userChoice = _userIO.ReadInput();
+                if (userChoice == null)
+                {
+                    break;
+                }
+
+                if (!InputValidator.ValidateInteger(userChoice, out choice))
                 {
                     _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
                     continue;
@@ -81,7 +87,8 @@ public class TaskDashboard
 
     private void DisplayMenu()
     {
-        _userIO.DisplayMessage("1. Add new Task \n" +
+        _userIO.DisplayMessage("\nMENU OPTIONS", MessageType.Info);
+        _userIO.DisplayPrompt("1. Add new Task \n" +
                 "2. Edit Task\n" +
                 "3. Delete Task\n" +
                 "4. View Specific Task Log\n" +
@@ -91,7 +98,7 @@ public class TaskDashboard
                 "8. Export Time logs\n" +
                 "9. Logout\n" +
                 "Enter your option (1 to 9): "
-                );
+        );
     }
 
     private void HandleMenu(int choice)
@@ -139,26 +146,27 @@ public class TaskDashboard
             return;
         }
 
-        _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \nEnter Your Option (1/2): ");
-        if (!TryGetInputIndex(out int choice))
-        {
-            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
-            return;
+            _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \n3. Back \nEnter Your Option (1/2/3): ");
+            if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out int choice))
+            {
+                _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+                return;
+            }
+            switch (choice)
+            {
+                case 1:
+                    this.EditTask();
+                    break;
+                case 2:
+                    this.EditTaskLog();
+                    break;
+                case 3:
+                    break;
+                default:
+                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1/2/3", MessageType.Error);
+                    break;
+            }
         }
-
-        switch (choice)
-        {
-            case 1:
-                this.EditTask();
-                break;
-            case 2:
-                this.EditTaskLog();
-                break;
-            default:
-                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 or 2", MessageType.Error);
-                break;
-        }
-    }
 
     private void Delete()
     {
@@ -168,13 +176,12 @@ public class TaskDashboard
             return;
         }
 
-        _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \nEnter Your Option (1/2): ");
-        if (!TryGetInputIndex(out int choice))
+        _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \n3. Back \nEnter Your Option (1/2/3): ");
+        if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out int choice))
         {
             _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
             return;
         }
-
         switch (choice)
         {
             case 1:
@@ -183,8 +190,10 @@ public class TaskDashboard
             case 2:
                 this.DeleteTaskLogs();
                 break;
+            case 3:
+                break;
             default:
-                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 or 2", MessageType.Error);
+                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice 1/2/3", MessageType.Error);
                 break;
         }
     }
@@ -305,13 +314,13 @@ public class TaskDashboard
         _userIO.DisplayMessage("Logging out", MessageType.Info);
     }
 
-        private void AddNewTask()
+    private void AddNewTask()
+    {
+        if (!TryGetTaskName(out string? taskName))
         {
-            if (!TryGetTaskName(out string? taskName))
-            {
-                _userIO.DisplayMessage("Invalid string format, Task name should not be null or empty!", MessageType.Error);
-                return;
-            }
+            _userIO.DisplayMessage("Invalid string format, Task name should not be null or empty!", MessageType.Error);
+            return;
+        }
 
         this._activityService.CreateNewTask(new Activity(taskName, TimeSpan.Zero, _currentSessionManager.CurrentSessionUser?.UserId));
         _userIO.DisplayMessage("Task Added Successfully!", MessageType.Success);
@@ -419,7 +428,6 @@ public class TaskDashboard
         }
     }
 
-
     private bool HasAnyItems<T>(IReadOnlyList<T> entries)
     {
         return entries.Any();
@@ -483,6 +491,13 @@ public class TaskDashboard
         zeroBasedIndex = index - 1;
         return true;
     }
+    
+    private bool TryGetInputIndex(string fieldName, out int index)
+    {
+        _userIO.DisplayPrompt($"Enter index to {fieldName}: ", MessageType.Info);
+        bool isValidIndex =  InputValidator.ValidateInteger(_userIO.ReadInput(), out index);
+        return isValidIndex;
+    }
 
     private void DisplayResult(Result result, string successMessage)
     {
@@ -503,7 +518,6 @@ public class TaskDashboard
             _userIO.DisplayMessage($"{++i}. {activity.ActivityName}  Duration: {FormatDuration(activity.TotalDuration)}");
         }
     }
-
 
     private bool TryGetInputIndex(out int index)
     {
@@ -526,11 +540,81 @@ public class TaskDashboard
 
     private void ImportTimeLog()
     {
-        _userIO.DisplayMessage("Not available yet", MessageType.Warning);
+        List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
+        if (!HasAnyItems(activities))
+        {
+            _userIO.DisplayMessage("No activity found to import time log", MessageType.Warning);
+            return;
+        }
+
+        this.DisplayActivities(activities);
+        if (!TryGetInputIndex("of task to import Task logs", out int index))
+        {
+            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+            return;
+        }
+
+        if (index < 1 || index > activities.Count)
+        { 
+            _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
+            return;
+        }
+
+        _userIO.DisplayMessage("Enter (.csv) file path to import logs: ", MessageType.Info);
+        string? rawInput = _userIO.ReadInput();
+        string? filePath = rawInput?.Trim().Trim('"').Trim();
+        if (!InputValidator.ValidateString(filePath))
+        {
+            _userIO.DisplayMessage("File path should not be null or empty", MessageType.Error);
+            return;
+        }
+
+        string? pathExtension = Path.GetExtension(filePath);
+        if (!string.Equals(pathExtension, ".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            _userIO.DisplayMessage("Invalid file path, give a valid .csv file path", MessageType.Error);
+            return;
+        }
+
+        Result importResult = this._activityLogService.ImportLogs(filePath!,activities[index-1].ActivityId);
+        if (!importResult.IsSuccess)
+        {
+            _userIO.DisplayMessage(importResult.Message!, MessageType.Error);
+            return;
+        }
+
+        _userIO.DisplayMessage(importResult.Message!, MessageType.Success);
     }
 
     private void ExportTimeLog()
     {
-        _userIO.DisplayMessage("Not available yet", MessageType.Warning);
+        List<Activity> activities = this._activityService.GetAllActivitiesByUser(_currentSessionManager.CurrentSessionUser!.UserId);
+        if (!HasAnyItems(activities))
+        {
+            _userIO.DisplayMessage("No activity found to export time log", MessageType.Warning);
+            return;
+        }
+
+        this.DisplayActivities(activities);
+        if (!TryGetInputIndex("of task to export its Logs", out int index))
+        {
+            _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
+            return;
+        }
+
+        if (index < 1 || index > activities.Count)
+        {
+            _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
+            return;
+        }
+
+        Result exportResult = this._activityLogService.ExportLogs(activities[index-1].ActivityId);
+        if (!exportResult.IsSuccess)
+        {
+            _userIO.DisplayMessage($"{exportResult.Message}", MessageType.Error);
+            return;
+        }
+
+        _userIO.DisplayMessage($"{exportResult.Message}", MessageType.Success);
     }
 }

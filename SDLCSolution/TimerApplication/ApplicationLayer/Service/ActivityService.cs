@@ -20,14 +20,23 @@ public class ActivityService
         this._activityRepository.CreateActivity(activity);
     }
 
-    public void EditTaskDuration(ActivityLog activityLog)
+    public void AddToTaskDuration(Guid activityId, TimeSpan durationToAdd)
     {
-        Activity activity = this.GetAllActivitiesByUser(activityLog.UserId)
-            .FirstOrDefault(a => a.ActivityId == activityLog.ActivityId)
-            ?? throw new KeyNotFoundException($"Activity with ID '{activityLog.ActivityId}' was not found.");
-        activity.TotalDuration += activityLog.Duration;
-        this._activityRepository.EditActivity(activityLog.ActivityId, activity);
+        if (durationToAdd < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(durationToAdd), "Duration to add cannot be negative.");
+        }
+    
+        Activity? activity = this._activityRepository.GetActivityById(activityId);
+        if (activity == null)
+        {
+            throw new KeyNotFoundException($"Activity with ID '{activityId}' was not found.");
+        }
+
+        activity.TotalDuration += durationToAdd;
+        this._activityRepository.EditActivity(activityId, activity);
     }
+
 
     public void RemoveLogDuration(Guid taskId, TimeSpan duration)
     {

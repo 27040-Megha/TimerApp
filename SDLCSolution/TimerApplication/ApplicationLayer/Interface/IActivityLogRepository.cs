@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using TimerApplication.Domain.Model;
+﻿using TimerApplication.Domain.Model;
 
 namespace TimerApplication.ApplicationLayer.Interface;
 

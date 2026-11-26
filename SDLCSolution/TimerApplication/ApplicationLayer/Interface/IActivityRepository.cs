@@ -10,5 +10,7 @@ public interface IActivityRepository
 
     public void EditActivity(Guid activityId, Activity activity);
 
-    public IEnumerable<Activity> GetAllActivitiesByUser(Guid userId);  
+    public IEnumerable<Activity> GetAllActivitiesByUser(Guid userId);
+
+    public Activity? GetActivityById(Guid activityId);
 }
