@@ -61,7 +61,13 @@ public class TaskDashboard
             do
             {
                 this.DisplayMenu();
-                if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out choice))
+                string? userChoice = _userIO.ReadInput();
+                if (userChoice == null)
+                {
+                    break;
+                }
+
+                if (!InputValidator.ValidateInteger(userChoice, out choice))
                 {
                     _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
                     continue;
@@ -140,7 +146,7 @@ public class TaskDashboard
             return;
         }
 
-            _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \n3. Back \nEnter Your Option (1/2): ");
+            _userIO.DisplayMessage("1. Edit Task \n2. Edit Task Logs \n3. Back \nEnter Your Option (1/2/3): ");
             if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out int choice))
             {
                 _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
@@ -157,7 +163,7 @@ public class TaskDashboard
                 case 3:
                     break;
                 default:
-                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1 or 2", MessageType.Error);
+                    _userIO.DisplayMessage("Invalid Choice, Enter a valid choice between 1/2/3", MessageType.Error);
                     break;
             }
         }
@@ -170,7 +176,7 @@ public class TaskDashboard
             return;
         }
 
-        _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \n3. Back \nEnter Your Option (1/2): ");
+        _userIO.DisplayMessage("1. Delete Task \n2. Delete Task Logs \n3. Back \nEnter Your Option (1/2/3): ");
         if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out int choice))
         {
             _userIO.DisplayMessage("Invalid integer format", MessageType.Error);
@@ -187,7 +193,7 @@ public class TaskDashboard
             case 3:
                 break;
             default:
-                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice 1 or 2", MessageType.Error);
+                _userIO.DisplayMessage("Invalid Choice, Enter a valid choice 1/2/3", MessageType.Error);
                 break;
         }
     }
@@ -203,12 +209,12 @@ public class TaskDashboard
         }
 
         this.DisplayActivities(activities);
-        if (!TrySelectIndex("Enter index of task to be deleted: ", out int index))
+        if (!TrySelectIndex("Enter index of task to be deleted: ",activities, out int index))
         {
             return;
         }
 
-        Result deletionResult = this._activityLogService.DeleteActivity(index);
+        Result deletionResult = this._activityLogService.DeleteActivity(activities[index].ActivityId);
         if (!deletionResult.IsSuccess)
         {
             string errorMessage = this.GetErrorMessage(deletionResult.ErrorType);
@@ -243,12 +249,12 @@ public class TaskDashboard
         }
 
         this.DisplayActivityLogs(activityLogs);
-        if (!TrySelectIndex("Enter index of task log to be deleted: ", out int index))
+        if (!TrySelectIndex("Enter index of task log to be deleted: ",activityLogs, out int index))
         {
             return;
         }
 
-        Result deletionResult = this._activityLogService.DeleteActivityLogByLogId(index);
+        Result deletionResult = this._activityLogService.DeleteActivityLogByLogId(activityLogs[index].ActivityLogId);
         DisplayResult(deletionResult, "Activity Log Deleted Successfully!");
     }
 
@@ -262,7 +268,7 @@ public class TaskDashboard
         }
 
         this.DisplayActivityLogs(activityLogs);
-        if (!TrySelectIndex("Enter index of task log to be edited: ", out int index))
+        if (!TrySelectIndex("Enter index of task log to be edited: ",activityLogs, out int index))
         {
             return;
         }
@@ -273,7 +279,7 @@ public class TaskDashboard
             return;
         }
 
-        Result editResult = this._activityLogService.EditTaskLog(index, logName!);
+        Result editResult = this._activityLogService.EditTaskLog(activityLogs[index].ActivityLogId, logName!);
         DisplayResult(editResult, "Task log name edited successfully!");
     }
 
@@ -287,7 +293,7 @@ public class TaskDashboard
         }
 
         this.DisplayActivities(activities);
-        if (!TrySelectIndex("Enter index of task to be edited: ", out int index))
+        if (!TrySelectIndex("Enter index of task to be edited: ",activities, out int index))
         {
             return;
         }
@@ -298,7 +304,7 @@ public class TaskDashboard
             return;
         }
 
-        Result editResult = this._activityService.EditTaskName(index, taskName!);
+        Result editResult = this._activityService.EditTaskName(activities[index].ActivityId, taskName!);
         DisplayResult(editResult, "Task name edited successfully!");
     }
 
@@ -308,12 +314,11 @@ public class TaskDashboard
         _userIO.DisplayMessage("Logging out", MessageType.Info);
     }
 
-
     private void AddNewTask()
     {
         if (!TryGetTaskName(out string? taskName))
         {
-            _userIO.DisplayMessage($"Invalid string format, Task name should not be null or empty!", MessageType.Error);
+            _userIO.DisplayMessage("Invalid string format, Task name should not be null or empty!", MessageType.Error);
             return;
         }
 
@@ -387,12 +392,12 @@ public class TaskDashboard
         }
 
         this.DisplayActivities(activities);
-        if (!TrySelectIndex("Enter index of task to view activity details: ", out int index))
+        if (!TrySelectIndex("Enter index of task to view activity details: ",activities, out int index))
         {
             return;
         }
 
-        Result<ActivityLog> logsResult = this._activityLogService.GetAllActivityLogsByActivityIndex(index);
+        Result<ActivityLog> logsResult = this._activityLogService.GetAllActivityLogsByActivityIndex(activities[index].ActivityId);
         if (!logsResult.IsSuccess)
         {
             _userIO.DisplayMessage(logsResult.Message, MessageType.Error);
@@ -438,12 +443,12 @@ public class TaskDashboard
         }
 
         this.DisplayActivities(activities);
-        if (!TrySelectIndex("Enter index of task to Start Timer: ", out int index))
+        if (!TrySelectIndex("Enter index of task to Start Timer: ", activities, out int index))
         {
             return;
         }
 
-        Result result = this._activityLogService.StartTimer(index);
+        Result result = this._activityLogService.StartTimer(activities[index].ActivityId);
         DisplayResult(result, "Timer started Successfully!");
     }
 
@@ -457,16 +462,16 @@ public class TaskDashboard
         }
 
         this.DisplayActivityLogs(activeLogs);
-        if (!TrySelectIndex("Enter index of task to Stop Timer: ", out int index))
+        if (!TrySelectIndex("Enter index of task to Stop Timer: ", activeLogs, out int index))
         {
             return;
         }
 
-        Result result = this._activityLogService.StopTimer(index);
+        Result result = this._activityLogService.StopTimer(activeLogs[index].ActivityLogId);
         DisplayResult(result, "Timer stopped successfully!");
     }
 
-    private bool TrySelectIndex(string prompt, out int zeroBasedIndex)
+    private bool TrySelectIndex<T>(string prompt, IEnumerable<T> collection, out int zeroBasedIndex)
     {
         zeroBasedIndex = -1;
         _userIO.DisplayMessage(prompt, MessageType.Info);
@@ -477,7 +482,7 @@ public class TaskDashboard
             return false;
         }
 
-        if (index < 1)
+        if (index < 1 || index > collection.Count())
         {
             _userIO.DisplayMessage("Index Out of Range", MessageType.Error);
             return false;
@@ -549,7 +554,7 @@ public class TaskDashboard
             return;
         }
 
-        if (index < 1)
+        if (index < 1 || index > activities.Count)
         { 
             _userIO.DisplayMessage($"Index Out of Range", MessageType.Error);
             return;
@@ -571,7 +576,7 @@ public class TaskDashboard
             return;
         }
 
-        Result importResult = this._activityLogService.ImportLogs(filePath!, index-1);
+        Result importResult = this._activityLogService.ImportLogs(filePath!,activities[index-1].ActivityId);
         if (!importResult.IsSuccess)
         {
             _userIO.DisplayMessage(importResult.Message!, MessageType.Error);
@@ -603,13 +608,13 @@ public class TaskDashboard
             return;
         }
 
-        Result exportResult = this._activityLogService.ExportLogs(index-1);
+        Result exportResult = this._activityLogService.ExportLogs(activities[index-1].ActivityId);
         if (!exportResult.IsSuccess)
         {
             _userIO.DisplayMessage($"{exportResult.Message}", MessageType.Error);
             return;
         }
 
-        _userIO.DisplayMessage($"Task logs exported successfully, check in your Downloads/Desktop", MessageType.Success);
+        _userIO.DisplayMessage($"{exportResult.Message}", MessageType.Success);
     }
 }

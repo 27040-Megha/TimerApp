@@ -20,17 +20,11 @@ public class ViewOperator
 
     private delegate bool ValidateInput(string? input, out string errorMessage);
 
-    private readonly ActivityService _activityService;
-
-    private readonly ActivityLogService _activityLogService;
-
-    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ActivityService activityService, ActivityLogService activityLogService, ISessionManager currentSessionManager)
+    public ViewOperator(UserService userService, IUserIO userIO, TaskDashboard taskDashboard, ISessionManager currentSessionManager)
     {
         this._userService = userService;
         this._userIO = userIO;
-        this._activityService = activityService;
         this._taskDashboard = taskDashboard;
-        this._activityLogService = activityLogService;
         this._currentSessionManager = currentSessionManager;
     }
 
@@ -50,7 +44,13 @@ public class ViewOperator
         do
         {
             this.DisplayMenu();
-            if (!InputValidator.ValidateInteger(_userIO.ReadInput(), out choice))
+            string? userChoice = _userIO.ReadInput();
+            if (userChoice == null)
+            {
+                break;
+            }
+
+            if (!InputValidator.ValidateInteger(userChoice, out choice))
             {
                 _userIO.DisplayMessage("Invalid Integer format, Enter a valid integer!", MessageType.Error);
                 continue;
@@ -69,11 +69,6 @@ public class ViewOperator
             }
         }
         while (choice != 3);
-    }
-
-    public void SaveCurrentActiveUser()
-    {
-        this._userService.SaveCurrentActiveUser();
     }
 
     private void LoadPreviousUserSession()
