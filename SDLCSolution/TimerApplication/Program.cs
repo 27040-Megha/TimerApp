@@ -25,7 +25,7 @@ public class Program
             catch (Exception ex)
             {
                 userIO.DisplayMessage($"Something went wrong: {ex.Message}", MessageType.Error);
-                userIO.DisplayMessage("Returnting to Main menu", MessageType.Warning);
+                userIO.DisplayMessage("Returning to Main menu", MessageType.Warning);
             }
         }
     }
