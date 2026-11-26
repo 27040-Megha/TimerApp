@@ -1,0 +1,43 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+# .NET / NuGet cache & restore files
+project.lock.json
+project.fragment.lock.json
+*.nuget.props
+*.nuget.targets
+
+# Visual Studio / VS Code / JetBrains Rider
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.user
+*.suo
+*.sln.docstates
+*.sln.iml
+
+# Test & Coverage results (if you add unit tests later)
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+*.coverage
+
+# Runtime data & logs (prevents committing local user JSON files)
+*.json
+!appsettings*.json
+!global.json
+[Ll]og/
+[Ll]ogs/
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+[Dd]esktop.ini
